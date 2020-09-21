@@ -253,11 +253,11 @@ The Packet Length Offset is a 64-bit unsigned integer with a maximum value of
 this limit.
 
 To reduce header overhead, servers MAY consistently use a Packet Length Offset
-of zero to reduce header overhead if and only if it either (1) never sends Retry
-packets, or (2) can guarantee, through the use of persistent storage or other
-means, that it will never lose the cryptographic state required to generate the
-salt before the promised expiration time. {{retry-injection}} describes the
-implications if it uses zero without meeting these conditions.
+of zero if and only if it either (1) never sends Retry packets, or (2) can
+guarantee, through the use of persistent storage or other means, that it will
+never lose the cryptographic state required to generate the salt before the
+promised expiration time. {{retry-injection}} describes the implications if it
+uses zero without meeting these conditions.
 
 Servers MUST either generate a random salt and Packet Length Offset and store a
 mapping of aliased version and ITE to salt and offset, or generate the salt and
