@@ -252,6 +252,13 @@ The Packet Length Offset is a 64-bit unsigned integer with a maximum value of
 2^62 - 1. Clients MUST ignore a transport parameter with a value that exceeds
 this limit.
 
+To reduce header overhead, servers MAY consistently use a Packet Length Offset
+of zero to reduce header overhead if and only if it either (1) never sends Retry
+packets, or (2) can guarantee, through the use of persistent storage or other
+means, that it will never lose the cryptographic state required to generate the
+salt before the promised expiration time. {{retry-injection}} describes the
+implications if it uses zero without meeting these conditions.
+
 Servers MUST either generate a random salt and Packet Length Offset and store a
 mapping of aliased version and ITE to salt and offset, or generate the salt and
 offset using a cryptographic method that uses the version number, ITE, and only
@@ -531,7 +538,7 @@ any version number. As a result, many more sufficiently sized UDP payloads with
 the first bit set to '1' are potential QUIC Initial Packets that require
 generation of a salt and Packet Length Offset.
 
-Note that the Packet Length Offset will allow the server to drop all but
+Note that a nonzero Packet Length Offset will allow the server to drop all but
 approximately 1 in every 2^49 packets, so trial decryption is unnecessary.
 
 While not a more potent attack then simply sending valid Initial Packets,
