@@ -167,22 +167,30 @@ entirely to the specification of the standard version.
 
 When they instantiate a connection, servers select an alternate 32-bit version
 number, and optionally an initial token extension, for the next connection at
-random and securely derive a salt from those values using a repeatable process.
-They communicate this using a transport parameter extension including the
-version, initial token extension, salt, and an expiration time for that value.
+random and securely derive a salt and Packet Length Offset from those values
+using a repeatable process. They communicate this using a transport parameter
+extension including the version, initial token extension, salt, Packet Length
+Offset, and an expiration time for that value.
 
 If a client next connects to that server within the indicated expiration time,
 it MAY use the provided version number and encrypt its Initial Packets using a
-key derived from the provided salt. If the server provided an Initial Token
-Extension, the client puts it in the Initial Packet token field. If there is
-another token the client wishes to include, it appends the Initial Token
-Extension to that token. The server can reconstruct the salt from the requested
-version and token, and proceed with the connection normally.
+key derived from the provided salt. It adds the Packet Length Offset to the
+true packet length when encoding it in the long header. If the server provided
+an Initial Token Extension, the client puts it in the Initial Packet token
+field. If there is another token the client wishes to include, it appends the
+Initial Token Extension to that token. The server can reconstruct the salt and
+Packet Length Offset from the requested version and token, and proceed with the
+connection normally.
 
-When generating a salt, servers can choose between doing so randomly and
-storing the mapping, or using a cryptographic process to transform the aliased
-version number and token extension into the salt. The two options provide a
-simple tradeoff between computational complexity and storage requirements.
+The Packet Length Offset is provides a low-cost way for the server to verify it
+can derive a valid salt from the inputs without trial decryption. This has
+important security implications, as described in {{retry-injection}}. 
+
+When generating a salt and Packet Length Offset, servers can choose between
+doing so randomly and storing the mapping, or using a cryptographic process to
+transform the aliased version number and token extension into the salt. The two
+options provide a simple tradeoff between computational complexity and storage
+requirements.
 
 Note that clients and servers MUST implement {{QUIC-VERSION-NEGOTIATION}} to use
 this specification. Therefore, servers list supported versions in Version
@@ -195,9 +203,10 @@ Version Negotiation Transport Parameters.
 
 Servers MUST use a random process to generate version numbers. This version
 number MUST NOT correspond to a QUIC version the server advertises in QUIC
-Version Negotiation packet or transport parameter. Servers SHOULD also exclude
-version numbers used in known specifications or experiments to avoid confusion
-at clients, whether or not they have plans to support those specifications.
+Version Negotiation packets or transport parameters. Servers SHOULD also
+exclude version numbers used in known specifications or experiments to avoid
+confusion at clients, whether or not they have plans to support those
+specifications.
 
 Servers MUST NOT use client-controlled information (e.g. the client IP address)
 in the random process, see {{salt-polling}}.
@@ -234,20 +243,32 @@ incoming Initial Packets that contain an aliased version number. As the server
 controls the lengths and encoding of each, there are many ways to guarantee
 this.
 
-## Salt Generation
+## Salt and Packet Length Offset Generation
 
 The salt is an opaque 20-octet field. It is used to generate Initial connection
 keys using the process described in {{QUIC-TLS}}.
 
-Servers MUST either generate a random salt and store a mapping of aliased
-version and ITE to salt, or generate the salt using a cryptographic method that
-uses the version number, ITE, and only server state that is persistent across
-connections.
+The Packet Length Offset is a 64-bit unsigned integer with a maximum value of
+2^62 - 1. Clients MUST ignore a transport parameter with a value that exceeds
+this limit.
+
+To reduce header overhead, servers MAY consistently use a Packet Length Offset
+of zero if and only if it either (1) never sends Retry packets, or (2) can
+guarantee, through the use of persistent storage or other means, that it will
+never lose the cryptographic state required to generate the salt before the
+promised expiration time. {{retry-injection}} describes the implications if it
+uses zero without meeting these conditions.
+
+Servers MUST either generate a random salt and Packet Length Offset and store a
+mapping of aliased version and ITE to salt and offset, or generate the salt and
+offset using a cryptographic method that uses the version number, ITE, and only
+server state that is persistent across connections.
 
 If the latter, servers MUST implement a method that it can repeat
-deterministically at a later time to derive the salt from the incoming version
-number and ITE. It MUST NOT use client controlled information other than the
-version number and ITE; for example, the client's IP address and port.
+deterministically at a later time to derive the salt and offset from the
+incoming version number and ITE. It MUST NOT use client controlled information
+other than the version number and ITE; for example, the client's IP address and
+port.
 
 ## Expiration Time
 
@@ -284,6 +305,8 @@ identifier 0x5641. The contents of the value field are indicated below.
 +                                                               +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Packet Length Offset (i)                  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         Expiration (i)                        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                Initial Token Extension (variable)             |
@@ -294,6 +317,8 @@ identifier 0x5641. The contents of the value field are indicated below.
 The definition of the fields is described above. Note that the "Expiration"
 field is in seconds, and its length is encoded using the Variable Length
 Integer encoding from Section 16 of {{QUIC-TRANSPORT}}.
+
+The Packet Length Offset is also encoded as a Variable Length Integer.
 
 Clients can determine the length of the Initial Token Extension by subtracting
 known and encoded field lengths from the overall transport parameter length.
@@ -309,9 +334,9 @@ Negotiation Packet or Transport Parameter.
 # Client Behavior
 
 When a client receives the Version Alias Transport Parameter, it MAY cache the
-version number, ITE, salt, and the expiration of this value. It MAY use the
-version number and ITE in a subsequent connection and compute the initial keys
-using the provided salt.
+version number, ITE, salt, Packet Length Offset, and the expiration of these
+values. It MAY use the version number and ITE in a subsequent connection and
+compute the initial keys using the provided salt.
 
 Clients MUST NOT advertise aliased versions in the Version Negotiation Transport
 Parameter unless they support a standard version with the same number. Including
@@ -336,6 +361,10 @@ the ITE as the entire token.
 The QUIC Token Length field MUST include the length of both any Retry or
 NEW_TOKEN token and the ITE.
 
+The Length fields of all Initial, Handshake, and 0-RTT packets in the
+connection are set to the value described in {{QUIC-TRANSPORT}} plus the
+provided Packet Length Offset, modulo 2^62.
+
 If the response to an Initial packet using the provided version is a Version
 Negotiation Packet, the client SHOULD cease attempting to use that version and
 salt to the server unless it later determines that the packet was the result of
@@ -350,7 +379,8 @@ If a client receives a Version Negotiation packet or Version Negotiation
 transport parameter advertising a version number the server previously sent as
 an aliased version, and the client verifies any Version Negotiation Packet is
 not a Version Downgrade attack ({{version-downgrade}}), it MUST discard the
-aliased version number, ITE,  and salt and not use it in future connections.
+aliased version number, ITE, packet length offset, and salt and not use it in
+future connections.
 
 # Server Actions on Aliased Version Numbers
 
@@ -362,17 +392,27 @@ Otherwise, it extracts the ITE, if any, and either looks up the corresponding
 salt in its database or computes it using the technique originally used to
 derive the salt from the version number and ITE.
 
+The server similarly obtains the Packet Length Offset and subtracts it from the
+provided Length field, modulo 2^62. If the resulting value is larger than the
+entire UDP datagram, the server discards the packet and SHOULD send a Version
+Negotiation Packet.
+
 If the server supports multiple standard versions, it uses the standard version
 extracted by the ITE or stored in the mapping to parse the decrypted packet.
 
-If the computed salt results in a packet that fails authentication, or the
-encoded standard version is not supported at the server, the server SHOULD send
-a Version Negotiation Packet.
+In all packets with long headers, the server uses the aliased version number
+and adds the Packet Length Offset to the length field.
+
+In the extremely unlikely event that the Packet Length Offset resulted in a
+legal value but the salt is incorrect, the packet may fail authentication.
+If so, or the encoded standard version is not supported at the server, the
+server SHOULD send a Version Negotiation Packet.
 
 To reduce linkability for the client, servers SHOULD provide a new Version Alias
-transport parameter, with a new version number, ITE, and salt, each time a
-client connects. However, issuing version numbers to a client SHOULD be rate-
-limited to mitigate the salt polling attack {{salt-polling}}.
+transport parameter, with a new version number, ITE, salt, and Packet Length
+Offset, each time a client connects. However, issuing version numbers to a
+client SHOULD be rate-limited to mitigate the salt polling attack
+{{salt-polling}}.
 
 # Considerations for Retry Packets
 
@@ -398,24 +438,9 @@ specification.
 Clients MUST ignore Retry packets that contain a QUIC version other than the
 version it used in its Initial Packet.
 
-If the client receives a Retry with a valid Integrity Tag, it MUST send another
-Initial Packet with the aliased version, and the ITE appended to the Retry
-Token.  Invalid Retry Integrity Tokens are, for standard versions, usually the
-result of packet corruption in the network. For an aliased version, it might
-also mean that the server has lost its state to correctly compute the salt. As
-it therefore has no valid aliased version, the client SHOULD attempt to connect
-with an Initial packet that contains the same standard version and the supplied
-Retry Token.
-
-A Retry Injection attack ({{retry-injection}}) can result in Retry packets with
-invalid integrity tags. The client SHOULD NOT discard its stored aliased
-versions until the subsequent connection to the server verifies that the Retry
-came from the server.
-
-As further protection against this attack, after starting a connection with a
-valid Retry token, servers SHOULD issue tokens using NEW_TOKEN frames and
-clients SHOULD keep connections using standard versions open long enough to
-receive such tokens.
+Servers MUST NOT reply to a packet with an incorrect Length field in its long
+header with a Retry packet; it SHOULD reply with Version Negotiation as
+described above.
 
 # Security and Privacy Considerations
 
@@ -446,26 +471,31 @@ transport parameters, to support this mechanism.
 
 ## Retry Injection {#retry-injection}
 
-An attacker might try to force the client to a standard QUIC version by
-injecting Retry packets. For example, a man-in-the-middle could drop an Initial
-Packet and generate a Retry packet in response, though the Integrity Tag would
-be invalid.
+QUIC Version 1 Retry packets are spoofable, as they follow a fixed format, are
+sent in plaintext, and the integrity protection uses a widely known key. As a
+result, QUIC Version 1 has verification mechanisms in subsequent packets of the
+connection to validate the origin of the Retry.
 
-The client will then connect with the standard version, and thus be decodable.
-However, the QUIC protocol detects this interference on the next handshake,
-thanks to the contents of the Retry token. Therefore, clients are discouraged
-from immediately assuming aliased versions are invalid upon receipt of such a
-packet.
+Version aliasing largely frustrates this attack. As the integrity check key is
+derived from the secret salt, packets from attackers will fail their integrity
+check and the client will ignore them.
 
-A more sophisticated attack instead changes some integrity bits in a valid Retry
-packet. As the Retry token is valid, the next handshake will not detect the
-intrusion and the client will believe the Retry packet legitimately signaled
-that the standard version was invalid. In general, the client will then receive
-a new aliased version. If the client has no token from a NEW_TOKEN frame, a
-subsequent connection attempt with an aliased version could also trigger a Retry
-and allow the same attack. Providing a token in a NEW_TOKEN frame bypasses the
-server Retry mechanism so that the attacker cannot continuously have legitimate
-Retry packets to modify in this way.
+The Packet Length Offset is important in this framework. Without this
+mechanism, servers would have to perform trial decryption to verify the client
+was using the correct salt. As this does not occur before sending Retry
+Packets, servers would not detect disagreement on the salt beforehand and would
+send a Retry packet signed with a different salt than the client expects.
+Therefore, a client that received a Retry packet with an invalid integrity
+check would not be able to distinguish between the following possibilities:
+
+* a Retry packet corrupted in the network, which should be ignored;
+* a Retry packet generated by an attacker, which should be ignored; or
+* a Retry packet from a server that lost its cryptographic state, meaning that
+further communication with aliased versions is impossible and the client should
+revert to using a standard version.
+
+The Packet Length Offset introduces sufficient entropy to make the third
+possibility exceedingly unlikely.
 
 ## Increased Linkability
 
@@ -506,7 +536,10 @@ is a low-cost response that triggers very early in packet processing.
 However, a server that provides version aliasing is prepared to accept almost
 any version number. As a result, many more sufficiently sized UDP payloads with
 the first bit set to '1' are potential QUIC Initial Packets that require
-generation of a salt, some initial connection state, and a decryption operation.
+generation of a salt and Packet Length Offset.
+
+Note that a nonzero Packet Length Offset will allow the server to drop all but
+approximately 1 in every 2^49 packets, so trial decryption is unnecessary.
 
 While not a more potent attack then simply sending valid Initial Packets,
 servers may have to provision additional resources to address this possibility.
@@ -536,6 +569,7 @@ Marten Seemann was the original progenitor of the version aliasing approach.
 ## since draft-duke-quic-version-aliasing-01
 
 * Fixed all references to "seed" where I meant "salt."
+* Added the Packet Length Offset, which eliminates Retry Injection Attacks
 
 ## since draft-duke-quic-version-aliasing-00
 
