@@ -323,6 +323,9 @@ The Packet Length Offset is also encoded as a Variable Length Integer.
 Clients can determine the length of the Initial Token Extension by subtracting
 known and encoded field lengths from the overall transport parameter length.
 
+Client storage of this transport parameter is mandatory if it seeks to send
+0-RTT packets with the corresponding aliased version.
+
 ## Multiple Servers for One Domain
 
 If multiple servers serve the same entity behind a load balancer, all such
@@ -549,6 +552,16 @@ servers may have to provision additional resources to address this possibility.
 This document requires two small cryptographic operations to build a Retry
 packet instead of one, placing more load on servers when already under load.
 
+## Request Forgery Attacks
+
+Section 21.4 of {{QUIC-TRANSPORT}} describes the request forgery attack, where
+a QUIC endpoint can cause its peer to deliver packets to a victim with specific
+content.
+
+Version aliasing allows the server to specify the contents of the version field
+and part of the token field in Initial packets sent by the client, therefore
+increasing the potency of this attack.
+
 # IANA Considerations
 
 This draft chooses a transport parameter (0x5641) to minimize the risk of
@@ -559,12 +572,17 @@ Parameter Registry.
 
 # Acknowledgments
 
-Marten Seemann was the original progenitor of the version aliasing approach.
+Marten Seemann was the original creator of the version aliasing approach.
 
 # Change Log
 
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
+
+## since draft-duke-quic-version-aliasing-02
+
+* Discussed request forgery attacks
+* Specified 0RTT status of the transport parameter
 
 ## since draft-duke-quic-version-aliasing-01
 
