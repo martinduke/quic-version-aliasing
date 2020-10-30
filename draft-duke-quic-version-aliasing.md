@@ -586,9 +586,12 @@ Marten Seemann was the original creator of the version aliasing approach.
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
 
-## since draft-duke-quic-version-aliasing-02
+## since draft-duke-quic-version-aliasing-03
 
 * Discussed request forgery attacks
+
+## since draft-duke-quic-version-aliasing-02
+
 * Specified 0RTT status of the transport parameter
 
 ## since draft-duke-quic-version-aliasing-01
