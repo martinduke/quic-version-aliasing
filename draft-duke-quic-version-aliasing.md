@@ -559,7 +559,7 @@ a QUIC endpoint can cause its peer to deliver packets to a victim with specific
 content.
 
 Version aliasing allows the server to specify the contents of the version field
-and part of the token field in Initial packets sent by the client, therefore
+and part of the token field in Initial packets sent by the client, potentially
 increasing the potency of this attack.
 
 # IANA Considerations
