@@ -279,7 +279,7 @@ to encode information in the version number, or rotate the keys used in salt
 generation.
 
 Furthermore, the expiration time SHOULD be short enough to frustrate a salt
-polling attack ({salt-polling}})
+polling attack ({{salt-polling}})
 
 Conversely, an extremely short expiration time will often force the client to
 use standard QUIC version numbers and salts.
@@ -320,12 +320,12 @@ Integer encoding from Section 16 of {{QUIC-TRANSPORT}}.
 
 The Packet Length Offset is also encoded as a Variable Length Integer.
 
-Clients can determine the length of the Initial Token Extension by subtracting
+Clients can compute the length of the Initial Token Extension by subtracting
 known and encoded field lengths from the overall transport parameter length.
 
 Note that servers that support version aliasing need not send the transport
 parameter on every connection. Therefore, a client MAY attempt to connect with
-an unexpired aliased version even if in its most recent connection it did not
+an unexpired aliased version, even if in its most recent connection it did not
 receive the transport parameter.
 
 Clients MAY remember the value in this transport parameter for future
