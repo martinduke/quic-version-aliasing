@@ -323,8 +323,15 @@ The Packet Length Offset is also encoded as a Variable Length Integer.
 Clients can determine the length of the Initial Token Extension by subtracting
 known and encoded field lengths from the overall transport parameter length.
 
-Client storage of this transport parameter is mandatory if it seeks to send
-0-RTT packets with the corresponding aliased version.
+Note that servers that support version aliasing need not send the transport
+parameter on every connection. Therefore, a client MAY attempt to connect with
+an unexpired aliased version even if in its most recent connection it did not
+receive the transport parameter.
+
+Clients MAY remember the value in this transport parameter for future
+connections. Servers MUST either store the contents of the transport parameter,
+or preserve the state to compute the full contents based on what the client
+provides.
 
 ## Multiple Servers for One Domain
 
