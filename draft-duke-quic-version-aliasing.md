@@ -1,7 +1,7 @@
 ---
 title: "QUIC Version Aliasing"
 abbrev: "QUIC Version Aliasing"
-docname: draft-duke-quic-version-aliasing-04
+docname: draft-duke-quic-version-aliasing-05
 date: {DATE}
 category: exp
 ipr: trust200902
@@ -182,9 +182,9 @@ Initial Token Extension to that token. The server can reconstruct the salt and
 Packet Length Offset from the requested version and token, and proceed with the
 connection normally.
 
-The Packet Length Offset is provides a low-cost way for the server to verify it
-can derive a valid salt from the inputs without trial decryption. This has
-important security implications, as described in {{retry-injection}}. 
+The Packet Length Offset provides a low-cost way for the server to verify it can
+derive a valid salt from the inputs without trial decryption. This has important
+security implications, as described in {{retry-injection}}. 
 
 When generating a salt and Packet Length Offset, servers can choose between
 doing so randomly and storing the mapping, or using a cryptographic process to
@@ -514,7 +514,7 @@ twice, those two connections are extremely likely to be from the same host. If
 the client has changed IP address, this is a significant increase in linkability
 relative to QUIC with a standard version numbers.
 
-## Salt Polling Attack {#salt-polling}
+## Salt Polling {#salt-polling}
 
 Observers that wish to decode Initial Packets might open a large number of
 connections to the server in an effort to obtain part of the mapping of version
@@ -559,7 +559,7 @@ servers may have to provision additional resources to address this possibility.
 This document requires two small cryptographic operations to build a Retry
 packet instead of one, placing more load on servers when already under load.
 
-## Request Forgery Attacks
+## Request Forgery
 
 Section 21.4 of {{QUIC-TRANSPORT}} describes the request forgery attack, where
 a QUIC endpoint can cause its peer to deliver packets to a victim with specific
