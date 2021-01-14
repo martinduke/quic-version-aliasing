@@ -243,6 +243,10 @@ exclude version numbers used in known specifications or experiments to avoid
 confusion at clients, whether or not they have plans to support those
 specifications.
 
+Servers MAY use version numbers reserved for grease in Section 15.1 of
+{{QUIC-TRANSPORT}}, even though they might be advertised in Version Negotiation
+Packets.
+
 Servers MUST NOT use client-controlled information (e.g. the client IP address)
 in the random process, see {{salt-polling}}.
 
