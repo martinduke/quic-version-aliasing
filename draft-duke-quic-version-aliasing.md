@@ -197,6 +197,41 @@ this specification. Therefore, servers list supported versions in Version
 Negotiation Packets. Both clients and servers list supported versions in
 Version Negotiation Transport Parameters.
 
+## Relationship to ECH
+
+The TLS Encrypted Client Hello {{ENCRYPTED_SNI}} shares some goals with
+this document. It encodes an "inner" encrypted Client Hello in a TLS extension
+in an "outer" Client Hello. The encryption uses asymmetric keys with the
+server's public key distributed via an out-of-band mechanism like DNS. The
+inner Client Hello contains any privacy-sensitive information and is only
+readable with the server's private key.
+
+Significantly, unlike QUIC Version Aliasing, ECH can operate on the first
+connection between a client and server. However, from the second connection
+QUIC version aliasing provides additional benefits. It:
+
+* greases QUIC header fields and packet formats;
+
+* protects all of the TLS Client Hello and Server Hello;
+
+* mitigates Retry injection attacks;
+
+* uses smaller Client Hello messages; and
+
+* relies on computationally cheap symmetric encryption.
+
+A maximally privacy-protecting client might use ECH for any connection attempts
+for which it does not have an unexpired aliased version, and QUIC version
+aliasing otherwise.
+
+Note that in the event of the server losing state, the two approaches have a
+similar fallback: ECH uses information in the outer Client Hello, and Version
+Aliasing requires a connection using a standard version. In either case,
+maintaining privacy requires the outer or standard version Client Hello to
+exclude privacy-sensitive information, and at least 1 RTT to allow a secure
+connection to resume. This mechanism is also relevant to Version Aliasing
+mitigation of Version Downgrade attacks {{version-downgrade}}.
+
 # The Version Alias Transport Parameter
 
 ## Version Number Generation
