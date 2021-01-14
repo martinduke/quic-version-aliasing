@@ -610,6 +610,12 @@ This draft chooses a transport parameter (0x5641) to minimize the risk of
 collision. IANA should assign a permanent value from the QUIC Transport
 Parameter Registry.
 
+Value: TBD
+
+Parameter Name: Version Aliasing
+
+Specification: This document
+
 --- back
 
 # Acknowledgments
