@@ -20,115 +20,37 @@ author:
 
 normative:
 
-  QUIC-TRANSPORT:
-    title: "QUIC: A UDP-Based Multiplexed and Secure Transport"
-    date: {DATE}
-    seriesinfo:
-      Internet-Draft: draft-ietf-quic-transport
-    author:
-      -
-        ins: J. Iyengar
-        name: Jana Iyengar
-        org: Fastly
-        role: editor
-      -
-        ins: M. Thomson
-        name: Martin Thomson
-        org: Mozilla
-        role: editor
-
-  QUIC-TLS:
-    title: "Using Transport Layer Security (TLS) to Secure QUIC"
-    date: {DATE}
-    seriesinfo:
-      Internet-Draft: draft-ietf-quic-tls-latest
-    author:
-      -
-        ins: M. Thomson
-        name: Martin Thomson
-        org: Mozilla
-        role: editor
-      -
-        ins: S. Turner
-        name: Sean Turner
-        org: sn3rd
-        role: editor
-
-  QUIC-VERSION-NEGOTIATION:
-    title: "Compatible Version Negotiation for QUIC"
-    date: {DATE}
-    seriesinfo:
-      Internet-Draft: draft-ietf-quic-version-negotiation-latest
-    author:
-      -
-        ins: D. Schinazi
-        name: David Schinazi
-        org: Google LLC
-        role: editor
-      -
-        ins: E. Rescorla
-        name: Eric Rescorla
-        org: Mozilla
-        role: editor
-
 informative:
-
-  ENCRYPTED-SNI:
-    title: "Encrypted Server Name Indication for TLS 1.3"
-    date: {DATE}
-    seriesinfo:
-      Internet-Draft: draft-ietf-tls-esni-latest
-    author:
-      -
-        ins: E. Rescorla
-        name: Eric Rescorla
-        org: RTFM, Inc.
-        role: editor
-      -
-        ins: K. Oku
-        name: Kazuho Oku
-        org: Fastly
-        role: editor
-      -
-        ins: N. Sullivan
-        name: Nick Sullivan
-        org: Cloudflare
-        role: editor
-      -
-        ins: C.A. Wood
-        name: Christopher A. Wood
-        org: Apple, Inc.
-        role: editor
-
 
 --- abstract
 
-The QUIC transport protocol {{QUIC-TRANSPORT}} preserves its future
-extensibility partly by specifying its version number. There will be a
-relatively small number of published version numbers for the foreseeable future.
-This document provides a method for clients and servers to negotiate the use of
-other version numbers in subsequent connections and encrypts Initial Packets
-using secret keys instead of standard ones. If a sizeable subset of QUIC
-connections use this mechanism, this should prevent middlebox ossification
-around the current set of published version numbers and the contents of QUIC
-Initial packets, as well as improving the protocol's privacy properties.
+The QUIC transport protocol preserves its future extensibility partly by
+specifying its version number. There will be a relatively small number of
+published version numbers for the foreseeable future. This document provides a
+method for clients and servers to negotiate the use of other version numbers in
+subsequent connections and encrypts Initial Packets using secret keys instead of
+standard ones. If a sizeable subset of QUIC connections use this mechanism, this
+should prevent middlebox ossification around the current set of published
+version numbers and the contents of QUIC Initial packets, as well as improving
+the protocol's privacy properties.
 
 --- middle
 
 # Introduction
 
-The QUIC version number is critical to future extensibility of the protocol.
-Past experience with other protocols, such as TLS1.3 {{?RFC8446}}, shows that
-middleboxes might attempt to enforce that QUIC packets use versions known at the
-time the middlebox was implemented. This has a chilling effect on deploying
-experimental and standard versions on the internet.
+The QUIC version number is critical to future extensibility of the protocol
+({{!QUIC-TRANSPORT=I-D.ietf-quic-transport}}). Past experience with other
+protocols, such as TLS1.3 {{?RFC8446}}, shows that middleboxes might attempt to
+enforce that QUIC packets use versions known at the time the middlebox was
+implemented. This has a chilling effect on deploying experimental and standard
+versions on the internet.
 
-Each version of QUIC has a "salt" {{QUIC-TLS}} that is used to derive the keys
-used to encrypt Initial packets. As each salt is published in a standards
-document, any observer can decrypt these packets and inspect the contents, 
-including a TLS Client Hello. A subsidiary mechanism like Encrypted SNI
-{{ENCRYPTED-SNI}} might protect some of the TLS fields inside a TLS Client
-Hello.
+Each version of QUIC has a "salt" {{!QUIC-TLS=I-D.ietf-quic-tls}} that is used
+to derive the keys used to encrypt Initial packets. As each salt is published in
+a standards document, any observer can decrypt these packets and inspect the
+contents, including a TLS Client Hello. A subsidiary mechanism like Encrypted
+Client Hello {{?ECHO=I-D.ietf-tls-esni}} might protect some of the TLS fields
+inside a TLS Client Hello.
 
 This document proposes "QUIC Version Aliasing," a standard way for servers to
 advertise the availability of other versions inside the cryptographic
@@ -192,14 +114,15 @@ transform the aliased version number and token extension into the salt. The two
 options provide a simple tradeoff between computational complexity and storage
 requirements.
 
-Note that clients and servers MUST implement {{QUIC-VERSION-NEGOTIATION}} to use
-this specification. Therefore, servers list supported versions in Version
-Negotiation Packets. Both clients and servers list supported versions in
-Version Negotiation Transport Parameters.
+Note that clients and servers MUST implement
+{{!QUIC-VN=I-D.ietf-quic-version-negotiation}} to use this specification.
+Therefore, servers list supported versions in Version Negotiation Packets. Both
+clients and servers list supported versions in Version Negotiation Transport
+Parameters.
 
-## Relationship to ECH
+## Relationship to ECH and QUIC Protected Initials
 
-The TLS Encrypted Client Hello {{ENCRYPTED_SNI}} shares some goals with
+The TLS Encrypted Client Hello {{ECHO}} shares some goals with
 this document. It encodes an "inner" encrypted Client Hello in a TLS extension
 in an "outer" Client Hello. The encryption uses asymmetric keys with the
 server's public key distributed via an out-of-band mechanism like DNS. The
@@ -216,13 +139,18 @@ QUIC version aliasing provides additional benefits. It:
 
 * mitigates Retry injection attacks;
 
+* Does not require a mechanism to distribute the public key;
+
 * uses smaller Client Hello messages; and
 
 * relies on computationally cheap symmetric encryption.
 
-A maximally privacy-protecting client might use ECH for any connection attempts
-for which it does not have an unexpired aliased version, and QUIC version
-aliasing otherwise.
+If ECH is operating in "Split Mode", where a client-facing server is using the
+SNI information to route to a backend server, the client-facing server MUST
+have the cryptographic context relevant to version aliasing at the backend
+server to successfully extract the SNI for routing purposes. Furthermore, either
+all backend servers must share this context, or the client-facing server must
+trial decrypt the incoming packet with all possible derived salts.
 
 Note that in the event of the server losing state, the two approaches have a
 similar fallback: ECH uses information in the outer Client Hello, and Version
@@ -231,6 +159,17 @@ maintaining privacy requires the outer or standard version Client Hello to
 exclude privacy-sensitive information, and at least 1 RTT to allow a secure
 connection to resume. This mechanism is also relevant to Version Aliasing
 mitigation of Version Downgrade attacks {{version-downgrade}}.
+
+Similarly, QUIC Protected Initials {{?I-D.duke-quic-protected-initial}} uses
+the ECH distribution mechanism to generate secure initial keys and Retry
+integrity tags. While still dependent on a key distribution system,
+asymmetric encryption, and relatively large amounts of data in the client's
+Initial packet, it offers similar protection properties to Version Aliasing
+while still not greasing the version field. 
+
+A maximally privacy-protecting client might use Protected Initials for any
+connection attempts for which it does not have an unexpired aliased version, and
+QUIC version aliasing otherwise.
 
 # The Version Alias Transport Parameter
 
@@ -497,26 +436,45 @@ This document intends to improve the existing security and privacy properties of
 QUIC by dramatically improving the secrecy of QUIC Initial Packets. However,
 there are new attacks against this mechanism.
 
+## First-Connection Privacy {#first-connection}
+
+As version aliasing requires one connection over a standard QUIC version to
+acquire initial state, this initial connection leaks some information about
+the true target.
+
+The client MAY alter its Initial Packet (e.g., its ALPN field) to sanitize
+sensitive information and obtain another aliased version before proceeding with
+its true request. Advice for the Outer ClientHello in Section 10.5 of {{ECHO}}
+applies here. When using this technique, the client MUST allow the handshake to
+complete, and verify the 1RTT keys are correct through exchange of a PING or
+other frame, to authenticate and verify the integrity of the resulting version
+aliasing parameters.
+
+Servers that support version aliasing SHOULD be liberal about the Initial Packet
+content they receive, keeping the connection open long enough to deliver their
+transport parameters, to support this mechanism.
+
+See also {{?I-D.duke-quic-protected-initial}} for a means of extending privacy
+guarantees to the first connection. Note that if this results in a version
+negotiation packet, that signals that the server has lost the state associated
+with these mechanisms (however, see {{version-downgrade}}), and the client has
+no recourse but the technique described in this section.
+
 ## Version Downgrade {#version-downgrade}
 
 A countermeasure against version aliasing is the downgrade attack. Middleboxes
 may drop a packet containing a random version and imitate the server's failure
 to correctly process it. Clients and servers are required to implement
-{{QUIC-VERSION-NEGOTIATION}} to detect downgrades.
+{{QUIC-VN}} to detect downgrades.
 
-Note that downgrade detection only works after receiving a response from the
-server. If a client immediately responds to a Version Negotiation Packet with
-an Initial Packet with a standard version number, it will have exposed its
-request in a format readable to observers before it discovers if the Version
-Negotiation Packet is authentic. A client SHOULD wait for an interval to see if
-a valid response comes from the server before assuming the version negotiation
-is valid. The client MAY also alter its Initial Packet (e.g., its ALPN field) to
-sanitize sensitive information and obtain another aliased version before
-proceeding with its true request.
-
-Servers that support version aliasing SHOULD be liberal about the Initial Packet
-content they receive, keeping the connection open long enough to deliver their
-transport parameters, to support this mechanism.
+Note that downgrade detection only works after receiving an authenticated
+response from the server. If a client immediately responds to a Version
+Negotiation Packet with an Initial Packet with a standard version number, it
+will have exposed its request in a format readable to observers before it
+discovers if the Version Negotiation Packet is authentic. A client SHOULD wait
+for an interval to see if a valid response comes from the server before assuming
+the version negotiation is valid. Even after such an interval, the client should
+consider the safeguards in {{first-connection}}.
 
 ## Retry Injection {#retry-injection}
 
@@ -633,7 +591,8 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 ## since draft-duke-quic-version-aliasing-04
 
-* Relationship with Encrypted Client Hello (ECH)
+* Relationship with Encrypted Client Hello (ECH) and QUIC Protected Initials
+* Corrected statement about version negotiation
 
 ## since draft-duke-quic-version-aliasing-03
 
