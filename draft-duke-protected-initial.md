@@ -1,7 +1,7 @@
 ---
 title: Protected QUIC Initial Packets
 abbrev: protected-initial
-docname: draft-duke-quic-protected-initial-00
+docname: draft-duke-quic-protected-initial-01
 category: std
 ipr: trust200902
 area: Transport
@@ -225,7 +225,8 @@ initial_secret = HKDF-Extract(shared_secret,
 The server now has sufficient context to send a Retry packet and MAY choose to
 do so at this point (see {{retry}}). If not, it decrypts the Initial packet.
 
-The remainder is identical to the client procedure.
+The remainder is identical to the client procedure. All server-generated
+Initial packets use the keys generated in this process.
 
 # Retry Integrity Tag {#retry}
 
@@ -294,3 +295,12 @@ Change Controller: IETF
 Contact: QUIC WG
 
 --- back
+
+# Change Log
+
+> **RFC Editor's Note:** Please remove this section prior to
+> publication of a final version of this document.
+
+## since draft-duke-quic-protected-initials-00
+
+* Clarified server initials are encrypted
