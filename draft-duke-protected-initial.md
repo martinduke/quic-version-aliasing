@@ -312,7 +312,7 @@ it relies on the subsequent exchange of transport parameters.
 
 An attacker that consistently injects Retry packets in front of a server that
 also consistently sends Retry can result in a Denial of Service, as clients
-cannot accept to Retries in the same connection.
+cannot accept two Retries in the same connection.
 
 An alternate design would use the shared secret derived from the Client Initial
 Packet to generate keys for the Retry Integrity Tag, which would allow the
