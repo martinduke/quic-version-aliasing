@@ -72,20 +72,36 @@ document uses the widespread configuration that will exist if ECHO is widely
 deployed, but only sends the subset of information necessary to seed the QUIC
 key generation process.
 
-This design is meant to be complimentary with QUIC Version Aliasing
-{{?VERSION-ALIASING=I-D.duke-quic-version-aliasing}}. Version Aliasing does not
-require coordination with DNS or costly asymmetric encryption, and also hinders
-ossification of the QUIC version field. However, it does not protect the first
-connection between the client and server, and can be difficult to coordinate
-with intermediaries like client-facing load balancers. This document addresses
-those use cases.
-
-Unlike {{ECHO}}, Protected Initial Packets protect the entire packet payloads
-that contain the Client Hello and Server Hello, instead of just part of the
-Client Hello.
-
 The version of QUIC described in this specification is identical to QUIC version
 1 {{QUIC-TRANSPORT}} except where described in this document.
+
+## Relationship to ECH and Version Aliasing
+
+Encrypted Client Hello {{ECHO}} and QUIC Version Aliasing
+{{?VERSION-ALIASING=I-D.duke-quic-version-aliasing}} also exist in the solution
+space of concealing parts of the Initial packet exchange from observers. The
+following table summarizes the advantages and disadvantages of each.
+
+| Property | ECH | Protected Initials | Version Aliasing |
+| :--- | :---: | :---: | :---: |
+| Fields Protected | Some of Client Hello | All Initial Payloads | All Initial Payloads |
+| Delay when server loses its keys | 1 RTT | 2 RTT | 2 RTT |
+| Works with TLS over TCP | Yes | No | No |
+| Attacker cannot force use of public SNI | Yes | No | No |
+| First-connection protection | Yes | Yes | No |
+| All-Symmetric Encryption | No | No | Yes |
+| Greases the Version Field | No | No | Yes |
+| All state exchange in-band | No | No | Yes |
+| Prevents Initial packet injection attacks | No | Yes | Yes |
+| Prevents Retry injection attacks | No | No | Yes |
+
+Initial packet injection attacks are described in Section 21.2 of
+{{QUIC-TRANSPORT}}.
+
+Both ECH and Protected Initials are complimentary with Version Aliasing: they
+both provide a computationally expensive way to protect parts of the Initial
+packet during the first connection between client and server, , after which
+Version Aliasing can protect future exchanges with several desirable properties.
 
 # Conventions
 
@@ -303,4 +319,5 @@ Contact: QUIC WG
 
 ## since draft-duke-quic-protected-initials-00
 
+* Additional text comparing ECH, Version Aliasing
 * Clarified server initials are encrypted
