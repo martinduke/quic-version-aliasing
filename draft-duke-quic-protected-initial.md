@@ -268,9 +268,10 @@ receive a second version negotiation packet that does not, should the attempt
 to identify a common ECHConfig fail.
 
 Servers MAY continue to advertise QUIC Protected Initials in its Server
-Handshake Version Information, even if shared secret extraction failed, to avoid
-tracking state as to which clients have failed such extraction. This does not
-effect the Version Downgrade mechanism, which is executed by servers.
+Handshake Version Information, even if shared secret extraction failed. However,
+they SHOULD track the clients to which they have recently sent Version
+Negotiation packets as a result of key mismatch, as this is important to
+server detection of injected Version Negotiation packets.
 
 Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
 does not contain the information necessary to generate subsequent Initial
