@@ -417,7 +417,7 @@ nonce = 0x461599d35d632bf2239825bb
    The weak form of this attack simply observes the Client Initial and
    delivers a Version Negotiation Packet before the client responds.
    Clients SHOULD wait for an interval (roughly the QUIC Probe Timeout,
-   see {{!I-D.ietf-quic-recovery) before acting on a Version Negotiation
+   see [I-D.ietf-quic-recovery]) before acting on a Version Negotiation
    Packet that indicates a lack of support for Protected Initials when a
    DNS record indicating such support exists, to allow a later valid
    server response to arrive.  If it does, the client MUST ignore the
@@ -499,6 +499,13 @@ nonce = 0x461599d35d632bf2239825bb
               Internet-Draft, draft-irtf-cfrg-hpke-08, 15 February 2021,
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
               hpke-08.txt>.
+
+   [I-D.ietf-quic-recovery]
+              Iyengar, J. and I. Swett, "QUIC Loss Detection and
+              Congestion Control", Work in Progress, Internet-Draft,
+              draft-ietf-quic-recovery-34, 14 January 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              recovery-34.txt>.
 
    [I-D.ietf-quic-tls]
               Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
