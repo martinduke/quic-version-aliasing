@@ -1,8 +1,23 @@
 
-*.swp
-.draft-duke-quic-version-aliasing.md.un~
+*~
+/*-[0-9][0-9].xml
+archive.json
 draft-duke-quic-version-aliasing.md~
+.draft-duke-quic-version-aliasing.md.un~
+*.html
 lib/
-.refcache/*
 metadata.min.js
+*.pdf
+*.redxml
+.refcache
+.refcache/*
+report.xml
+*.swp
+.tags
 .targets.mk
+*.txt
+*.upload
+venv/
+lib
+draft-duke-quic-protected-initial.xml
+draft-duke-quic-version-aliasing.xml
