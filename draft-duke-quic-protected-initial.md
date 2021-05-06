@@ -86,16 +86,17 @@ following table summarizes the advantages and disadvantages of each.
 | :--- | :---: | :---: | :---: |
 | Fields Protected | Some of Client Hello | All Initial Payloads | All Initial Payloads |
 | Delay when server loses its keys | 1 RTT | 2 RTT | 2 RTT |
+| No key sharing with Multiple Entities | Yes | No | No |
 | Works with TLS over TCP | Yes | No | No |
-| No trial decryption for multiple entities | Yes | No | No |
 | First-connection protection | Yes | Yes | No |
+| No trial decryption | No | Yes | Yes |
 | All-Symmetric Encryption | No | No | Yes |
 | Greases the Version Field | No | No | Yes |
 | All state exchange in-band | No | No | Yes |
 | Prevents Initial packet injection attacks | No | Yes | Yes |
 | Prevents Retry injection attacks | No | No | Yes |
 
-The more complex properties in the table are described in {{intermediaries}} and
+The more complex properties in the table are discussed in
 {{security-considerations}}.
 
 Both ECH and Protected Initials are complimentary with Version Aliasing: they
@@ -256,6 +257,10 @@ key = 0xbe0c690b9f66575a1d766b54e368c84e
 nonce = 0x461599d35d632bf2239825bb
 ~~~
 
+# The ECHConfig Transport Parameter
+
+[TODO]
+
 # Version Negotiation
 
 Endpoints that support QUIC Protected Initials MUST support at least one other
@@ -278,14 +283,6 @@ does not contain the information necessary to generate subsequent Initial
 packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
 version 1. However, since the versions have identical properties after the
 Initial packet exchange, there is little value in such a trasition.
-
-# Intermediaries {#intermediaries}
-
-Intermediaries that rely on the contents of the Client Hello (e.g., a load
-balancer that routes between servers with the same IP address based on the SNI
-field in the Client Hello) MUST have access to the ECHConfig and the
-corresponding Private Keys, as described in Section 3.1 of {{ECHO}}, to function
-properly.
 
 # Applicability
 
@@ -339,6 +336,30 @@ with these capabilities can always block a secured handshake of any kind, and
 can force the client choose between an insecure handshake and not communicating
 at all.
 
+## New Attack
+
+[TODO: An attacker could easily craft a Client Initial designed to fail,
+spoofing the target IP. This will trigger a VN packet, which means that no one
+will detect subsequent VN injections.]
+
+## Intermediaries
+
+Intermediaries that rely on the contents of the Client Hello (e.g., a load
+balancer that routes between servers with the same IP address based on the SNI
+field in the Client Hello) MUST have access to the ECHConfig and the
+corresponding Private Keys, as described in Section 3.1 of {{ECHO}}, to function
+properly.
+
+Note that in the event of multiple mistrustful entities behind the same such
+router, sharing the context between entities would increase the likelihood of
+leakage of the private key to outside observers. Furthermore, assigning each
+entity its own config ID will reveal the target of each client Initial in
+cleartext. Therefore, there is no alternative but for the load balancer to
+trial decrypt with each entity's ECHConfig to obtain the correct routing.
+
+[TODO: If they all fail, then what? What VN do we send? It's not clear how the
+client can recover the ECHConfig from the public_name.]
+
 ## Initial Packet Injection
 
 QUIC version 1 handshakes are vulnerable to DoS from observers for the short
@@ -370,6 +391,14 @@ computational cost. Such a design could also eliminate the complexity associated
 with adding an arbitrary value to the Packet Length field. The purpose of this
 addition is to avoid trial decryption to verify the configuration is correct,
 but this cost is negligible compared to extracting the shared secret.
+
+## Less Trial Decryption
+
+Unlike ECH, Protected Initials can use the Packet Length Offset mechanism to
+detect key mismatches without trial decryption, saving resources in the case
+of genuine misconfiguration. However, an attacker attempting to force trial
+decryption can easily force a decryption that will ultimately result in the
+packet being silently dropped.
 
 # IANA Considerations
 
