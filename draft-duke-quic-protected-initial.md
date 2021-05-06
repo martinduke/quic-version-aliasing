@@ -323,7 +323,7 @@ up the possibility of Version Downgrade attacks.
 
 The weak form of this attack simply observes the Client Initial and delivers a
 Version Negotiation Packet before the client responds. Clients SHOULD wait for
-an interval (roughly the QUIC Probe Timeout, see {{!I-D.ietf-quic-recovery)
+an interval (roughly the QUIC Probe Timeout, see {{!I-D.ietf-quic-recovery}})
 before acting on a Version Negotiation Packet that indicates a lack of support
 for Protected Initials when a DNS record indicating such support exists, to
 allow a later valid server response to arrive. If it does, the client MUST
