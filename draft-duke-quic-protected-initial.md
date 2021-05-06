@@ -31,7 +31,7 @@ via the Domain Name System (DNS) or other out-of-band system.
 
 Discussion of this work is encouraged to happen on the QUIC IETF
 mailing list [](quic@ietf.org) or on the GitHub repository which
-contains the draft: 
+contains the draft:
 [](https://github.com/martinduke/quic-version-aliasing).
 
 --- middle
@@ -87,7 +87,7 @@ following table summarizes the advantages and disadvantages of each.
 | Fields Protected | Some of Client Hello | All Initial Payloads | All Initial Payloads |
 | Delay when server loses its keys | 1 RTT | 2 RTT | 2 RTT |
 | Works with TLS over TCP | Yes | No | No |
-| Attacker cannot force use of public SNI | Yes | No | No |
+| No trial decryption for multiple entities | Yes | No | No |
 | First-connection protection | Yes | Yes | No |
 | All-Symmetric Encryption | No | No | Yes |
 | Greases the Version Field | No | No | Yes |
@@ -95,13 +95,13 @@ following table summarizes the advantages and disadvantages of each.
 | Prevents Initial packet injection attacks | No | Yes | Yes |
 | Prevents Retry injection attacks | No | No | Yes |
 
-Initial packet injection attacks are described in Section 21.2 of
-{{QUIC-TRANSPORT}}.
+The more complex properties in the table are described in {{intermediaries}} and
+{{security-considerations}}.
 
 Both ECH and Protected Initials are complimentary with Version Aliasing: they
-both provide a computationally expensive way to protect parts of the Initial
-packet during the first connection between client and server, , after which
-Version Aliasing can protect future exchanges with several desirable properties.
+provide a computationally expensive way to protect parts of the Initial packet
+during the first connection between client and server, after which Version
+Aliasing can protect future exchanges with several desirable properties.
 
 # Conventions
 
@@ -278,7 +278,7 @@ packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
 version 1. However, since the versions have identical properties after the
 Initial packet exchange, there is little value in such a trasition.
 
-# Intermediaries
+# Intermediaries {#intermediaries}
 
 Intermediaries that rely on the contents of the Client Hello (e.g., a load
 balancer that routes between servers with the same IP address based on the SNI
@@ -293,31 +293,59 @@ capabilities available to applications. Therefore, all Application Layer
 Protocol Negotiation (ALPN) ({{?RFC7301}}) codepoints specified to operate over
 QUICv1 can also operate over this version of QUIC.
 
-# Security and Privacy Considerations
+# Security and Privacy Considerations {#security-considerations}
 
 Sections 10.2, 10.3, 10.4, and 10.6 of {{ECHO}} apply to QUIC Protected Initials
 as well.
 
-Sections 7.2, 7.7, and 7.8 of {{VERSION-ALIASING}} are also applicable.
+Section 7.8 of {{VERSION-ALIASING}} is also applicable.
 
-# IANA Considerations
+## Key Loss and Version Downgrade
 
-This document request that IANA add the following entry to the QUIC version
-registry:
+ECH and Protected Initials both rely on shared cryptographic configuration state
+between client and server, delivered by an out-of-band method, usually DNS.
 
-Value: TBD
+In the event this synchronization fails in ECH, the client-facing server can
+complete the handshake, authenticate itself against the "public name" in the
+unprotected part of the Client Hello, and provide updated configuration state,
+allowing a resumed attempt after 1 RTT.
 
-Status: permanent
+With Protected Initials, when decryption fails there is not enough context to
+complete any sort of authentication to update the crypto context. Instead, the
+server sends a Version Negotiation Packet that causes the client to fall back
+to a version of QUIC with unprotected Initials, in which it could connect to the
+public name and only then acquire the updated crypto context. Note that this
+incurs an additional 1-RTT penalty over ECH, although loss of key
+synchronization is hopefully a rare occurrence.
 
-Specification: This document
+Furthermore, Version Negotiation Packets are not authenticated, which opens
+up the possibility of Version Downgrade attacks.
 
-Change Controller: IETF
+The weak form of this attack simply observes the Client Initial and delivers a
+Version Negotiation Packet before the client responds. Clients SHOULD wait for
+an interval (roughly the QUIC Probe Timeout, see {{!I-D.ietf-quic-recovery)
+before acting on a Version Negotiation Packet that indicates a lack of support
+for Protected Initials when a DNS record indicating such support exists, to
+allow a later valid server response to arrive. If it does, the client MUST
+ignore the Version Negotiation packet.
 
-Contact: QUIC WG
+The strong form of this attack requires the attacker to drop either the Client
+Initial or the Server Initial. In this case, the client has no recourse but to
+connect with an unprotected Initial. As described above, the client can obtain
+an updated context from the public name and then assume subsequent Version
+Negotiation packets are invalid with high probability. Regardless, an attacker
+with these capabilities can always block a secured handshake of any kind, and
+can force the client choose between an insecure handshake and not communicating
+at all.
 
---- back
+## Initial Packet Injection
 
-# More secure Retries
+QUIC version 1 handshakes are vulnerable to DoS from observers for the short
+interval that endpoints keep Initial keys (usually ~1.5 RTTS), since Initial
+Packets are not authenticated. With version aliasing, attackers do not have
+the necessary keys to launch such an attack.
+
+## Retry Injection
 
 This version of QUIC does not improve the security of Retry packets with
 respect to QUIC version 1. The Retry Integrity Tag uses a well-known key and
@@ -342,6 +370,23 @@ with adding an arbitrary value to the Packet Length field. The purpose of this
 addition is to avoid trial decryption to verify the configuration is correct,
 but this cost is negligible compared to extracting the shared secret.
 
+# IANA Considerations
+
+This document request that IANA add the following entry to the QUIC version
+registry:
+
+Value: TBD
+
+Status: permanent
+
+Specification: This document
+
+Change Controller: IETF
+
+Contact: QUIC WG
+
+--- back
+
 # Change Log
 
 > **RFC Editor's Note:** Please remove this section prior to
@@ -352,3 +397,4 @@ but this cost is negligible compared to extracting the shared secret.
 * Additional text comparing ECH, Version Aliasing
 * Clarified server initials are encrypted
 * Retry keys are no longer generated from the shared secret
+* Complete Rewrite of Version Aliasing

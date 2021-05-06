@@ -106,7 +106,7 @@ connection normally.
 
 The Packet Length Offset provides a low-cost way for the server to verify it can
 derive a valid salt from the inputs without trial decryption. This has important
-security implications, as described in {{retry-injection}}. 
+security implications, as described in {{retry-injection}}.
 
 When generating a salt and Packet Length Offset, servers can choose between
 doing so randomly and storing the mapping, or using a cryptographic process to
@@ -165,7 +165,7 @@ the ECH distribution mechanism to generate secure initial keys and Retry
 integrity tags. While still dependent on a key distribution system,
 asymmetric encryption, and relatively large amounts of data in the client's
 Initial packet, it offers similar protection properties to Version Aliasing
-while still not greasing the version field. 
+while still not greasing the version field.
 
 A maximally privacy-protecting client might use Protected Initials for any
 connection attempts for which it does not have an unexpired aliased version, and
@@ -319,12 +319,41 @@ and computing salts, or share a common database of mappings. They MUST NOT
 generate version numbers that any of them would advertise in a Version
 Negotiation Packet or Transport Parameter.
 
-# Client Behavior
+## Multiple Entities With One Load Balancer
+
+If mutually mistrustful entities share the same IP address and port, incoming
+packets are usually routed by examining the SNI at a load balancer server that
+routes the traffic. This use case makes concealing the contents of the Client
+Initial especially attractive, as the IP address reveals less information. There
+are several solutions to solve this problem.
+
+* All entities have a common crytographic context for deriving salts and Packet
+Length Offsets from the version number and ITE. This is straightforward but also
+increases the risk that the keys will leak to an attacker which could then
+decode Initial packets from point where the packets are observable. This is
+therefore NOT RECOMMENDED.
+
+* Each entity has its own cryptographic context, shared with the load balancer.
+This requires the load balancer to trial decrypt each incoming Initial with
+each context.
+
+* Each entity reports its Version Aliasing Transport Parameters to the load
+balancer out-of-band.
+
+Note that {{ECHO}} solves this problem elegantly by only holding the
+cryptographic information at the load balancer, which decodes the sensitive
+information on behalf of the back-end server.
+
+# Client Behavior {#client-behavior}
 
 When a client receives the Version Alias Transport Parameter, it MAY cache the
 version number, ITE, salt, Packet Length Offset, and the expiration of these
 values. It MAY use the version number and ITE in a subsequent connection and
 compute the initial keys using the provided salt.
+
+The Client MUST NOT use the contents of a Version Alias transport parameter if
+the handshake does not (1) later authenticate the server name and (2)
+result in both endpoints computing the same 1-RTT keys. See {{impersonation}}.
 
 Clients MUST NOT advertise aliased versions in the Version Negotiation Transport
 Parameter unless they support a standard version with the same number. Including
@@ -436,45 +465,66 @@ This document intends to improve the existing security and privacy properties of
 QUIC by dramatically improving the secrecy of QUIC Initial Packets. However,
 there are new attacks against this mechanism.
 
+## Endpoint Impersonation {#impersonation}
+
+An on-path attacker might respond to an Initial Packet with a standard version
+with a Version Aliasing Transport Parameter that then caused the client to
+reveal sensitive information in a subsequent Initial.
+
+As described in {{client-behavior}}, clients cannot use the contents of a
+Version Aliasing transport parameter until they have authenticated the source
+as a trusted domain, and have verified that the 1RTT key derivation is
+identical at both endpoints.
+
 ## First-Connection Privacy {#first-connection}
 
 As version aliasing requires one connection over a standard QUIC version to
 acquire initial state, this initial connection leaks some information about
 the true target.
 
-The client MAY alter its Initial Packet (e.g., its ALPN field) to sanitize
-sensitive information and obtain another aliased version before proceeding with
-its true request. Advice for the Outer ClientHello in Section 10.5 of {{ECHO}}
-applies here. When using this technique, the client MUST allow the handshake to
-complete, and verify the 1RTT keys are correct through exchange of a PING or
-other frame, to authenticate and verify the integrity of the resulting version
-aliasing parameters.
+The client MAY alter its Initial Packet to sanitize sensitive information and
+obtain another aliased version before proceeding with its true request. However,
+the client Initial must lead to the authentication of a domain name the client
+trusts to provide accurate Version Aliasing information (possibly the
+public_name from an Encrypted Client Hello configuration from {{ECHO}}). Advice
+for the Outer ClientHello in Section 10.5 of {{ECHO}} applies here.
 
-Servers that support version aliasing SHOULD be liberal about the Initial Packet
-content they receive, keeping the connection open long enough to deliver their
-transport parameters, to support this mechanism.
-
-See also {{?I-D.duke-quic-protected-initial}} for a means of extending privacy
-guarantees to the first connection. Note that if this results in a version
-negotiation packet, that signals that the server has lost the state associated
-with these mechanisms (however, see {{version-downgrade}}), and the client has
-no recourse but the technique described in this section.
+Endpoints are encouraged to instead use {{ECHO}} or
+{{?I-D.duke-quic-protected-initial}} to increase privacy on the first connection
+between a client and server.
 
 ## Version Downgrade {#version-downgrade}
 
-A countermeasure against version aliasing is the downgrade attack. Middleboxes
-may drop a packet containing a random version and imitate the server's failure
-to correctly process it. Clients and servers are required to implement
-{{QUIC-VN}} to detect downgrades.
+When servers lose their cryptographic state, they send a Version Negotiation
+packet to force the server to use a standard version. As these packets are not
+authenticated, this opens the possibility of Version Downgrade attacks to force
+insecure communication.
 
-Note that downgrade detection only works after receiving an authenticated
-response from the server. If a client immediately responds to a Version
-Negotiation Packet with an Initial Packet with a standard version number, it
-will have exposed its request in a format readable to observers before it
-discovers if the Version Negotiation Packet is authentic. A client SHOULD wait
-for an interval to see if a valid response comes from the server before assuming
-the version negotiation is valid. Even after such an interval, the client should
-consider the safeguards in {{first-connection}}.
+{{QUIC-VN}} reveals that a Version Negotiation packet is invalid after the
+Initial Packets have exchanged, with any associated privacy leakage.
+
+The weak form of this attack simply observes the Client Initial and delivers a
+Version Negotiation Packet before the client responds. Clients SHOULD wait for
+an interval (roughly the QUIC Probe Timeout, see {{!I-D.ietf-quic-recovery}})
+before acting on a Version Negotiation Packet that indicates a loss of crypto
+state. If a valid Initial arrives, the client MUST ignore the Version
+Negotiation packet.
+
+The strong form of this attack requires the attacker to drop either the Client
+Initial or the Server Initial. In this case, the client has no recourse but to
+connect with a standard version. As described in {{first-connection}}, the
+client can obtain an updated context and then assume subsequent Version
+Negotiation packets are invalid with high probability. Regardless, an attacker
+with these capabilities can always block a secured handshake of any kind, and
+can force the client choose between an insecure handshake and not communicating
+at all.
+
+## Initial Packet Injection
+
+QUIC version 1 handshakes are vulnerable to DoS from observers for the short
+interval that endpoints keep Initial keys (usually ~1.5 RTTS), since Initial
+Packets are not authenticated. With version aliasing, attackers do not have
+the necessary keys to launch such an attack.
 
 ## Retry Injection {#retry-injection}
 
@@ -588,6 +638,11 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
+
+## since draft-duke-quic-version-aliasing-05
+
+* Revised security considerations
+* Discussed multiple SNIs behind one load balancer
 
 ## since draft-duke-quic-version-aliasing-04
 
