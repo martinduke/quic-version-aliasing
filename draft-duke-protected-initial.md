@@ -230,7 +230,8 @@ Initial packets use the keys generated in this process.
 
 # Retry Integrity Tag {#retry}
 
-The key and nonce used for the Retry Integrity Tag (Sec 5.8 of
+The Retry packet is identical to QUIC version 1, except that
+the key and nonce used for the Retry Integrity Tag (Sec 5.8 of
 {{!I-D.ietf-quic-tls}} change to:
 
 ~~~
