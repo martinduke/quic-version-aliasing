@@ -1,7 +1,7 @@
 ---
 title: Protected QUIC Initial Packets
 abbrev: protected-initial
-docname: draft-duke-quic-protected-initial-01
+docname: draft-duke-quic-protected-initial-latest
 category: std
 ipr: trust200902
 area: Transport
