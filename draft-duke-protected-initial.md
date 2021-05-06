@@ -230,10 +230,15 @@ Initial packets use the keys generated in this process.
 
 # Retry Integrity Tag {#retry}
 
-The Retry packet is identical to QUIC version 1, except that the secret key K
-and nonce N (see Sec 5.8 of {{QUIC-TLS}}) are derived from the shared_secret
-instead of the secret provided there. Also, the labels are as described in
-{{labels}}.
+The Retry packet is identical to QUIC version 1, except that
+the key and nonce used for the Retry Integrity Tag (Sec 5.8 of
+{{!I-D.ietf-quic-tls}} change to:
+
+~~~
+secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
+key = 0xbe0c690b9f66575a1d766b54e368c84e
+nonce = 0x461599d35d632bf2239825bb
+~~~
 
 # Version Negotiation
 
@@ -277,7 +282,7 @@ QUICv1 can also operate over this version of QUIC.
 Sections 10.2, 10.3, 10.4, and 10.6 of {{ECHO}} apply to QUIC Protected Initials
 as well.
 
-Sections 7.2, 7.3, 7.7, and 7.8 of {{VERSION-ALIASING}} are also applicable.
+Sections 7.2, 7.7, and 7.8 of {{VERSION-ALIASING}} are also applicable.
 
 # IANA Considerations
 
@@ -296,6 +301,31 @@ Contact: QUIC WG
 
 --- back
 
+# More secure Retries
+
+This version of QUIC does not improve the security of Retry packets with
+respect to QUIC version 1. The Retry Integrity Tag uses a well-known key and
+relies on data in the Initial that triggered the Retry. It therefore protects
+against transmission errors and injection of Retry packets by off-path attackers
+that cannot observe the Initial. To detect Retry packets injected by observers,
+it relies on the subsequent exchange of transport parameters.
+
+An attacker that consistently injects Retry packets in front of a server that
+also consistently sends Retry can result in a Denial of Service, as clients
+cannot accept two Retries in the same connection.
+
+An alternate design would use the shared secret derived from the Client Initial
+Packet to generate keys for the Retry Integrity Tag, which would allow the
+client to immediately discard Retries injected by other parties. Unfortunately,
+this would require servers to perform an asymmetric crypto operation to send a
+Retry packet, when in a state where it is likely computationally limited.
+
+It is possible to enhance the security of Retry by assuming this added
+computational cost. Such a design could also eliminate the complexity associated
+with adding an arbitrary value to the Packet Length field. The purpose of this
+addition is to avoid trial decryption to verify the configuration is correct,
+but this cost is negligible compared to extracting the shared secret.
+
 # Change Log
 
 > **RFC Editor's Note:** Please remove this section prior to
@@ -304,3 +334,4 @@ Contact: QUIC WG
 ## since draft-duke-quic-protected-initials-00
 
 * Clarified server initials are encrypted
+* Retry keys are no longer generated from the shared secret
