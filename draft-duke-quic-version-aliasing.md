@@ -1,7 +1,7 @@
 ---
 title: "QUIC Version Aliasing"
 abbrev: "QUIC Version Aliasing"
-docname: draft-duke-quic-version-aliasing-05
+docname: draft-duke-quic-version-aliasing-latest
 date: {DATE}
 category: exp
 ipr: trust200902
