@@ -5,5 +5,4 @@ draft-duke-quic-version-aliasing.md~
 lib/
 .refcache/*
 metadata.min.js
-.github/*
 .targets.mk
