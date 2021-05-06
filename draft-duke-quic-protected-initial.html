@@ -17,27 +17,9 @@ mailing list   or on the GitHub repository which
 contains the draft: 
  . 
     " name="description">
-<meta content="xml2rfc 3.7.0" name="generator">
+<meta content="xml2rfc 2.40.1" name="generator">
 <meta content="draft-duke-quic-protected-initial" name="ietf.draft">
-<!-- Generator version information:
-  xml2rfc 3.7.0
-    Python 3.8.8
-    appdirs 1.4.4
-    ConfigArgParse 1.2.3
-    google-i18n-address 2.4.0
-    html5lib 1.1
-    intervaltree 3.1.0
-    Jinja2 2.11.2
-    kitchen 1.2.6
-    lxml 4.6.3
-    pycountry 20.7.3
-    pyflakes 2.2.0
-    PyYAML 5.4.1
-    requests 2.25.1
-    setuptools 51.3.3
-    six 1.15.0
--->
-<link href="draft-duke-quic-protected-initial.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-duke-quic-protected-initial.xml" type="application/rfc+xml" rel="alternate">
 <link href="#copyright" rel="license">
 <style type="text/css">@import url('https://martinthomson.github.io/i-d-template/fonts.css');
 
@@ -953,85 +935,85 @@ contains the draft:
         <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
 <a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
         </h2>
-<nav class="toc"><ul class="compact toc ulEmpty">
-<li class="compact toc ulEmpty" id="section-toc.1-1.1">
-            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
-<ul class="compact toc ulEmpty">
-<li class="compact toc ulEmpty" id="section-toc.1-1.1.2.1">
-                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-relationship-to-ech-and-ver" class="xref">Relationship to ECH and Version Aliasing</a></p>
+<nav class="toc"><ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a><a href="#section-toc.1-1.1.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-relationship-to-ech-and-ver" class="xref">Relationship to ECH and Version Aliasing</a><a href="#section-toc.1-1.1.2.1.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="xref">2</a>.  <a href="#name-conventions" class="xref">Conventions</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-conventions" class="xref">Conventions</a><a href="#section-toc.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-key-configuration" class="xref">Key Configuration</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-key-configuration" class="xref">Key Configuration</a><a href="#section-toc.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-version-number" class="xref">Version Number</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-version-number" class="xref">Version Number</a><a href="#section-toc.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-key-derivation-labels" class="xref">Key Derivation Labels</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-key-derivation-labels" class="xref">Key Derivation Labels</a><a href="#section-toc.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-initial-packet-header" class="xref">Initial Packet Header</a></p>
-<ul class="compact toc ulEmpty">
-<li class="compact toc ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="xref">6.1</a>.  <a href="#name-encryption-context" class="xref">Encryption Context</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-initial-packet-header" class="xref">Initial Packet Header</a><a href="#section-toc.1-1.6.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="xref">6.1</a>.  <a href="#name-encryption-context" class="xref">Encryption Context</a><a href="#section-toc.1-1.6.2.1.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-client-packet-protection-pr" class="xref">Client Packet Protection Procedure</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-client-packet-protection-pr" class="xref">Client Packet Protection Procedure</a><a href="#section-toc.1-1.7.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-server-packet-protection-pr" class="xref">Server Packet Protection Procedure</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-server-packet-protection-pr" class="xref">Server Packet Protection Procedure</a><a href="#section-toc.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-retry-integrity-tag" class="xref">Retry Integrity Tag</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-retry-integrity-tag" class="xref">Retry Integrity Tag</a><a href="#section-toc.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#section-10" class="xref">10</a>. <a href="#name-version-negotiation" class="xref">Version Negotiation</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="xref">10</a>. <a href="#name-version-negotiation" class="xref">Version Negotiation</a><a href="#section-toc.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#section-11" class="xref">11</a>. <a href="#name-intermediaries" class="xref">Intermediaries</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="xref">11</a>. <a href="#name-intermediaries" class="xref">Intermediaries</a><a href="#section-toc.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.12">
-            <p id="section-toc.1-1.12.1"><a href="#section-12" class="xref">12</a>. <a href="#name-applicability" class="xref">Applicability</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#section-12" class="xref">12</a>. <a href="#name-applicability" class="xref">Applicability</a><a href="#section-toc.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.13">
-            <p id="section-toc.1-1.13.1"><a href="#section-13" class="xref">13</a>. <a href="#name-security-and-privacy-consid" class="xref">Security and Privacy Considerations</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#section-13" class="xref">13</a>. <a href="#name-security-and-privacy-consid" class="xref">Security and Privacy Considerations</a><a href="#section-toc.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.14">
-            <p id="section-toc.1-1.14.1"><a href="#section-14" class="xref">14</a>. <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#section-14" class="xref">14</a>. <a href="#name-iana-considerations" class="xref">IANA Considerations</a><a href="#section-toc.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.15">
-            <p id="section-toc.1-1.15.1"><a href="#section-15" class="xref">15</a>. <a href="#name-references" class="xref">References</a></p>
-<ul class="compact toc ulEmpty">
-<li class="compact toc ulEmpty" id="section-toc.1-1.15.2.1">
-                <p id="section-toc.1-1.15.2.1.1"><a href="#section-15.1" class="xref">15.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#section-15" class="xref">15</a>. <a href="#name-references" class="xref">References</a><a href="#section-toc.1-1.15.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.15.2.1">
+                <p id="section-toc.1-1.15.2.1.1"><a href="#section-15.1" class="xref">15.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a><a href="#section-toc.1-1.15.2.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="compact toc ulEmpty" id="section-toc.1-1.15.2.2">
-                <p id="section-toc.1-1.15.2.2.1"><a href="#section-15.2" class="xref">15.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.15.2.2">
+                <p id="section-toc.1-1.15.2.2.1"><a href="#section-15.2" class="xref">15.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a><a href="#section-toc.1-1.15.2.2.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.16">
-            <p id="section-toc.1-1.16.1"><a href="#section-appendix.a" class="xref">Appendix A</a>.  <a href="#name-more-secure-retries" class="xref">More secure Retries</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.16">
+            <p id="section-toc.1-1.16.1"><a href="#section-appendix.a" class="xref">Appendix A</a>.  <a href="#name-more-secure-retries" class="xref">More secure Retries</a><a href="#section-toc.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.17">
-            <p id="section-toc.1-1.17.1"><a href="#section-appendix.b" class="xref">Appendix B</a>.  <a href="#name-change-log" class="xref">Change Log</a></p>
-<ul class="compact toc ulEmpty">
-<li class="compact toc ulEmpty" id="section-toc.1-1.17.2.1">
-                <p id="section-toc.1-1.17.2.1.1"><a href="#section-b.1" class="xref">B.1</a>.  <a href="#name-since-draft-duke-quic-prote" class="xref">since draft-duke-quic-protected-initials-00</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.17">
+            <p id="section-toc.1-1.17.1"><a href="#section-appendix.b" class="xref">Appendix B</a>.  <a href="#name-change-log" class="xref">Change Log</a><a href="#section-toc.1-1.17.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.17.2.1">
+                <p id="section-toc.1-1.17.2.1.1"><a href="#section-b.1" class="xref">B.1</a>.  <a href="#name-since-draft-duke-quic-prote" class="xref">since draft-duke-quic-protected-initials-00</a><a href="#section-toc.1-1.17.2.1.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="compact toc ulEmpty" id="section-toc.1-1.18">
-            <p id="section-toc.1-1.18.1"><a href="#section-appendix.c" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.18">
+            <p id="section-toc.1-1.18.1"><a href="#section-appendix.c" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a><a href="#section-toc.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
-        </ul>
+</ul>
 </nav>
 </section>
 </div>
@@ -1422,29 +1404,23 @@ registry:<a href="#section-14-1" class="pilcrow">¶</a></p>
         </h3>
 <dl class="references">
 <dt id="ECHO">[ECHO]</dt>
-        <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-10</span>, <time datetime="2021-03-08" class="refDate">8 March 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-10.txt">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-10.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Rescorla, E.</span><span class="refAuthor">, Oku, K.</span><span class="refAuthor">, Sullivan, N.</span><span class="refAuthor">, and C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-10</span>, <time datetime="2021-03-08">8 March 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-tls-esni-10.txt">https://www.ietf.org/archive/id/draft-ietf-tls-esni-10.txt</a>&gt;</span>. </dd>
 <dt id="HPKE">[HPKE]</dt>
-        <dd>
-<span class="refAuthor">Barnes, R. L.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-hpke-08</span>, <time datetime="2021-02-15" class="refDate">15 February 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-08.txt">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-08.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Barnes, R. L.</span><span class="refAuthor">, Bhargavan, K.</span><span class="refAuthor">, Lipp, B.</span><span class="refAuthor">, and C. A. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-hpke-08</span>, <time datetime="2021-02-15">15 February 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-irtf-cfrg-hpke-08.txt">https://www.ietf.org/archive/id/draft-irtf-cfrg-hpke-08.txt</a>&gt;</span>. </dd>
 <dt id="I-D.ietf-quic-tls">[I-D.ietf-quic-tls]</dt>
-        <dd>
-<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">S. Turner</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-tls-34</span>, <time datetime="2021-01-14" class="refDate">14 January 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-tls-34.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-tls-34.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Thomson, M.</span><span class="refAuthor"> and S. Turner</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-tls-34</span>, <time datetime="2021-01-14">14 January 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-tls-34.txt">https://www.ietf.org/archive/id/draft-ietf-quic-tls-34.txt</a>&gt;</span>. </dd>
 <dt id="I-D.ietf-quic-version-negotiation">[I-D.ietf-quic-version-negotiation]</dt>
-        <dd>
-<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-03</span>, <time datetime="2021-02-04" class="refDate">4 February 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-03.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-03.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Schinazi, D.</span><span class="refAuthor"> and E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-03</span>, <time datetime="2021-02-04">4 February 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-version-negotiation-03.txt">https://www.ietf.org/archive/id/draft-ietf-quic-version-negotiation-03.txt</a>&gt;</span>. </dd>
 <dt id="QUIC-TLS">[QUIC-TLS]</dt>
-        <dd>
-<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">S. Turner</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-tls-34</span>, <time datetime="2021-01-14" class="refDate">14 January 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-tls-34.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-tls-34.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Thomson, M.</span><span class="refAuthor"> and S. Turner</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-tls-34</span>, <time datetime="2021-01-14">14 January 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-tls-34.txt">https://www.ietf.org/archive/id/draft-ietf-quic-tls-34.txt</a>&gt;</span>. </dd>
 <dt id="QUIC-TRANSPORT">[QUIC-TRANSPORT]</dt>
-      <dd>
-<span class="refAuthor">Iyengar, J.</span> and <span class="refAuthor">M. Thomson</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-transport-34</span>, <time datetime="2021-01-14" class="refDate">14 January 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-transport-34.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-transport-34.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Iyengar, J.</span><span class="refAuthor"> and M. Thomson</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-transport-34</span>, <time datetime="2021-01-14">14 January 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-transport-34.txt">https://www.ietf.org/archive/id/draft-ietf-quic-transport-34.txt</a>&gt;</span>. </dd>
 </dl>
 </section>
 <section id="section-15.2">
@@ -1453,21 +1429,17 @@ registry:<a href="#section-14-1" class="pilcrow">¶</a></p>
         </h3>
 <dl class="references">
 <dt id="RFC2119">[RFC2119]</dt>
-        <dd>
-<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc2119">https://datatracker.ietf.org/doc/html/rfc2119</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
 <dt id="RFC7301">[RFC7301]</dt>
-        <dd>
-<span class="refAuthor">Friedl, S.</span>, <span class="refAuthor">Popov, A.</span>, <span class="refAuthor">Langley, A.</span>, and <span class="refAuthor">E. Stephan</span>, <span class="refTitle">"Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension"</span>, <span class="seriesInfo">RFC 7301</span>, <span class="seriesInfo">DOI 10.17487/RFC7301</span>, <time datetime="2014-07" class="refDate">July 2014</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc7301">https://datatracker.ietf.org/doc/html/rfc7301</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Friedl, S.</span><span class="refAuthor">, Popov, A.</span><span class="refAuthor">, Langley, A.</span><span class="refAuthor">, and E. Stephan</span>, <span class="refTitle">"Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension"</span>, <span class="seriesInfo">RFC 7301</span>, <span class="seriesInfo">DOI 10.17487/RFC7301</span>, <time datetime="2014-07">July 2014</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc7301">https://www.rfc-editor.org/info/rfc7301</a>&gt;</span>. </dd>
 <dt id="RFC8446">[RFC8446]</dt>
-        <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08" class="refDate">August 2018</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc8446">https://datatracker.ietf.org/doc/html/rfc8446</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8446">https://www.rfc-editor.org/info/rfc8446</a>&gt;</span>. </dd>
 <dt id="VERSION-ALIASING">[VERSION-ALIASING]</dt>
-      <dd>
-<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version Aliasing"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-version-aliasing-05</span>, <time datetime="2021-05-04" class="refDate">4 May 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-version-aliasing-05.txt">https://datatracker.ietf.org/doc/html/draft-duke-quic-version-aliasing-05.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version Aliasing"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-version-aliasing-04</span>, <time datetime="2020-10-30">30 October 2020</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-duke-quic-version-aliasing-04.txt">https://www.ietf.org/archive/id/draft-duke-quic-version-aliasing-04.txt</a>&gt;</span>. </dd>
 </dl>
 </section>
 </section>
@@ -1502,25 +1474,25 @@ but this cost is negligible compared to extracting the shared secret.<a href="#s
       <h2 id="name-change-log">
 <a href="#section-appendix.b" class="section-number selfRef">Appendix B. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
       </h2>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-appendix.b-1.1">
+<ul class="ulEmpty">
+<li class="ulEmpty" id="section-appendix.b-1.1">
           <strong>RFC Editor's Note:</strong> Please remove this section prior to
 publication of a final version of this document.<a href="#section-appendix.b-1.1" class="pilcrow">¶</a>
 </li>
-      </ul>
+</ul>
 <div id="since-draft-duke-quic-protected-initials-00">
 <section id="section-b.1">
         <h2 id="name-since-draft-duke-quic-prote">
 <a href="#section-b.1" class="section-number selfRef">B.1. </a><a href="#name-since-draft-duke-quic-prote" class="section-name selfRef">since draft-duke-quic-protected-initials-00</a>
         </h2>
-<ul class="normal">
-<li class="normal" id="section-b.1-1.1">Additional text comparing ECH, Version Aliasing<a href="#section-b.1-1.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-b.1-1.1">Additional text comparing ECH, Version Aliasing<a href="#section-b.1-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.1-1.2">Clarified server initials are encrypted<a href="#section-b.1-1.2" class="pilcrow">¶</a>
+<li id="section-b.1-1.2">Clarified server initials are encrypted<a href="#section-b.1-1.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.1-1.3">Retry keys are no longer generated from the shared secret<a href="#section-b.1-1.3" class="pilcrow">¶</a>
+<li id="section-b.1-1.3">Retry keys are no longer generated from the shared secret<a href="#section-b.1-1.3" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 </section>
 </div>
 </section>

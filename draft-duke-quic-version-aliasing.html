@@ -17,27 +17,9 @@ should prevent middlebox ossification around the current set of published
 version numbers and the contents of QUIC Initial packets, as well as improving
 the protocol's privacy properties. 
     " name="description">
-<meta content="xml2rfc 3.7.0" name="generator">
+<meta content="xml2rfc 2.40.1" name="generator">
 <meta content="draft-duke-quic-version-aliasing" name="ietf.draft">
-<!-- Generator version information:
-  xml2rfc 3.7.0
-    Python 3.8.8
-    appdirs 1.4.4
-    ConfigArgParse 1.2.3
-    google-i18n-address 2.4.0
-    html5lib 1.1
-    intervaltree 3.1.0
-    Jinja2 2.11.2
-    kitchen 1.2.6
-    lxml 4.6.3
-    pycountry 20.7.3
-    pyflakes 2.2.0
-    PyYAML 5.4.1
-    requests 2.25.1
-    setuptools 51.3.3
-    six 1.15.0
--->
-<link href="draft-duke-quic-version-aliasing.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-duke-quic-version-aliasing.xml" type="application/rfc+xml" rel="alternate">
 <link href="#copyright" rel="license">
 <style type="text/css">@import url('https://martinthomson.github.io/i-d-template/fonts.css');
 
@@ -953,125 +935,125 @@ the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">
         <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
 <a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
         </h2>
-<nav class="toc"><ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.1">
-            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
-<ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.1.2.1">
-                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-terminology" class="xref">Terminology</a></p>
+<nav class="toc"><ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a><a href="#section-toc.1-1.1.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-terminology" class="xref">Terminology</a><a href="#section-toc.1-1.1.2.1.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-protocol-overview" class="xref">Protocol Overview</a></p>
-<ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.2.2.1">
-                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="xref">2.1</a>.  <a href="#name-relationship-to-ech-and-qui" class="xref">Relationship to ECH and QUIC Protected Initials</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-protocol-overview" class="xref">Protocol Overview</a><a href="#section-toc.1-1.2.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1"><a href="#section-2.1" class="xref">2.1</a>.  <a href="#name-relationship-to-ech-and-qui" class="xref">Relationship to ECH and QUIC Protected Initials</a><a href="#section-toc.1-1.2.2.1.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-the-version-alias-transport" class="xref">The Version Alias Transport Parameter</a></p>
-<ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.3.2.1">
-                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-version-number-generation" class="xref">Version Number Generation</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-the-version-alias-transport" class="xref">The Version Alias Transport Parameter</a><a href="#section-toc.1-1.3.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-version-number-generation" class="xref">Version Number Generation</a><a href="#section-toc.1-1.3.2.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.3.2.2">
-                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="xref">3.2</a>.  <a href="#name-initial-token-extension-ite" class="xref">Initial Token Extension (ITE) Generation</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="xref">3.2</a>.  <a href="#name-initial-token-extension-ite" class="xref">Initial Token Extension (ITE) Generation</a><a href="#section-toc.1-1.3.2.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.3.2.3">
-                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="xref">3.3</a>.  <a href="#name-salt-and-packet-length-offs" class="xref">Salt and Packet Length Offset Generation</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="xref">3.3</a>.  <a href="#name-salt-and-packet-length-offs" class="xref">Salt and Packet Length Offset Generation</a><a href="#section-toc.1-1.3.2.3.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.3.2.4">
-                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="xref">3.4</a>.  <a href="#name-expiration-time" class="xref">Expiration Time</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.4">
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="xref">3.4</a>.  <a href="#name-expiration-time" class="xref">Expiration Time</a><a href="#section-toc.1-1.3.2.4.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.3.2.5">
-                <p id="section-toc.1-1.3.2.5.1"><a href="#section-3.5" class="xref">3.5</a>.  <a href="#name-format" class="xref">Format</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.5">
+                <p id="section-toc.1-1.3.2.5.1"><a href="#section-3.5" class="xref">3.5</a>.  <a href="#name-format" class="xref">Format</a><a href="#section-toc.1-1.3.2.5.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.3.2.6">
-                <p id="section-toc.1-1.3.2.6.1"><a href="#section-3.6" class="xref">3.6</a>.  <a href="#name-multiple-servers-for-one-do" class="xref">Multiple Servers for One Domain</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.6">
+                <p id="section-toc.1-1.3.2.6.1"><a href="#section-3.6" class="xref">3.6</a>.  <a href="#name-multiple-servers-for-one-do" class="xref">Multiple Servers for One Domain</a><a href="#section-toc.1-1.3.2.6.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-client-behavior" class="xref">Client Behavior</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-client-behavior" class="xref">Client Behavior</a><a href="#section-toc.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-server-actions-on-aliased-v" class="xref">Server Actions on Aliased Version Numbers</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-server-actions-on-aliased-v" class="xref">Server Actions on Aliased Version Numbers</a><a href="#section-toc.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-considerations-for-retry-pa" class="xref">Considerations for Retry Packets</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-considerations-for-retry-pa" class="xref">Considerations for Retry Packets</a><a href="#section-toc.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-security-and-privacy-consid" class="xref">Security and Privacy Considerations</a></p>
-<ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.7.2.1">
-                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="xref">7.1</a>.  <a href="#name-first-connection-privacy" class="xref">First-Connection Privacy</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-security-and-privacy-consid" class="xref">Security and Privacy Considerations</a><a href="#section-toc.1-1.7.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="xref">7.1</a>.  <a href="#name-first-connection-privacy" class="xref">First-Connection Privacy</a><a href="#section-toc.1-1.7.2.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.2">
-                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="xref">7.2</a>.  <a href="#name-version-downgrade" class="xref">Version Downgrade</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="xref">7.2</a>.  <a href="#name-version-downgrade" class="xref">Version Downgrade</a><a href="#section-toc.1-1.7.2.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="xref">7.3</a>.  <a href="#name-retry-injection" class="xref">Retry Injection</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="xref">7.3</a>.  <a href="#name-retry-injection" class="xref">Retry Injection</a><a href="#section-toc.1-1.7.2.3.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.4">
-                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="xref">7.4</a>.  <a href="#name-increased-linkability" class="xref">Increased Linkability</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.4">
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="xref">7.4</a>.  <a href="#name-increased-linkability" class="xref">Increased Linkability</a><a href="#section-toc.1-1.7.2.4.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.5">
-                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="xref">7.5</a>.  <a href="#name-salt-polling" class="xref">Salt Polling</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.5">
+                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="xref">7.5</a>.  <a href="#name-salt-polling" class="xref">Salt Polling</a><a href="#section-toc.1-1.7.2.5.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.6">
-                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="xref">7.6</a>.  <a href="#name-increased-processing-of-gar" class="xref">Increased Processing of Garbage UDP Packets</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.6">
+                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="xref">7.6</a>.  <a href="#name-increased-processing-of-gar" class="xref">Increased Processing of Garbage UDP Packets</a><a href="#section-toc.1-1.7.2.6.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.7">
-                <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="xref">7.7</a>.  <a href="#name-increased-retry-overhead" class="xref">Increased Retry Overhead</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.7">
+                <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="xref">7.7</a>.  <a href="#name-increased-retry-overhead" class="xref">Increased Retry Overhead</a><a href="#section-toc.1-1.7.2.7.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.7.2.8">
-                <p id="section-toc.1-1.7.2.8.1"><a href="#section-7.8" class="xref">7.8</a>.  <a href="#name-request-forgery" class="xref">Request Forgery</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.7.2.8">
+                <p id="section-toc.1-1.7.2.8.1"><a href="#section-7.8" class="xref">7.8</a>.  <a href="#name-request-forgery" class="xref">Request Forgery</a><a href="#section-toc.1-1.7.2.8.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a><a href="#section-toc.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-references" class="xref">References</a></p>
-<ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.9.2.1">
-                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="xref">9.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-references" class="xref">References</a><a href="#section-toc.1-1.9.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="xref">9.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a><a href="#section-toc.1-1.9.2.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.9.2.2">
-                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="xref">9.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="xref">9.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a><a href="#section-toc.1-1.9.2.2.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#section-appendix.a" class="xref">Appendix A</a>.  <a href="#name-acknowledgments" class="xref">Acknowledgments</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-appendix.a" class="xref">Appendix A</a>.  <a href="#name-acknowledgments" class="xref">Acknowledgments</a><a href="#section-toc.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#section-appendix.b" class="xref">Appendix B</a>.  <a href="#name-change-log" class="xref">Change Log</a></p>
-<ul class="ulEmpty compact toc">
-<li class="ulEmpty compact toc" id="section-toc.1-1.11.2.1">
-                <p id="section-toc.1-1.11.2.1.1"><a href="#section-b.1" class="xref">B.1</a>.  <a href="#name-since-draft-duke-quic-versi" class="xref">since draft-duke-quic-version-aliasing-04</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-appendix.b" class="xref">Appendix B</a>.  <a href="#name-change-log" class="xref">Change Log</a><a href="#section-toc.1-1.11.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.11.2.1">
+                <p id="section-toc.1-1.11.2.1.1"><a href="#section-b.1" class="xref">B.1</a>.  <a href="#name-since-draft-duke-quic-versi" class="xref">since draft-duke-quic-version-aliasing-04</a><a href="#section-toc.1-1.11.2.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.11.2.2">
-                <p id="section-toc.1-1.11.2.2.1"><a href="#section-b.2" class="xref">B.2</a>.  <a href="#name-since-draft-duke-quic-versio" class="xref">since draft-duke-quic-version-aliasing-03</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.11.2.2">
+                <p id="section-toc.1-1.11.2.2.1"><a href="#section-b.2" class="xref">B.2</a>.  <a href="#name-since-draft-duke-quic-versio" class="xref">since draft-duke-quic-version-aliasing-03</a><a href="#section-toc.1-1.11.2.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.11.2.3">
-                <p id="section-toc.1-1.11.2.3.1"><a href="#section-b.3" class="xref">B.3</a>.  <a href="#name-since-draft-duke-quic-version" class="xref">since draft-duke-quic-version-aliasing-02</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.11.2.3">
+                <p id="section-toc.1-1.11.2.3.1"><a href="#section-b.3" class="xref">B.3</a>.  <a href="#name-since-draft-duke-quic-version" class="xref">since draft-duke-quic-version-aliasing-02</a><a href="#section-toc.1-1.11.2.3.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.11.2.4">
-                <p id="section-toc.1-1.11.2.4.1"><a href="#section-b.4" class="xref">B.4</a>.  <a href="#name-since-draft-duke-quic-version-" class="xref">since draft-duke-quic-version-aliasing-01</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.11.2.4">
+                <p id="section-toc.1-1.11.2.4.1"><a href="#section-b.4" class="xref">B.4</a>.  <a href="#name-since-draft-duke-quic-version-" class="xref">since draft-duke-quic-version-aliasing-01</a><a href="#section-toc.1-1.11.2.4.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="ulEmpty compact toc" id="section-toc.1-1.11.2.5">
-                <p id="section-toc.1-1.11.2.5.1"><a href="#section-b.5" class="xref">B.5</a>.  <a href="#name-since-draft-duke-quic-version-a" class="xref">since draft-duke-quic-version-aliasing-00</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.11.2.5">
+                <p id="section-toc.1-1.11.2.5.1"><a href="#section-b.5" class="xref">B.5</a>.  <a href="#name-since-draft-duke-quic-version-a" class="xref">since draft-duke-quic-version-aliasing-00</a><a href="#section-toc.1-1.11.2.5.1" class="pilcrow">¶</a></p>
 </li>
-            </ul>
+</ul>
 </li>
-          <li class="ulEmpty compact toc" id="section-toc.1-1.12">
-            <p id="section-toc.1-1.12.1"><a href="#section-appendix.c" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a></p>
+<li class="toc ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#section-appendix.c" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a><a href="#section-toc.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
-        </ul>
+</ul>
 </nav>
 </section>
 </div>
@@ -1173,20 +1155,20 @@ readable with the server's private key.<a href="#section-2.1-1" class="pilcrow">
 <p id="section-2.1-2">Significantly, unlike QUIC Version Aliasing, ECH can operate on the first
 connection between a client and server. However, from the second connection
 QUIC version aliasing provides additional benefits. It:<a href="#section-2.1-2" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-2.1-3.1">greases QUIC header fields and packet formats;<a href="#section-2.1-3.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-2.1-3.1">greases QUIC header fields and packet formats;<a href="#section-2.1-3.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-2.1-3.2">protects all of the TLS Client Hello and Server Hello;<a href="#section-2.1-3.2" class="pilcrow">¶</a>
+<li id="section-2.1-3.2">protects all of the TLS Client Hello and Server Hello;<a href="#section-2.1-3.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-2.1-3.3">mitigates Retry injection attacks;<a href="#section-2.1-3.3" class="pilcrow">¶</a>
+<li id="section-2.1-3.3">mitigates Retry injection attacks;<a href="#section-2.1-3.3" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-2.1-3.4">Does not require a mechanism to distribute the public key;<a href="#section-2.1-3.4" class="pilcrow">¶</a>
+<li id="section-2.1-3.4">Does not require a mechanism to distribute the public key;<a href="#section-2.1-3.4" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-2.1-3.5">uses smaller Client Hello messages; and<a href="#section-2.1-3.5" class="pilcrow">¶</a>
+<li id="section-2.1-3.5">uses smaller Client Hello messages; and<a href="#section-2.1-3.5" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-2.1-3.6">relies on computationally cheap symmetric encryption.<a href="#section-2.1-3.6" class="pilcrow">¶</a>
+<li id="section-2.1-3.6">relies on computationally cheap symmetric encryption.<a href="#section-2.1-3.6" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 <p id="section-2.1-4">If ECH is operating in "Split Mode", where a client-facing server is using the
 SNI information to route to a backend server, the client-facing server MUST
 have the cryptographic context relevant to version aliasing at the backend
@@ -1549,16 +1531,16 @@ Packets, servers would not detect disagreement on the salt beforehand and would
 send a Retry packet signed with a different salt than the client expects.
 Therefore, a client that received a Retry packet with an invalid integrity
 check would not be able to distinguish between the following possibilities:<a href="#section-7.3-3" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-7.3-4.1">a Retry packet corrupted in the network, which should be ignored;<a href="#section-7.3-4.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-7.3-4.1">a Retry packet corrupted in the network, which should be ignored;<a href="#section-7.3-4.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-7.3-4.2">a Retry packet generated by an attacker, which should be ignored; or<a href="#section-7.3-4.2" class="pilcrow">¶</a>
+<li id="section-7.3-4.2">a Retry packet generated by an attacker, which should be ignored; or<a href="#section-7.3-4.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-7.3-4.3">a Retry packet from a server that lost its cryptographic state, meaning that
+<li id="section-7.3-4.3">a Retry packet from a server that lost its cryptographic state, meaning that
 further communication with aliased versions is impossible and the client should
 revert to using a standard version.<a href="#section-7.3-4.3" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 <p id="section-7.3-5">The Packet Length Offset introduces sufficient entropy to make the third
 possibility exceedingly unlikely.<a href="#section-7.3-5" class="pilcrow">¶</a></p>
 </section>
@@ -1585,14 +1567,14 @@ numbers and ITEs to salts for a server. While storage-intensive, this attack
 could increase the probability that at least some version-aliased connections
 are observable. There are three mitigations servers can execute against this
 attack:<a href="#section-7.5-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-7.5-2.1">use a longer ITE to increase the entropy of the salt,<a href="#section-7.5-2.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-7.5-2.1">use a longer ITE to increase the entropy of the salt,<a href="#section-7.5-2.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-7.5-2.2">rate-limit transport parameters sent to a particular client, and/or<a href="#section-7.5-2.2" class="pilcrow">¶</a>
+<li id="section-7.5-2.2">rate-limit transport parameters sent to a particular client, and/or<a href="#section-7.5-2.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-7.5-2.3">set a low expiration time to reduce the lifetime of the attacker's database.<a href="#section-7.5-2.3" class="pilcrow">¶</a>
+<li id="section-7.5-2.3">set a low expiration time to reduce the lifetime of the attacker's database.<a href="#section-7.5-2.3" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 <p id="section-7.5-3">Segmenting the version number space based on client information, i.e. using only
 a subset of version numbers for a certain IP address range, would significantly
 amplify an attack. Observers will generally be on the path to the client and be
@@ -1669,17 +1651,14 @@ Parameter Registry.<a href="#section-8-1" class="pilcrow">¶</a></p>
         </h3>
 <dl class="references">
 <dt id="QUIC-TLS">[QUIC-TLS]</dt>
-        <dd>
-<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">S. Turner</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-tls-34</span>, <time datetime="2021-01-14" class="refDate">14 January 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-tls-34.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-tls-34.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Thomson, M.</span><span class="refAuthor"> and S. Turner</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-tls-34</span>, <time datetime="2021-01-14">14 January 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-tls-34.txt">https://www.ietf.org/archive/id/draft-ietf-quic-tls-34.txt</a>&gt;</span>. </dd>
 <dt id="QUIC-TRANSPORT">[QUIC-TRANSPORT]</dt>
-        <dd>
-<span class="refAuthor">Iyengar, J.</span> and <span class="refAuthor">M. Thomson</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-transport-34</span>, <time datetime="2021-01-14" class="refDate">14 January 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-transport-34.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-transport-34.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Iyengar, J.</span><span class="refAuthor"> and M. Thomson</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-transport-34</span>, <time datetime="2021-01-14">14 January 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-transport-34.txt">https://www.ietf.org/archive/id/draft-ietf-quic-transport-34.txt</a>&gt;</span>. </dd>
 <dt id="QUIC-VN">[QUIC-VN]</dt>
-      <dd>
-<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-03</span>, <time datetime="2021-02-04" class="refDate">4 February 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-03.txt">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-03.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Schinazi, D.</span><span class="refAuthor"> and E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-03</span>, <time datetime="2021-02-04">4 February 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-quic-version-negotiation-03.txt">https://www.ietf.org/archive/id/draft-ietf-quic-version-negotiation-03.txt</a>&gt;</span>. </dd>
 </dl>
 </section>
 <section id="section-9.2">
@@ -1688,21 +1667,17 @@ Parameter Registry.<a href="#section-8-1" class="pilcrow">¶</a></p>
         </h3>
 <dl class="references">
 <dt id="ECHO">[ECHO]</dt>
-        <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-10</span>, <time datetime="2021-03-08" class="refDate">8 March 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-10.txt">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-10.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Rescorla, E.</span><span class="refAuthor">, Oku, K.</span><span class="refAuthor">, Sullivan, N.</span><span class="refAuthor">, and C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-10</span>, <time datetime="2021-03-08">8 March 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-ietf-tls-esni-10.txt">https://www.ietf.org/archive/id/draft-ietf-tls-esni-10.txt</a>&gt;</span>. </dd>
 <dt id="I-D.duke-quic-protected-initial">[I-D.duke-quic-protected-initial]</dt>
-        <dd>
-<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"Protected QUIC Initial Packets"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-protected-initial-00</span>, <time datetime="2021-05-04" class="refDate">4 May 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-00.txt">https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-00.txt</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"Protected QUIC Initial Packets"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-protected-initial-00</span>, <time datetime="2021-05-04">4 May 2021</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-duke-quic-protected-initial-00.txt">https://www.ietf.org/archive/id/draft-duke-quic-protected-initial-00.txt</a>&gt;</span>. </dd>
 <dt id="RFC2119">[RFC2119]</dt>
-        <dd>
-<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc2119">https://datatracker.ietf.org/doc/html/rfc2119</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
 <dt id="RFC8446">[RFC8446]</dt>
-      <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08" class="refDate">August 2018</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc8446">https://datatracker.ietf.org/doc/html/rfc8446</a>&gt;</span>. </dd>
-<dd class="break"></dd>
+<dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8446">https://www.rfc-editor.org/info/rfc8446</a>&gt;</span>. </dd>
 </dl>
 </section>
 </section>
@@ -1719,23 +1694,23 @@ Parameter Registry.<a href="#section-8-1" class="pilcrow">¶</a></p>
       <h2 id="name-change-log">
 <a href="#section-appendix.b" class="section-number selfRef">Appendix B. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
       </h2>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-appendix.b-1.1">
+<ul class="ulEmpty">
+<li class="ulEmpty" id="section-appendix.b-1.1">
           <strong>RFC Editor's Note:</strong> Please remove this section prior to
 publication of a final version of this document.<a href="#section-appendix.b-1.1" class="pilcrow">¶</a>
 </li>
-      </ul>
+</ul>
 <div id="since-draft-duke-quic-version-aliasing-04">
 <section id="section-b.1">
         <h2 id="name-since-draft-duke-quic-versi">
 <a href="#section-b.1" class="section-number selfRef">B.1. </a><a href="#name-since-draft-duke-quic-versi" class="section-name selfRef">since draft-duke-quic-version-aliasing-04</a>
         </h2>
-<ul class="normal">
-<li class="normal" id="section-b.1-1.1">Relationship with Encrypted Client Hello (ECH) and QUIC Protected Initials<a href="#section-b.1-1.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-b.1-1.1">Relationship with Encrypted Client Hello (ECH) and QUIC Protected Initials<a href="#section-b.1-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.1-1.2">Corrected statement about version negotiation<a href="#section-b.1-1.2" class="pilcrow">¶</a>
+<li id="section-b.1-1.2">Corrected statement about version negotiation<a href="#section-b.1-1.2" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-03">
@@ -1743,10 +1718,10 @@ publication of a final version of this document.<a href="#section-appendix.b-1.1
         <h2 id="name-since-draft-duke-quic-versio">
 <a href="#section-b.2" class="section-number selfRef">B.2. </a><a href="#name-since-draft-duke-quic-versio" class="section-name selfRef">since draft-duke-quic-version-aliasing-03</a>
         </h2>
-<ul class="normal">
-<li class="normal" id="section-b.2-1.1">Discussed request forgery attacks<a href="#section-b.2-1.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-b.2-1.1">Discussed request forgery attacks<a href="#section-b.2-1.1" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-02">
@@ -1754,10 +1729,10 @@ publication of a final version of this document.<a href="#section-appendix.b-1.1
         <h2 id="name-since-draft-duke-quic-version">
 <a href="#section-b.3" class="section-number selfRef">B.3. </a><a href="#name-since-draft-duke-quic-version" class="section-name selfRef">since draft-duke-quic-version-aliasing-02</a>
         </h2>
-<ul class="normal">
-<li class="normal" id="section-b.3-1.1">Specified 0RTT status of the transport parameter<a href="#section-b.3-1.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-b.3-1.1">Specified 0RTT status of the transport parameter<a href="#section-b.3-1.1" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-01">
@@ -1765,12 +1740,12 @@ publication of a final version of this document.<a href="#section-appendix.b-1.1
         <h2 id="name-since-draft-duke-quic-version-">
 <a href="#section-b.4" class="section-number selfRef">B.4. </a><a href="#name-since-draft-duke-quic-version-" class="section-name selfRef">since draft-duke-quic-version-aliasing-01</a>
         </h2>
-<ul class="normal">
-<li class="normal" id="section-b.4-1.1">Fixed all references to "seed" where I meant "salt."<a href="#section-b.4-1.1" class="pilcrow">¶</a>
+<ul>
+<li id="section-b.4-1.1">Fixed all references to "seed" where I meant "salt."<a href="#section-b.4-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.4-1.2">Added the Packet Length Offset, which eliminates Retry Injection Attacks<a href="#section-b.4-1.2" class="pilcrow">¶</a>
+<li id="section-b.4-1.2">Added the Packet Length Offset, which eliminates Retry Injection Attacks<a href="#section-b.4-1.2" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-00">
@@ -1778,20 +1753,20 @@ publication of a final version of this document.<a href="#section-appendix.b-1.1
         <h2 id="name-since-draft-duke-quic-version-a">
 <a href="#section-b.5" class="section-number selfRef">B.5. </a><a href="#name-since-draft-duke-quic-version-a" class="section-name selfRef">since draft-duke-quic-version-aliasing-00</a>
         </h2>
-<ul class="normal">
-<li class="normal" id="section-b.5-1.1">Added "Initial Token Extensions" to increase salt entropy and make salt
+<ul>
+<li id="section-b.5-1.1">Added "Initial Token Extensions" to increase salt entropy and make salt
 polling attacks impractical.<a href="#section-b.5-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.5-1.2">Allowed servers to store a mapping of version number and ITE to salt instead.<a href="#section-b.5-1.2" class="pilcrow">¶</a>
+<li id="section-b.5-1.2">Allowed servers to store a mapping of version number and ITE to salt instead.<a href="#section-b.5-1.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.5-1.3">Made standard version encoding mandatory. This dramatically simplifies the new
+<li id="section-b.5-1.3">Made standard version encoding mandatory. This dramatically simplifies the new
 Retry logic and changes the security model.<a href="#section-b.5-1.3" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.5-1.4">Added references to Version Negotiation Transport Parameters.<a href="#section-b.5-1.4" class="pilcrow">¶</a>
+<li id="section-b.5-1.4">Added references to Version Negotiation Transport Parameters.<a href="#section-b.5-1.4" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-b.5-1.5">Extensive readability edit.<a href="#section-b.5-1.5" class="pilcrow">¶</a>
+<li id="section-b.5-1.5">Extensive readability edit.<a href="#section-b.5-1.5" class="pilcrow">¶</a>
 </li>
-        </ul>
+</ul>
 </section>
 </div>
 </section>
