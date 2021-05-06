@@ -992,10 +992,10 @@ contains the draft:
             <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-retry-integrity-tag" class="xref">Retry Integrity Tag</a></p>
 </li>
           <li class="ulEmpty compact toc" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#section-10" class="xref">10</a>. <a href="#name-version-negotiation" class="xref">Version Negotiation</a></p>
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="xref">10</a>. <a href="#name-the-echconfig-transport-par" class="xref">The ECHConfig Transport Parameter</a></p>
 </li>
           <li class="ulEmpty compact toc" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#section-11" class="xref">11</a>. <a href="#name-intermediaries" class="xref">Intermediaries</a></p>
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="xref">11</a>. <a href="#name-version-negotiation" class="xref">Version Negotiation</a></p>
 </li>
           <li class="ulEmpty compact toc" id="section-toc.1-1.12">
             <p id="section-toc.1-1.12.1"><a href="#section-12" class="xref">12</a>. <a href="#name-applicability" class="xref">Applicability</a></p>
@@ -1007,10 +1007,19 @@ contains the draft:
                 <p id="section-toc.1-1.13.2.1.1"><a href="#section-13.1" class="xref">13.1</a>.  <a href="#name-key-loss-and-version-downgr" class="xref">Key Loss and Version Downgrade</a></p>
 </li>
               <li class="ulEmpty compact toc" id="section-toc.1-1.13.2.2">
-                <p id="section-toc.1-1.13.2.2.1"><a href="#section-13.2" class="xref">13.2</a>.  <a href="#name-initial-packet-injection" class="xref">Initial Packet Injection</a></p>
+                <p id="section-toc.1-1.13.2.2.1"><a href="#section-13.2" class="xref">13.2</a>.  <a href="#name-new-attack" class="xref">New Attack</a></p>
 </li>
               <li class="ulEmpty compact toc" id="section-toc.1-1.13.2.3">
-                <p id="section-toc.1-1.13.2.3.1"><a href="#section-13.3" class="xref">13.3</a>.  <a href="#name-retry-injection" class="xref">Retry Injection</a></p>
+                <p id="section-toc.1-1.13.2.3.1"><a href="#section-13.3" class="xref">13.3</a>.  <a href="#name-intermediaries" class="xref">Intermediaries</a></p>
+</li>
+              <li class="ulEmpty compact toc" id="section-toc.1-1.13.2.4">
+                <p id="section-toc.1-1.13.2.4.1"><a href="#section-13.4" class="xref">13.4</a>.  <a href="#name-initial-packet-injection" class="xref">Initial Packet Injection</a></p>
+</li>
+              <li class="ulEmpty compact toc" id="section-toc.1-1.13.2.5">
+                <p id="section-toc.1-1.13.2.5.1"><a href="#section-13.5" class="xref">13.5</a>.  <a href="#name-retry-injection" class="xref">Retry Injection</a></p>
+</li>
+              <li class="ulEmpty compact toc" id="section-toc.1-1.13.2.6">
+                <p id="section-toc.1-1.13.2.6.1"><a href="#section-13.6" class="xref">13.6</a>.  <a href="#name-less-trial-decryption" class="xref">Less Trial Decryption</a></p>
 </li>
             </ul>
 </li>
@@ -1111,13 +1120,13 @@ following table summarizes the advantages and disadvantages of each.<a href="#se
               <td class="text-center" rowspan="1" colspan="1">2 RTT</td>
             </tr>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">Works with TLS over TCP</td>
+              <td class="text-left" rowspan="1" colspan="1">No key sharing with Multiple Entities</td>
               <td class="text-center" rowspan="1" colspan="1">Yes</td>
               <td class="text-center" rowspan="1" colspan="1">No</td>
               <td class="text-center" rowspan="1" colspan="1">No</td>
             </tr>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">No trial decryption for multiple entities</td>
+              <td class="text-left" rowspan="1" colspan="1">Works with TLS over TCP</td>
               <td class="text-center" rowspan="1" colspan="1">Yes</td>
               <td class="text-center" rowspan="1" colspan="1">No</td>
               <td class="text-center" rowspan="1" colspan="1">No</td>
@@ -1127,6 +1136,12 @@ following table summarizes the advantages and disadvantages of each.<a href="#se
               <td class="text-center" rowspan="1" colspan="1">Yes</td>
               <td class="text-center" rowspan="1" colspan="1">Yes</td>
               <td class="text-center" rowspan="1" colspan="1">No</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">No trial decryption</td>
+              <td class="text-center" rowspan="1" colspan="1">No</td>
+              <td class="text-center" rowspan="1" colspan="1">Yes</td>
+              <td class="text-center" rowspan="1" colspan="1">Yes</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">All-Symmetric Encryption</td>
@@ -1160,7 +1175,7 @@ following table summarizes the advantages and disadvantages of each.<a href="#se
             </tr>
           </tbody>
         </table>
-<p id="section-1.1-3">The more complex properties in the table are described in <a href="#intermediaries" class="xref">Section 11</a> and
+<p id="section-1.1-3">The more complex properties in the table are discussed in
 <a href="#security-considerations" class="xref">Section 13</a>.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
 <p id="section-1.1-4">Both ECH and Protected Initials are complimentary with Version Aliasing: they
 provide a computationally expensive way to protect parts of the Initial packet
@@ -1350,40 +1365,36 @@ nonce = 0x461599d35d632bf2239825bb
 </div>
 </section>
 </div>
-<div id="version-negotiation">
+<div id="the-echconfig-transport-parameter">
 <section id="section-10">
-      <h2 id="name-version-negotiation">
-<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-version-negotiation" class="section-name selfRef">Version Negotiation</a>
+      <h2 id="name-the-echconfig-transport-par">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-the-echconfig-transport-par" class="section-name selfRef">The ECHConfig Transport Parameter</a>
       </h2>
-<p id="section-10-1">Endpoints that support QUIC Protected Initials MUST support at least one other
+<p id="section-10-1">[TODO]<a href="#section-10-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="version-negotiation">
+<section id="section-11">
+      <h2 id="name-version-negotiation">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-version-negotiation" class="section-name selfRef">Version Negotiation</a>
+      </h2>
+<p id="section-11-1">Endpoints that support QUIC Protected Initials MUST support at least one other
 version of QUIC (in case the endpoints cannot agree on the ECHConfig), and
-therefore MUST also support <span>[<a href="#I-D.ietf-quic-version-negotiation" class="xref">I-D.ietf-quic-version-negotiation</a>]</span>.<a href="#section-10-1" class="pilcrow">¶</a></p>
-<p id="section-10-2">In contrast to Section 5 of that document, clients MUST be prepared to receive
+therefore MUST also support <span>[<a href="#I-D.ietf-quic-version-negotiation" class="xref">I-D.ietf-quic-version-negotiation</a>]</span>.<a href="#section-11-1" class="pilcrow">¶</a></p>
+<p id="section-11-2">In contrast to Section 5 of that document, clients MUST be prepared to receive
 a version negotiation packet that contains QUIC Protected Initial, and then
 receive a second version negotiation packet that does not, should the attempt
-to identify a common ECHConfig fail.<a href="#section-10-2" class="pilcrow">¶</a></p>
-<p id="section-10-3">Servers MAY continue to advertise QUIC Protected Initials in its Server
+to identify a common ECHConfig fail.<a href="#section-11-2" class="pilcrow">¶</a></p>
+<p id="section-11-3">Servers MAY continue to advertise QUIC Protected Initials in its Server
 Handshake Version Information, even if shared secret extraction failed. However,
 they SHOULD track the clients to which they have recently sent Version
 Negotiation packets as a result of key mismatch, as this is important to
-server detection of injected Version Negotiation packets.<a href="#section-10-3" class="pilcrow">¶</a></p>
-<p id="section-10-4">Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
+server detection of injected Version Negotiation packets.<a href="#section-11-3" class="pilcrow">¶</a></p>
+<p id="section-11-4">Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
 does not contain the information necessary to generate subsequent Initial
 packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
 version 1. However, since the versions have identical properties after the
-Initial packet exchange, there is little value in such a trasition.<a href="#section-10-4" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="intermediaries">
-<section id="section-11">
-      <h2 id="name-intermediaries">
-<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-intermediaries" class="section-name selfRef">Intermediaries</a>
-      </h2>
-<p id="section-11-1">Intermediaries that rely on the contents of the Client Hello (e.g., a load
-balancer that routes between servers with the same IP address based on the SNI
-field in the Client Hello) MUST have access to the ECHConfig and the
-corresponding Private Keys, as described in Section 3.1 of <span>[<a href="#ECHO" class="xref">ECHO</a>]</span>, to function
-properly.<a href="#section-11-1" class="pilcrow">¶</a></p>
+Initial packet exchange, there is little value in such a trasition.<a href="#section-11-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="applicability">
@@ -1442,41 +1453,83 @@ can force the client choose between an insecure handshake and not communicating
 at all.<a href="#section-13.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="initial-packet-injection">
+<div id="new-attack">
 <section id="section-13.2">
-        <h3 id="name-initial-packet-injection">
-<a href="#section-13.2" class="section-number selfRef">13.2. </a><a href="#name-initial-packet-injection" class="section-name selfRef">Initial Packet Injection</a>
+        <h3 id="name-new-attack">
+<a href="#section-13.2" class="section-number selfRef">13.2. </a><a href="#name-new-attack" class="section-name selfRef">New Attack</a>
         </h3>
-<p id="section-13.2-1">QUIC version 1 handshakes are vulnerable to DoS from observers for the short
+<p id="section-13.2-1">[TODO: An attacker could easily craft a Client Initial designed to fail,
+spoofing the target IP. This will trigger a VN packet, which means that no one
+will detect subsequent VN injections.]<a href="#section-13.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="intermediaries">
+<section id="section-13.3">
+        <h3 id="name-intermediaries">
+<a href="#section-13.3" class="section-number selfRef">13.3. </a><a href="#name-intermediaries" class="section-name selfRef">Intermediaries</a>
+        </h3>
+<p id="section-13.3-1">Intermediaries that rely on the contents of the Client Hello (e.g., a load
+balancer that routes between servers with the same IP address based on the SNI
+field in the Client Hello) MUST have access to the ECHConfig and the
+corresponding Private Keys, as described in Section 3.1 of <span>[<a href="#ECHO" class="xref">ECHO</a>]</span>, to function
+properly.<a href="#section-13.3-1" class="pilcrow">¶</a></p>
+<p id="section-13.3-2">Note that in the event of multiple mistrustful entities behind the same such
+router, sharing the context between entities would increase the likelihood of
+leakage of the private key to outside observers. Furthermore, assigning each
+entity its own config ID will reveal the target of each client Initial in
+cleartext. Therefore, there is no alternative but for the load balancer to
+trial decrypt with each entity's ECHConfig to obtain the correct routing.<a href="#section-13.3-2" class="pilcrow">¶</a></p>
+<p id="section-13.3-3">[TODO: If they all fail, then what? What VN do we send? It's not clear how the
+client can recover the ECHConfig from the public_name.]<a href="#section-13.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="initial-packet-injection">
+<section id="section-13.4">
+        <h3 id="name-initial-packet-injection">
+<a href="#section-13.4" class="section-number selfRef">13.4. </a><a href="#name-initial-packet-injection" class="section-name selfRef">Initial Packet Injection</a>
+        </h3>
+<p id="section-13.4-1">QUIC version 1 handshakes are vulnerable to DoS from observers for the short
 interval that endpoints keep Initial keys (usually ~1.5 RTTS), since Initial
 Packets are not authenticated. With version aliasing, attackers do not have
-the necessary keys to launch such an attack.<a href="#section-13.2-1" class="pilcrow">¶</a></p>
+the necessary keys to launch such an attack.<a href="#section-13.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="retry-injection">
-<section id="section-13.3">
+<section id="section-13.5">
         <h3 id="name-retry-injection">
-<a href="#section-13.3" class="section-number selfRef">13.3. </a><a href="#name-retry-injection" class="section-name selfRef">Retry Injection</a>
+<a href="#section-13.5" class="section-number selfRef">13.5. </a><a href="#name-retry-injection" class="section-name selfRef">Retry Injection</a>
         </h3>
-<p id="section-13.3-1">This version of QUIC does not improve the security of Retry packets with
+<p id="section-13.5-1">This version of QUIC does not improve the security of Retry packets with
 respect to QUIC version 1. The Retry Integrity Tag uses a well-known key and
 relies on data in the Initial that triggered the Retry. It therefore protects
 against transmission errors and injection of Retry packets by off-path attackers
 that cannot observe the Initial. To detect Retry packets injected by observers,
-it relies on the subsequent exchange of transport parameters.<a href="#section-13.3-1" class="pilcrow">¶</a></p>
-<p id="section-13.3-2">An attacker that consistently injects Retry packets in front of a server that
+it relies on the subsequent exchange of transport parameters.<a href="#section-13.5-1" class="pilcrow">¶</a></p>
+<p id="section-13.5-2">An attacker that consistently injects Retry packets in front of a server that
 also consistently sends Retry can result in a Denial of Service, as clients
-cannot accept two Retries in the same connection.<a href="#section-13.3-2" class="pilcrow">¶</a></p>
-<p id="section-13.3-3">An alternate design would use the shared secret derived from the Client Initial
+cannot accept two Retries in the same connection.<a href="#section-13.5-2" class="pilcrow">¶</a></p>
+<p id="section-13.5-3">An alternate design would use the shared secret derived from the Client Initial
 Packet to generate keys for the Retry Integrity Tag, which would allow the
 client to immediately discard Retries injected by other parties. Unfortunately,
 this would require servers to perform an asymmetric crypto operation to send a
-Retry packet, when in a state where it is likely computationally limited.<a href="#section-13.3-3" class="pilcrow">¶</a></p>
-<p id="section-13.3-4">It is possible to enhance the security of Retry by assuming this added
+Retry packet, when in a state where it is likely computationally limited.<a href="#section-13.5-3" class="pilcrow">¶</a></p>
+<p id="section-13.5-4">It is possible to enhance the security of Retry by assuming this added
 computational cost. Such a design could also eliminate the complexity associated
 with adding an arbitrary value to the Packet Length field. The purpose of this
 addition is to avoid trial decryption to verify the configuration is correct,
-but this cost is negligible compared to extracting the shared secret.<a href="#section-13.3-4" class="pilcrow">¶</a></p>
+but this cost is negligible compared to extracting the shared secret.<a href="#section-13.5-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="less-trial-decryption">
+<section id="section-13.6">
+        <h3 id="name-less-trial-decryption">
+<a href="#section-13.6" class="section-number selfRef">13.6. </a><a href="#name-less-trial-decryption" class="section-name selfRef">Less Trial Decryption</a>
+        </h3>
+<p id="section-13.6-1">Unlike ECH, Protected Initials can use the Packet Length Offset mechanism to
+detect key mismatches without trial decryption, saving resources in the case
+of genuine misconfiguration. However, an attacker attempting to force trial
+decryption can easily force a decryption that will ultimately result in the
+packet being silently dropped.<a href="#section-13.6-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1563,8 +1616,8 @@ registry:<a href="#section-14-1" class="pilcrow">¶</a></p>
       <h2 id="name-change-log">
 <a href="#section-appendix.a" class="section-number selfRef">Appendix A. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
       </h2>
-<ul class="ulEmpty normal">
-<li class="ulEmpty normal" id="section-appendix.a-1.1">
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-appendix.a-1.1">
           <strong>RFC Editor's Note:</strong> Please remove this section prior to
 publication of a final version of this document.<a href="#section-appendix.a-1.1" class="pilcrow">¶</a>
 </li>

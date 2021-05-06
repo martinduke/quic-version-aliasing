@@ -79,13 +79,16 @@ Table of Contents
    7.  Client Packet Protection Procedure
    8.  Server Packet Protection Procedure
    9.  Retry Integrity Tag
-   10. Version Negotiation
-   11. Intermediaries
+   10. The ECHConfig Transport Parameter
+   11. Version Negotiation
    12. Applicability
    13. Security and Privacy Considerations
      13.1.  Key Loss and Version Downgrade
-     13.2.  Initial Packet Injection
-     13.3.  Retry Injection
+     13.2.  New Attack
+     13.3.  Intermediaries
+     13.4.  Initial Packet Injection
+     13.5.  Retry Injection
+     13.6.  Less Trial Decryption
    14. IANA Considerations
    15. References
      15.1.  Normative References
@@ -143,46 +146,47 @@ Table of Contents
    parts of the Initial packet exchange from observers.  The following
    table summarizes the advantages and disadvantages of each.
 
-   +=======================+==============+=============+=============+
-   | Property              |     ECH      |  Protected  |   Version   |
-   |                       |              |   Initials  |   Aliasing  |
-   +=======================+==============+=============+=============+
-   | Fields Protected      |   Some of    | All Initial | All Initial |
-   |                       | Client Hello |   Payloads  |   Payloads  |
-   +-----------------------+--------------+-------------+-------------+
-   | Delay when server     |    1 RTT     |    2 RTT    |    2 RTT    |
-   | loses its keys        |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | Works with TLS over   |     Yes      |      No     |      No     |
-   | TCP                   |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | No trial decryption   |     Yes      |      No     |      No     |
-   | for multiple entities |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | First-connection      |     Yes      |     Yes     |      No     |
-   | protection            |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | All-Symmetric         |      No      |      No     |     Yes     |
-   | Encryption            |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | Greases the Version   |      No      |      No     |     Yes     |
-   | Field                 |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | All state exchange    |      No      |      No     |     Yes     |
-   | in-band               |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | Prevents Initial      |      No      |     Yes     |     Yes     |
-   | packet injection      |              |             |             |
-   | attacks               |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
-   | Prevents Retry        |      No      |      No     |     Yes     |
-   | injection attacks     |              |             |             |
-   +-----------------------+--------------+-------------+-------------+
+    +=====================+==============+=============+=============+
+    | Property            |     ECH      |  Protected  |   Version   |
+    |                     |              |   Initials  |   Aliasing  |
+    +=====================+==============+=============+=============+
+    | Fields Protected    |   Some of    | All Initial | All Initial |
+    |                     | Client Hello |   Payloads  |   Payloads  |
+    +---------------------+--------------+-------------+-------------+
+    | Delay when server   |    1 RTT     |    2 RTT    |    2 RTT    |
+    | loses its keys      |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | No key sharing with |     Yes      |      No     |      No     |
+    | Multiple Entities   |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | Works with TLS over |     Yes      |      No     |      No     |
+    | TCP                 |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | First-connection    |     Yes      |     Yes     |      No     |
+    | protection          |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | No trial decryption |      No      |     Yes     |     Yes     |
+    +---------------------+--------------+-------------+-------------+
+    | All-Symmetric       |      No      |      No     |     Yes     |
+    | Encryption          |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | Greases the Version |      No      |      No     |     Yes     |
+    | Field               |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | All state exchange  |      No      |      No     |     Yes     |
+    | in-band             |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | Prevents Initial    |      No      |     Yes     |     Yes     |
+    | packet injection    |              |             |             |
+    | attacks             |              |             |             |
+    +---------------------+--------------+-------------+-------------+
+    | Prevents Retry      |      No      |      No     |     Yes     |
+    | injection attacks   |              |             |             |
+    +---------------------+--------------+-------------+-------------+
 
                                  Table 1
 
-   The more complex properties in the table are described in Section 11
-   and Section 13.
+   The more complex properties in the table are discussed in Section 13.
 
    Both ECH and Protected Initials are complimentary with Version
    Aliasing: they provide a computationally expensive way to protect
@@ -342,7 +346,11 @@ secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
 key = 0xbe0c690b9f66575a1d766b54e368c84e
 nonce = 0x461599d35d632bf2239825bb
 
-10.  Version Negotiation
+10.  The ECHConfig Transport Parameter
+
+   [TODO]
+
+11.  Version Negotiation
 
    Endpoints that support QUIC Protected Initials MUST support at least
    one other version of QUIC (in case the endpoints cannot agree on the
@@ -367,14 +375,6 @@ nonce = 0x461599d35d632bf2239825bb
    Protected Initials are compatible with QUIC version 1.  However,
    since the versions have identical properties after the Initial packet
    exchange, there is little value in such a trasition.
-
-11.  Intermediaries
-
-   Intermediaries that rely on the contents of the Client Hello (e.g., a
-   load balancer that routes between servers with the same IP address
-   based on the SNI field in the Client Hello) MUST have access to the
-   ECHConfig and the corresponding Private Keys, as described in
-   Section 3.1 of [ECHO], to function properly.
 
 12.  Applicability
 
@@ -434,7 +434,32 @@ nonce = 0x461599d35d632bf2239825bb
    and can force the client choose between an insecure handshake and not
    communicating at all.
 
-13.2.  Initial Packet Injection
+13.2.  New Attack
+
+   [TODO: An attacker could easily craft a Client Initial designed to
+   fail, spoofing the target IP.  This will trigger a VN packet, which
+   means that no one will detect subsequent VN injections.]
+
+13.3.  Intermediaries
+
+   Intermediaries that rely on the contents of the Client Hello (e.g., a
+   load balancer that routes between servers with the same IP address
+   based on the SNI field in the Client Hello) MUST have access to the
+   ECHConfig and the corresponding Private Keys, as described in
+   Section 3.1 of [ECHO], to function properly.
+
+   Note that in the event of multiple mistrustful entities behind the
+   same such router, sharing the context between entities would increase
+   the likelihood of leakage of the private key to outside observers.
+   Furthermore, assigning each entity its own config ID will reveal the
+   target of each client Initial in cleartext.  Therefore, there is no
+   alternative but for the load balancer to trial decrypt with each
+   entity's ECHConfig to obtain the correct routing.
+
+   [TODO: If they all fail, then what?  What VN do we send?  It's not
+   clear how the client can recover the ECHConfig from the public_name.]
+
+13.4.  Initial Packet Injection
 
    QUIC version 1 handshakes are vulnerable to DoS from observers for
    the short interval that endpoints keep Initial keys (usually ~1.5
@@ -442,7 +467,7 @@ nonce = 0x461599d35d632bf2239825bb
    aliasing, attackers do not have the necessary keys to launch such an
    attack.
 
-13.3.  Retry Injection
+13.5.  Retry Injection
 
    This version of QUIC does not improve the security of Retry packets
    with respect to QUIC version 1.  The Retry Integrity Tag uses a well-
@@ -469,6 +494,15 @@ nonce = 0x461599d35d632bf2239825bb
    Length field.  The purpose of this addition is to avoid trial
    decryption to verify the configuration is correct, but this cost is
    negligible compared to extracting the shared secret.
+
+13.6.  Less Trial Decryption
+
+   Unlike ECH, Protected Initials can use the Packet Length Offset
+   mechanism to detect key mismatches without trial decryption, saving
+   resources in the case of genuine misconfiguration.  However, an
+   attacker attempting to force trial decryption can easily force a
+   decryption that will ultimately result in the packet being silently
+   dropped.
 
 14.  IANA Considerations
 
