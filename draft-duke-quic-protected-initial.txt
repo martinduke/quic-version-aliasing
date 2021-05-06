@@ -83,13 +83,15 @@ Table of Contents
    11. Intermediaries
    12. Applicability
    13. Security and Privacy Considerations
+     13.1.  Key Loss and Version Downgrade
+     13.2.  Initial Packet Injection
+     13.3.  Retry Injection
    14. IANA Considerations
    15. References
      15.1.  Normative References
      15.2.  Informative References
-   Appendix A.  More secure Retries
-   Appendix B.  Change Log
-     B.1.  since draft-duke-quic-protected-initials-00
+   Appendix A.  Change Log
+     A.1.  since draft-duke-quic-protected-initials-00
    Author's Address
 
 1.  Introduction
@@ -141,7 +143,7 @@ Table of Contents
    parts of the Initial packet exchange from observers.  The following
    table summarizes the advantages and disadvantages of each.
 
-   +-----------------------+--------------+-------------+-------------+
+   +=======================+==============+=============+=============+
    | Property              |     ECH      |  Protected  |   Version   |
    |                       |              |   Initials  |   Aliasing  |
    +=======================+==============+=============+=============+
@@ -154,8 +156,8 @@ Table of Contents
    | Works with TLS over   |     Yes      |      No     |      No     |
    | TCP                   |              |             |             |
    +-----------------------+--------------+-------------+-------------+
-   | Attacker cannot force |     Yes      |      No     |      No     |
-   | use of public SNI     |              |             |             |
+   | No trial decryption   |     Yes      |      No     |      No     |
+   | for multiple entities |              |             |             |
    +-----------------------+--------------+-------------+-------------+
    | First-connection      |     Yes      |     Yes     |      No     |
    | protection            |              |             |             |
@@ -179,14 +181,14 @@ Table of Contents
 
                                  Table 1
 
-   Initial packet injection attacks are described in Section 21.2 of
-   [QUIC-TRANSPORT].
+   The more complex properties in the table are described in Section 11
+   and Section 13.
 
    Both ECH and Protected Initials are complimentary with Version
-   Aliasing: they both provide a computationally expensive way to
-   protect parts of the Initial packet during the first connection
-   between client and server, , after which Version Aliasing can protect
-   future exchanges with several desirable properties.
+   Aliasing: they provide a computationally expensive way to protect
+   parts of the Initial packet during the first connection between
+   client and server, after which Version Aliasing can protect future
+   exchanges with several desirable properties.
 
 2.  Conventions
 
@@ -336,9 +338,9 @@ Table of Contents
    and nonce used for the Retry Integrity Tag (Sec 5.8 of
    [I-D.ietf-quic-tls] change to:
 
-   secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
-   key = 0xbe0c690b9f66575a1d766b54e368c84e
-   nonce = 0x461599d35d632bf2239825bb
+secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
+key = 0xbe0c690b9f66575a1d766b54e368c84e
+nonce = 0x461599d35d632bf2239825bb
 
 10.  Version Negotiation
 
@@ -386,87 +388,60 @@ Table of Contents
    Sections 10.2, 10.3, 10.4, and 10.6 of [ECHO] apply to QUIC Protected
    Initials as well.
 
-   Sections 7.2, 7.7, and 7.8 of [VERSION-ALIASING] are also applicable.
+   Section 7.8 of [VERSION-ALIASING] is also applicable.
 
-14.  IANA Considerations
+13.1.  Key Loss and Version Downgrade
 
-   This document request that IANA add the following entry to the QUIC
-   version registry:
+   ECH and Protected Initials both rely on shared cryptographic
+   configuration state between client and server, delivered by an out-
+   of-band method, usually DNS.
 
-   Value: TBD
+   In the event this synchronization fails in ECH, the client-facing
+   server can complete the handshake, authenticate itself against the
+   "public name" in the unprotected part of the Client Hello, and
+   provide updated configuration state, allowing a resumed attempt after
+   1 RTT.
 
-   Status: permanent
+   With Protected Initials, when decryption fails there is not enough
+   context to complete any sort of authentication to update the crypto
+   context.  Instead, the server sends a Version Negotiation Packet that
+   causes the client to fall back to a version of QUIC with unprotected
+   Initials, in which it could connect to the public name and only then
+   acquire the updated crypto context.  Note that this incurs an
+   additional 1-RTT penalty over ECH, although loss of key
+   synchronization is hopefully a rare occurrence.
 
-   Specification: This document
+   Furthermore, Version Negotiation Packets are not authenticated, which
+   opens up the possibility of Version Downgrade attacks.
 
-   Change Controller: IETF
+   The weak form of this attack simply observes the Client Initial and
+   delivers a Version Negotiation Packet before the client responds.
+   Clients SHOULD wait for an interval (roughly the QUIC Probe Timeout,
+   see {{!I-D.ietf-quic-recovery) before acting on a Version Negotiation
+   Packet that indicates a lack of support for Protected Initials when a
+   DNS record indicating such support exists, to allow a later valid
+   server response to arrive.  If it does, the client MUST ignore the
+   Version Negotiation packet.
 
-   Contact: QUIC WG
+   The strong form of this attack requires the attacker to drop either
+   the Client Initial or the Server Initial.  In this case, the client
+   has no recourse but to connect with an unprotected Initial.  As
+   described above, the client can obtain an updated context from the
+   public name and then assume subsequent Version Negotiation packets
+   are invalid with high probability.  Regardless, an attacker with
+   these capabilities can always block a secured handshake of any kind,
+   and can force the client choose between an insecure handshake and not
+   communicating at all.
 
-15.  References
+13.2.  Initial Packet Injection
 
-15.1.  Normative References
+   QUIC version 1 handshakes are vulnerable to DoS from observers for
+   the short interval that endpoints keep Initial keys (usually ~1.5
+   RTTS), since Initial Packets are not authenticated.  With version
+   aliasing, attackers do not have the necessary keys to launch such an
+   attack.
 
-   [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
-              Encrypted Client Hello", Work in Progress, Internet-Draft,
-              draft-ietf-tls-esni-10, 8 March 2021,
-              <https://www.ietf.org/archive/id/draft-ietf-tls-esni-
-              10.txt>.
-
-   [HPKE]     Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
-              "Hybrid Public Key Encryption", Work in Progress,
-              Internet-Draft, draft-irtf-cfrg-hpke-08, 15 February 2021,
-              <https://www.ietf.org/archive/id/draft-irtf-cfrg-hpke-
-              08.txt>.
-
-   [I-D.ietf-quic-tls]
-              Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
-              Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
-              14 January 2021, <https://www.ietf.org/archive/id/draft-
-              ietf-quic-tls-34.txt>.
-
-   [I-D.ietf-quic-version-negotiation]
-              Schinazi, D. and E. Rescorla, "Compatible Version
-              Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-03, 4 February 2021,
-              <https://www.ietf.org/archive/id/draft-ietf-quic-version-
-              negotiation-03.txt>.
-
-   [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
-              Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
-              14 January 2021, <https://www.ietf.org/archive/id/draft-
-              ietf-quic-tls-34.txt>.
-
-   [QUIC-TRANSPORT]
-              Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
-              and Secure Transport", Work in Progress, Internet-Draft,
-              draft-ietf-quic-transport-34, 14 January 2021,
-              <https://www.ietf.org/archive/id/draft-ietf-quic-
-              transport-34.txt>.
-
-15.2.  Informative References
-
-   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
-              Requirement Levels", BCP 14, RFC 2119,
-              DOI 10.17487/RFC2119, March 1997,
-              <https://www.rfc-editor.org/info/rfc2119>.
-
-   [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
-              "Transport Layer Security (TLS) Application-Layer Protocol
-              Negotiation Extension", RFC 7301, DOI 10.17487/RFC7301,
-              July 2014, <https://www.rfc-editor.org/info/rfc7301>.
-
-   [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
-              Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
-              <https://www.rfc-editor.org/info/rfc8446>.
-
-   [VERSION-ALIASING]
-              Duke, M., "QUIC Version Aliasing", Work in Progress,
-              Internet-Draft, draft-duke-quic-version-aliasing-04, 30
-              October 2020, <https://www.ietf.org/archive/id/draft-duke-
-              quic-version-aliasing-04.txt>.
-
-Appendix A.  More secure Retries
+13.3.  Retry Injection
 
    This version of QUIC does not improve the security of Retry packets
    with respect to QUIC version 1.  The Retry Integrity Tag uses a well-
@@ -494,18 +469,99 @@ Appendix A.  More secure Retries
    decryption to verify the configuration is correct, but this cost is
    negligible compared to extracting the shared secret.
 
-Appendix B.  Change Log
+14.  IANA Considerations
+
+   This document request that IANA add the following entry to the QUIC
+   version registry:
+
+   Value: TBD
+
+   Status: permanent
+
+   Specification: This document
+
+   Change Controller: IETF
+
+   Contact: QUIC WG
+
+15.  References
+
+15.1.  Normative References
+
+   [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
+              Encrypted Client Hello", Work in Progress, Internet-Draft,
+              draft-ietf-tls-esni-10, 8 March 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
+              esni-10.txt>.
+
+   [HPKE]     Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
+              "Hybrid Public Key Encryption", Work in Progress,
+              Internet-Draft, draft-irtf-cfrg-hpke-08, 15 February 2021,
+              <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
+              hpke-08.txt>.
+
+   [I-D.ietf-quic-tls]
+              Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
+              Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
+              14 January 2021, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-quic-tls-34.txt>.
+
+   [I-D.ietf-quic-version-negotiation]
+              Schinazi, D. and E. Rescorla, "Compatible Version
+              Negotiation for QUIC", Work in Progress, Internet-Draft,
+              draft-ietf-quic-version-negotiation-03, 4 February 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              version-negotiation-03.txt>.
+
+   [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
+              Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
+              14 January 2021, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-quic-tls-34.txt>.
+
+   [QUIC-TRANSPORT]
+              Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
+              and Secure Transport", Work in Progress, Internet-Draft,
+              draft-ietf-quic-transport-34, 14 January 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              transport-34.txt>.
+
+15.2.  Informative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://datatracker.ietf.org/doc/html/rfc2119>.
+
+   [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
+              "Transport Layer Security (TLS) Application-Layer Protocol
+              Negotiation Extension", RFC 7301, DOI 10.17487/RFC7301,
+              July 2014,
+              <https://datatracker.ietf.org/doc/html/rfc7301>.
+
+   [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
+              <https://datatracker.ietf.org/doc/html/rfc8446>.
+
+   [VERSION-ALIASING]
+              Duke, M., "QUIC Version Aliasing", Work in Progress,
+              Internet-Draft, draft-duke-quic-version-aliasing-05, 4 May
+              2021, <https://datatracker.ietf.org/doc/html/draft-duke-
+              quic-version-aliasing-05.txt>.
+
+Appendix A.  Change Log
 
       *RFC Editor's Note:* Please remove this section prior to
       publication of a final version of this document.
 
-B.1.  since draft-duke-quic-protected-initials-00
+A.1.  since draft-duke-quic-protected-initials-00
 
    *  Additional text comparing ECH, Version Aliasing
 
    *  Clarified server initials are encrypted
 
    *  Retry keys are no longer generated from the shared secret
+
+   *  Complete Rewrite of Version Aliasing
 
 Author's Address
 

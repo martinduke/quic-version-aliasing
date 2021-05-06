@@ -79,29 +79,33 @@ Table of Contents
      3.4.  Expiration Time
      3.5.  Format
      3.6.  Multiple Servers for One Domain
+     3.7.  Multiple Entities With One Load Balancer
    4.  Client Behavior
    5.  Server Actions on Aliased Version Numbers
    6.  Considerations for Retry Packets
    7.  Security and Privacy Considerations
-     7.1.  First-Connection Privacy
-     7.2.  Version Downgrade
-     7.3.  Retry Injection
-     7.4.  Increased Linkability
-     7.5.  Salt Polling
-     7.6.  Increased Processing of Garbage UDP Packets
-     7.7.  Increased Retry Overhead
-     7.8.  Request Forgery
+     7.1.  Endpoint Impersonation
+     7.2.  First-Connection Privacy
+     7.3.  Version Downgrade
+     7.4.  Initial Packet Injection
+     7.5.  Retry Injection
+     7.6.  Increased Linkability
+     7.7.  Salt Polling
+     7.8.  Increased Processing of Garbage UDP Packets
+     7.9.  Increased Retry Overhead
+     7.10. Request Forgery
    8.  IANA Considerations
    9.  References
      9.1.  Normative References
      9.2.  Informative References
    Appendix A.  Acknowledgments
    Appendix B.  Change Log
-     B.1.  since draft-duke-quic-version-aliasing-04
-     B.2.  since draft-duke-quic-version-aliasing-03
-     B.3.  since draft-duke-quic-version-aliasing-02
-     B.4.  since draft-duke-quic-version-aliasing-01
-     B.5.  since draft-duke-quic-version-aliasing-00
+     B.1.  since draft-duke-quic-version-aliasing-05
+     B.2.  since draft-duke-quic-version-aliasing-04
+     B.3.  since draft-duke-quic-version-aliasing-03
+     B.4.  since draft-duke-quic-version-aliasing-02
+     B.5.  since draft-duke-quic-version-aliasing-01
+     B.6.  since draft-duke-quic-version-aliasing-00
    Author's Address
 
 1.  Introduction
@@ -179,7 +183,7 @@ Table of Contents
    The Packet Length Offset provides a low-cost way for the server to
    verify it can derive a valid salt from the inputs without trial
    decryption.  This has important security implications, as described
-   in Section 7.3.
+   in Section 7.5.
 
    When generating a salt and Packet Length Offset, servers can choose
    between doing so randomly and storing the mapping, or using a
@@ -234,7 +238,7 @@ Table of Contents
    standard version Client Hello to exclude privacy-sensitive
    information, and at least 1 RTT to allow a secure connection to
    resume.  This mechanism is also relevant to Version Aliasing
-   mitigation of Version Downgrade attacks Section 7.2.
+   mitigation of Version Downgrade attacks Section 7.3.
 
    Similarly, QUIC Protected Initials [I-D.duke-quic-protected-initial]
    uses the ECH distribution mechanism to generate secure initial keys
@@ -264,7 +268,7 @@ Table of Contents
    Negotiation Packets.
 
    Servers MUST NOT use client-controlled information (e.g. the client
-   IP address) in the random process, see Section 7.5.
+   IP address) in the random process, see Section 7.7.
 
    Servers MUST NOT advertise these versions in QUIC Version Negotiation
    packets.
@@ -316,7 +320,7 @@ Table of Contents
    packets, or (2) can guarantee, through the use of persistent storage
    or other means, that it will never lose the cryptographic state
    required to generate the salt before the promised expiration time.
-   Section 7.3 describes the implications if it uses zero without
+   Section 7.5 describes the implications if it uses zero without
    meeting these conditions.
 
    Servers MUST either generate a random salt and Packet Length Offset
@@ -340,7 +344,7 @@ Table of Contents
    number, or rotate the keys used in salt generation.
 
    Furthermore, the expiration time SHOULD be short enough to frustrate
-   a salt polling attack (Section 7.5)
+   a salt polling attack (Section 7.7)
 
    Conversely, an extremely short expiration time will often force the
    client to use standard QUIC version numbers and salts.
@@ -405,6 +409,33 @@ Table of Contents
    would advertise in a Version Negotiation Packet or Transport
    Parameter.
 
+3.7.  Multiple Entities With One Load Balancer
+
+   If mutually mistrustful entities share the same IP address and port,
+   incoming packets are usually routed by examining the SNI at a load
+   balancer server that routes the traffic.  This use case makes
+   concealing the contents of the Client Initial especially attractive,
+   as the IP address reveals less information.  There are several
+   solutions to solve this problem.
+
+   *  All entities have a common crytographic context for deriving salts
+      and Packet Length Offsets from the version number and ITE.  This
+      is straightforward but also increases the risk that the keys will
+      leak to an attacker which could then decode Initial packets from
+      point where the packets are observable.  This is therefore NOT
+      RECOMMENDED.
+
+   *  Each entity has its own cryptographic context, shared with the
+      load balancer.  This requires the load balancer to trial decrypt
+      each incoming Initial with each context.
+
+   *  Each entity reports its Version Aliasing Transport Parameters to
+      the load balancer out-of-band.
+
+   Note that [ECHO] solves this problem elegantly by only holding the
+   cryptographic information at the load balancer, which decodes the
+   sensitive information on behalf of the back-end server.
+
 4.  Client Behavior
 
    When a client receives the Version Alias Transport Parameter, it MAY
@@ -412,6 +443,11 @@ Table of Contents
    expiration of these values.  It MAY use the version number and ITE in
    a subsequent connection and compute the initial keys using the
    provided salt.
+
+   The Client MUST NOT use the contents of a Version Alias transport
+   parameter if the handshake does not (1) later authenticate the server
+   name and (2) result in both endpoints computing the same 1-RTT keys.
+   See Section 7.1.
 
    Clients MUST NOT advertise aliased versions in the Version
    Negotiation Transport Parameter unless they support a standard
@@ -445,7 +481,7 @@ Table of Contents
    If the response to an Initial packet using the provided version is a
    Version Negotiation Packet, the client SHOULD cease attempting to use
    that version and salt to the server unless it later determines that
-   the packet was the result of a version downgrade, see Section 7.2.
+   the packet was the result of a version downgrade, see Section 7.3.
 
    If a client receives an aliased version number that matches a
    standard version that the client supports, it SHOULD assume the
@@ -457,7 +493,7 @@ Table of Contents
    Negotiation transport parameter advertising a version number the
    server previously sent as an aliased version, and the client verifies
    any Version Negotiation Packet is not a Version Downgrade attack
-   (Section 7.2), it MUST discard the aliased version number, ITE,
+   (Section 7.3), it MUST discard the aliased version number, ITE,
    packet length offset, and salt and not use it in future connections.
 
 5.  Server Actions on Aliased Version Numbers
@@ -493,7 +529,7 @@ Table of Contents
    Version Alias transport parameter, with a new version number, ITE,
    salt, and Packet Length Offset, each time a client connects.
    However, issuing version numbers to a client SHOULD be rate-limited
-   to mitigate the salt polling attack Section 7.5.
+   to mitigate the salt polling attack Section 7.7.
 
 6.  Considerations for Retry Packets
 
@@ -531,51 +567,73 @@ Table of Contents
    Initial Packets.  However, there are new attacks against this
    mechanism.
 
-7.1.  First-Connection Privacy
+7.1.  Endpoint Impersonation
+
+   An on-path attacker might respond to an Initial Packet with a
+   standard version with a Version Aliasing Transport Parameter that
+   then caused the client to reveal sensitive information in a
+   subsequent Initial.
+
+   As described in Section 4, clients cannot use the contents of a
+   Version Aliasing transport parameter until they have authenticated
+   the source as a trusted domain, and have verified that the 1RTT key
+   derivation is identical at both endpoints.
+
+7.2.  First-Connection Privacy
 
    As version aliasing requires one connection over a standard QUIC
    version to acquire initial state, this initial connection leaks some
    information about the true target.
 
-   The client MAY alter its Initial Packet (e.g., its ALPN field) to
-   sanitize sensitive information and obtain another aliased version
-   before proceeding with its true request.  Advice for the Outer
-   ClientHello in Section 10.5 of [ECHO] applies here.  When using this
-   technique, the client MUST allow the handshake to complete, and
-   verify the 1RTT keys are correct through exchange of a PING or other
-   frame, to authenticate and verify the integrity of the resulting
-   version aliasing parameters.
+   The client MAY alter its Initial Packet to sanitize sensitive
+   information and obtain another aliased version before proceeding with
+   its true request.  However, the client Initial must lead to the
+   authentication of a domain name the client trusts to provide accurate
+   Version Aliasing information (possibly the public_name from an
+   Encrypted Client Hello configuration from [ECHO]).  Advice for the
+   Outer ClientHello in Section 10.5 of [ECHO] applies here.
 
-   Servers that support version aliasing SHOULD be liberal about the
-   Initial Packet content they receive, keeping the connection open long
-   enough to deliver their transport parameters, to support this
-   mechanism.
+   Endpoints are encouraged to instead use [ECHO] or
+   [I-D.duke-quic-protected-initial] to increase privacy on the first
+   connection between a client and server.
 
-   See also [I-D.duke-quic-protected-initial] for a means of extending
-   privacy guarantees to the first connection.  Note that if this
-   results in a version negotiation packet, that signals that the server
-   has lost the state associated with these mechanisms (however, see
-   Section 7.2), and the client has no recourse but the technique
-   described in this section.
+7.3.  Version Downgrade
 
-7.2.  Version Downgrade
+   When servers lose their cryptographic state, they send a Version
+   Negotiation packet to force the server to use a standard version.  As
+   these packets are not authenticated, this opens the possibility of
+   Version Downgrade attacks to force insecure communication.
 
-   A countermeasure against version aliasing is the downgrade attack.
-   Middleboxes may drop a packet containing a random version and imitate
-   the server's failure to correctly process it.  Clients and servers
-   are required to implement [QUIC-VN] to detect downgrades.
+   [QUIC-VN] reveals that a Version Negotiation packet is invalid after
+   the Initial Packets have exchanged, with any associated privacy
+   leakage.
 
-   Note that downgrade detection only works after receiving an
-   authenticated response from the server.  If a client immediately
-   responds to a Version Negotiation Packet with an Initial Packet with
-   a standard version number, it will have exposed its request in a
-   format readable to observers before it discovers if the Version
-   Negotiation Packet is authentic.  A client SHOULD wait for an
-   interval to see if a valid response comes from the server before
-   assuming the version negotiation is valid.  Even after such an
-   interval, the client should consider the safeguards in Section 7.1.
+   The weak form of this attack simply observes the Client Initial and
+   delivers a Version Negotiation Packet before the client responds.
+   Clients SHOULD wait for an interval (roughly the QUIC Probe Timeout,
+   see [I-D.ietf-quic-recovery]) before acting on a Version Negotiation
+   Packet that indicates a loss of crypto state.  If a valid Initial
+   arrives, the client MUST ignore the Version Negotiation packet.
 
-7.3.  Retry Injection
+   The strong form of this attack requires the attacker to drop either
+   the Client Initial or the Server Initial.  In this case, the client
+   has no recourse but to connect with a standard version.  As described
+   in Section 7.2, the client can obtain an updated context and then
+   assume subsequent Version Negotiation packets are invalid with high
+   probability.  Regardless, an attacker with these capabilities can
+   always block a secured handshake of any kind, and can force the
+   client choose between an insecure handshake and not communicating at
+   all.
+
+7.4.  Initial Packet Injection
+
+   QUIC version 1 handshakes are vulnerable to DoS from observers for
+   the short interval that endpoints keep Initial keys (usually ~1.5
+   RTTS), since Initial Packets are not authenticated.  With version
+   aliasing, attackers do not have the necessary keys to launch such an
+   attack.
+
+7.5.  Retry Injection
 
    QUIC Version 1 Retry packets are spoofable, as they follow a fixed
    format, are sent in plaintext, and the integrity protection uses a
@@ -609,7 +667,7 @@ Table of Contents
    The Packet Length Offset introduces sufficient entropy to make the
    third possibility exceedingly unlikely.
 
-7.4.  Increased Linkability
+7.6.  Increased Linkability
 
    As each version number and ITE is unique to each client, if a client
    uses one twice, those two connections are extremely likely to be from
@@ -617,7 +675,7 @@ Table of Contents
    significant increase in linkability relative to QUIC with a standard
    version numbers.
 
-7.5.  Salt Polling
+7.7.  Salt Polling
 
    Observers that wish to decode Initial Packets might open a large
    number of connections to the server in an effort to obtain part of
@@ -642,7 +700,7 @@ Table of Contents
    reduce the search space for attackers.  Thus, servers are prohibited
    from using this mechanism.
 
-7.6.  Increased Processing of Garbage UDP Packets
+7.8.  Increased Processing of Garbage UDP Packets
 
    As QUIC shares the UDP protocol number with other UDP applications,
    in some deployments it may be possible for traffic intended for other
@@ -666,13 +724,13 @@ Table of Contents
    Packets, servers may have to provision additional resources to
    address this possibility.
 
-7.7.  Increased Retry Overhead
+7.9.  Increased Retry Overhead
 
    This document requires two small cryptographic operations to build a
    Retry packet instead of one, placing more load on servers when
    already under load.
 
-7.8.  Request Forgery
+7.10.  Request Forgery
 
    Section 21.4 of [QUIC-TRANSPORT] describes the request forgery
    attack, where a QUIC endpoint can cause its peer to deliver packets
@@ -698,46 +756,54 @@ Table of Contents
 
 9.1.  Normative References
 
+   [I-D.ietf-quic-recovery]
+              Iyengar, J. and I. Swett, "QUIC Loss Detection and
+              Congestion Control", Work in Progress, Internet-Draft,
+              draft-ietf-quic-recovery-34, 14 January 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              recovery-34.txt>.
+
    [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
               Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
-              14 January 2021, <https://www.ietf.org/archive/id/draft-
-              ietf-quic-tls-34.txt>.
+              14 January 2021, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-quic-tls-34.txt>.
 
    [QUIC-TRANSPORT]
               Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
               and Secure Transport", Work in Progress, Internet-Draft,
               draft-ietf-quic-transport-34, 14 January 2021,
-              <https://www.ietf.org/archive/id/draft-ietf-quic-
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
               transport-34.txt>.
 
    [QUIC-VN]  Schinazi, D. and E. Rescorla, "Compatible Version
               Negotiation for QUIC", Work in Progress, Internet-Draft,
               draft-ietf-quic-version-negotiation-03, 4 February 2021,
-              <https://www.ietf.org/archive/id/draft-ietf-quic-version-
-              negotiation-03.txt>.
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              version-negotiation-03.txt>.
 
 9.2.  Informative References
 
    [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
               Encrypted Client Hello", Work in Progress, Internet-Draft,
               draft-ietf-tls-esni-10, 8 March 2021,
-              <https://www.ietf.org/archive/id/draft-ietf-tls-esni-
-              10.txt>.
+              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
+              esni-10.txt>.
 
    [I-D.duke-quic-protected-initial]
               Duke, M., "Protected QUIC Initial Packets", Work in
               Progress, Internet-Draft, draft-duke-quic-protected-
-              initial-00, 4 May 2021, <https://www.ietf.org/archive/id/
-              draft-duke-quic-protected-initial-00.txt>.
+              initial-00, 4 May 2021,
+              <https://datatracker.ietf.org/doc/html/draft-duke-quic-
+              protected-initial-00.txt>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
-              <https://www.rfc-editor.org/info/rfc2119>.
+              <https://datatracker.ietf.org/doc/html/rfc2119>.
 
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
-              <https://www.rfc-editor.org/info/rfc8446>.
+              <https://datatracker.ietf.org/doc/html/rfc8446>.
 
 Appendix A.  Acknowledgments
 
@@ -749,29 +815,35 @@ Appendix B.  Change Log
       *RFC Editor's Note:* Please remove this section prior to
       publication of a final version of this document.
 
-B.1.  since draft-duke-quic-version-aliasing-04
+B.1.  since draft-duke-quic-version-aliasing-05
+
+   *  Revised security considerations
+
+   *  Discussed multiple SNIs behind one load balancer
+
+B.2.  since draft-duke-quic-version-aliasing-04
 
    *  Relationship with Encrypted Client Hello (ECH) and QUIC Protected
       Initials
 
    *  Corrected statement about version negotiation
 
-B.2.  since draft-duke-quic-version-aliasing-03
+B.3.  since draft-duke-quic-version-aliasing-03
 
    *  Discussed request forgery attacks
 
-B.3.  since draft-duke-quic-version-aliasing-02
+B.4.  since draft-duke-quic-version-aliasing-02
 
    *  Specified 0RTT status of the transport parameter
 
-B.4.  since draft-duke-quic-version-aliasing-01
+B.5.  since draft-duke-quic-version-aliasing-01
 
    *  Fixed all references to "seed" where I meant "salt."
 
    *  Added the Packet Length Offset, which eliminates Retry Injection
       Attacks
 
-B.5.  since draft-duke-quic-version-aliasing-00
+B.6.  since draft-duke-quic-version-aliasing-00
 
    *  Added "Initial Token Extensions" to increase salt entropy and make
       salt polling attacks impractical.
