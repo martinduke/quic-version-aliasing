@@ -90,7 +90,7 @@ following table summarizes the advantages and disadvantages of each.
 | First-connection protection | Yes | Yes | No |
 | No trial decryption | No | Yes | Yes |
 | Prevents Initial packet injection attacks | No | Yes | Yes |
-| All-Symmetric Encryption | No | No | Yes |
+| Symmetric Encryption Only | No | No | Yes |
 | Greases the Version Field | No | No | Yes |
 | Prevents Retry injection attacks | No | No | Yes |
 
@@ -563,8 +563,9 @@ Specification: This document
 ## since draft-duke-quic-protected-initials-00
 
 * Additional text comparing ECH, Version Aliasing
-* Adapted to foreground the split-mode use case -- Handshake and 1-RTT keys are
-no longer separated from v1.
+* Adapted to foreground the split-mode use case
 * Clarified server initials are encrypted
 * Retry keys are no longer generated from the shared secret
 * Complete Rewrite of Fallback
+* New transport parameters
+* Added crypto agility
