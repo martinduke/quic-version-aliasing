@@ -1283,15 +1283,28 @@ connection error of type PROTOCOL_VIOLATION.<a href="#section-6-4" class="pilcro
 <pre>
 Encryption Context {
     Config ID (8),
+    SCKDF (16),
+    SCAEADID (16),
     Encapsulated Secret (..),
 }
 </pre><a href="#section-6.1-2" class="pilcrow">¶</a>
 </div>
-<p id="section-6.1-3">The client obtains the Config ID (an 8-bit unsigned integer) from the ECHConfig.
-It corresponds to a public key and Key Encapsulation Mechanism (KEM) that are
-not sent over the wire.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
-<p id="section-6.1-4">The Encapsulated Secret is HPKE encapsulated. Its length is inferred from the
-Encryption Context Length field.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">Config ID: An 8-bit integer identifying the configuration parameters, obtained
+from the ECHConfig. This ID implicitly identifies the public key, Key
+Encapsulation Mechanism, and the set of symmetric suites from which the
+following fields are selected.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">SCKDF: Symmetric Cipher Key Derivation Function. The client selects this from
+the cipher suites listed in the ECHConfig. This is the cipher used to encrypt
+the Initial Packet. The values are listed in Section 7.2 of <span>[<a href="#HPKE" class="xref">HPKE</a>]</span>. All
+endpoints MUST support HKDF-SHA256 (0x0001), which is used for QUIC Version 1
+Initial packets.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-5">SCAEADID: Symmetric Cipher Key Derivation Function. The client selects this
+from the cipher suites listed in the ECHConfig. This is the cipher used to
+encrypt the Initial Packet. The values are listed in Section 7.3 of <span>[<a href="#HPKE" class="xref">HPKE</a>]</span>.
+all endpoints MUST support AES-128-GCM (0x0001), which is used for QUIC Version
+1 Initial packets.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">The Encapsulated Secret is HPKE encapsulated. Its length is inferred from the
+Encryption Context Length field.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1593,6 +1606,12 @@ transport parameter.<a href="#section-14.1-9" class="pilcrow">¶</a></p>
 interval that endpoints keep Initial keys (usually ~1.5 RTTS), since Initial
 Packets are not authenticated. With version aliasing, attackers do not have
 the necessary keys to launch such an attack.<a href="#section-14.2-1" class="pilcrow">¶</a></p>
+<p id="section-14.2-2">QUIC version 1 can use a fixed symmetric cipher for its Initial Packets because
+the encryption is not providing true security. As this design aspires to
+stonger guarantees, the Encryption Context field of the Initial header provides
+the codepoints to enable use of other symmetric ciphers should AES-128-GCM be
+compromised in the future. This is to provide cryptographic agility in
+accordance with <span>[<a href="#RFC7696" class="xref">RFC7696</a>]</span>.<a href="#section-14.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="retry-injection">
@@ -1722,6 +1741,10 @@ Transport Parameters registry:<a href="#section-15.2-1" class="pilcrow">¶</a></
 <dt id="RFC7301">[RFC7301]</dt>
         <dd>
 <span class="refAuthor">Friedl, S.</span>, <span class="refAuthor">Popov, A.</span>, <span class="refAuthor">Langley, A.</span>, and <span class="refAuthor">E. Stephan</span>, <span class="refTitle">"Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension"</span>, <span class="seriesInfo">RFC 7301</span>, <span class="seriesInfo">DOI 10.17487/RFC7301</span>, <time datetime="2014-07" class="refDate">July 2014</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc7301">https://datatracker.ietf.org/doc/html/rfc7301</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7696">[RFC7696]</dt>
+        <dd>
+<span class="refAuthor">Housley, R.</span>, <span class="refTitle">"Guidelines for Cryptographic Algorithm Agility and Selecting Mandatory-to-Implement Algorithms"</span>, <span class="seriesInfo">BCP 201</span>, <span class="seriesInfo">RFC 7696</span>, <span class="seriesInfo">DOI 10.17487/RFC7696</span>, <time datetime="2015-11" class="refDate">November 2015</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/rfc7696">https://datatracker.ietf.org/doc/html/rfc7696</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8446">[RFC8446]</dt>
         <dd>
