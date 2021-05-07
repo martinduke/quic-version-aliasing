@@ -545,4 +545,4 @@ Specification: This document
 no longer separated from v1.
 * Clarified server initials are encrypted
 * Retry keys are no longer generated from the shared secret
-* Complete Rewrite of Version Aliasing
+* Complete Rewrite of Fallback
