@@ -4,8 +4,8 @@
 
 quic                                                             M. Duke
 Internet-Draft                                         F5 Networks, Inc.
-Intended status: Standards Track                              6 May 2021
-Expires: 7 November 2021
+Intended status: Standards Track                              7 May 2021
+Expires: 8 November 2021
 
 
                      Protected QUIC Initial Packets
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 November 2021.
+   This Internet-Draft will expire on 8 November 2021.
 
 Copyright Notice
 
@@ -79,20 +79,25 @@ Table of Contents
    7.  Client Packet Protection Procedure
    8.  Server Packet Protection Procedure
    9.  Retry Integrity Tag
-   10. The ECHConfig Transport Parameter
-   11. Version Negotiation
-   12. Applicability
-   13. Security and Privacy Considerations
-     13.1.  Key Loss and Version Downgrade
-     13.2.  New Attack
-     13.3.  Intermediaries
-     13.4.  Initial Packet Injection
-     13.5.  Retry Injection
-     13.6.  Less Trial Decryption
-   14. IANA Considerations
-   15. References
-     15.1.  Normative References
-     15.2.  Informative References
+   10. Fallback
+   11. New Transport Parameters
+     11.1.  public_key_failed
+     11.2.  The ECHConfig Transport Parameter
+   12. Intermediaries
+     12.1.  Client-Facing Server
+     12.2.  Back-End Server
+   13. Applicability
+   14. Security and Privacy Considerations
+     14.1.  Key Loss and Version Downgrade
+     14.2.  Initial Packet Injection
+     14.3.  Retry Injection
+     14.4.  Less Trial Decryption
+   15. IANA Considerations
+     15.1.  QUIC Version Registry
+     15.2.  QUIC Transport Parameter Registry
+   16. References
+     16.1.  Normative References
+     16.2.  Informative References
    Appendix A.  Change Log
      A.1.  since draft-duke-quic-protected-initials-00
    Author's Address
@@ -146,53 +151,48 @@ Table of Contents
    parts of the Initial packet exchange from observers.  The following
    table summarizes the advantages and disadvantages of each.
 
-    +=====================+==============+=============+=============+
-    | Property            |     ECH      |  Protected  |   Version   |
-    |                     |              |   Initials  |   Aliasing  |
-    +=====================+==============+=============+=============+
-    | Fields Protected    |   Some of    | All Initial | All Initial |
-    |                     | Client Hello |   Payloads  |   Payloads  |
-    +---------------------+--------------+-------------+-------------+
-    | Delay when server   |    1 RTT     |    2 RTT    |    2 RTT    |
-    | loses its keys      |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | No key sharing with |     Yes      |      No     |      No     |
-    | Multiple Entities   |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | Works with TLS over |     Yes      |      No     |      No     |
-    | TCP                 |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | First-connection    |     Yes      |     Yes     |      No     |
-    | protection          |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | No trial decryption |      No      |     Yes     |     Yes     |
-    +---------------------+--------------+-------------+-------------+
-    | All-Symmetric       |      No      |      No     |     Yes     |
-    | Encryption          |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | Greases the Version |      No      |      No     |     Yes     |
-    | Field               |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | All state exchange  |      No      |      No     |     Yes     |
-    | in-band             |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | Prevents Initial    |      No      |     Yes     |     Yes     |
-    | packet injection    |              |             |             |
-    | attacks             |              |             |             |
-    +---------------------+--------------+-------------+-------------+
-    | Prevents Retry      |      No      |      No     |     Yes     |
-    | injection attacks   |              |             |             |
-    +---------------------+--------------+-------------+-------------+
+     +===================+==============+=============+=============+
+     | Property          |     ECH      |  Protected  |   Version   |
+     |                   |              |   Initials  |   Aliasing  |
+     +===================+==============+=============+=============+
+     | Fields Protected  |   Some of    | All Initial | All Initial |
+     |                   | Client Hello |   Payloads  |   Payloads  |
+     +-------------------+--------------+-------------+-------------+
+     | Delay when server |    1 RTT     |    2 RTT    |    2 RTT    |
+     | loses its keys    |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | Works with TLS    |     Yes      |      No     |      No     |
+     | over TCP          |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | First-connection  |     Yes      |     Yes     |      No     |
+     | protection        |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | No trial          |      No      |     Yes     |     Yes     |
+     | decryption        |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | Prevents Initial  |      No      |     Yes     |     Yes     |
+     | packet injection  |              |             |             |
+     | attacks           |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | All-Symmetric     |      No      |      No     |     Yes     |
+     | Encryption        |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | Greases the       |      No      |      No     |     Yes     |
+     | Version Field     |              |             |             |
+     +-------------------+--------------+-------------+-------------+
+     | Prevents Retry    |      No      |      No     |     Yes     |
+     | injection attacks |              |             |             |
+     +-------------------+--------------+-------------+-------------+
 
                                  Table 1
 
-   The more complex properties in the table are discussed in Section 13.
+   The more complex properties in the table are discussed in Section 14.
 
    Both ECH and Protected Initials are complimentary with Version
    Aliasing: they provide a computationally expensive way to protect
    parts of the Initial packet during the first connection between
    client and server, after which Version Aliasing can protect future
-   exchanges with several desirable properties.
+   exchanges with several additional desirable properties.
 
 2.  Conventions
 
@@ -319,9 +319,7 @@ Table of Contents
    probability this test results in a false negative, when an incorrect
    key generates a result less than the datagram size, is typically less
    than 1 in 2^51.  The server MUST discard the packet and SHOULD send a
-   Version Negotiation packet that does not advertise the current QUIC
-   version, as the endpoints do not have the necessary shared state to
-   use QUIC Protected Initials.
+   Version Negotiation packet (see Section 10).
 
    Otherwise, the server generates the Initial secrets:
 
@@ -346,37 +344,154 @@ secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
 key = 0xbe0c690b9f66575a1d766b54e368c84e
 nonce = 0x461599d35d632bf2239825bb
 
-10.  The ECHConfig Transport Parameter
-
-   [TODO]
-
-11.  Version Negotiation
+10.  Fallback
 
    Endpoints that support QUIC Protected Initials MUST support at least
    one other version of QUIC (in case the endpoints cannot agree on the
-   ECHConfig), and therefore MUST also support
-   [I-D.ietf-quic-version-negotiation].
-
-   In contrast to Section 5 of that document, clients MUST be prepared
-   to receive a version negotiation packet that contains QUIC Protected
-   Initial, and then receive a second version negotiation packet that
-   does not, should the attempt to identify a common ECHConfig fail.
-
-   Servers MAY continue to advertise QUIC Protected Initials in its
-   Server Handshake Version Information, even if shared secret
-   extraction failed.  However, they SHOULD track the clients to which
-   they have recently sent Version Negotiation packets as a result of
-   key mismatch, as this is important to server detection of injected
-   Version Negotiation packets.
+   ECHConfig), and therefore MUST also support [QUIC-VN].
 
    Note that QUIC version 1 is not compatible with QUIC Protected
    Initials, as it does not contain the information necessary to
    generate subsequent Initial packets correctly.  Conversely, QUIC
    Protected Initials are compatible with QUIC version 1.  However,
    since the versions have identical properties after the Initial packet
-   exchange, there is little value in such a trasition.
+   exchange, there is little value in such a transition.
 
-12.  Applicability
+   When decoding a client Initial packet length, the server may conclude
+   that the client does not have the server's correct configuration (see
+   Section 8).  In this case, it SHOULD send a Version Negotiation
+   packet and that packet MUST include the version the client attempted
+   to connect with.  This contradicts the usual semantics in Section 5
+   of [QUIC-VN], and clients that support Protected Initials MUST accept
+   these packets, as well as further transport parameters that advertise
+   support for Protected Initials.
+
+   Because of the vulnerabilities described in Section 14.1, additional
+   measures are required to protect against an attacker forcing version
+   downgrade.  If the client chooses to attempt a reconnection, it MUST
+   choose a version listed in the Version Negotiation packet that does
+   not include Protected Initials.
+
+   When connecting with that version, the client MUST include the
+   public_key_failed transport parameter with the Config ID and public
+   key it attempted to use.
+
+   The server checks the Config ID and public key to see if it should
+   successfully process a Protected Initial with these parameters.  If
+   it would have, it MUST terminate the connection with a
+   VERSION_NEGOTIATION_ERROR to indicate that there has been a downgrade
+   attack.
+
+   If the server would not have successfully decoded the packet with
+   those parameters, it MUST send its own public_key_failed transport
+   parameter to acknowledge the parameter was successfully processed.
+   It MAY also send a ECHConfig transport parameter to allow use of
+   Protected Initials in subsequent connections, a Version Aliasing
+   transport parameter (see [VERSION-ALIASING]) to enable a different
+   means of Initial Protection, both, or neither.
+
+   If the client does not receive a public_key_failed transport
+   parameter in response to sending a public_key_failed transport
+   parameter, it MUST terminate the connection with a
+   TRANSPORT_PARAMETER_ERROR.
+
+11.  New Transport Parameters
+
+11.1.  public_key_failed
+
+   The system to detect version downgrade in [QUIC-VN] is insufficient
+   to do so for Protection Initials (see Section 14.1).  The
+   public_key_failed transport parameter solves this problem.  For
+   details on use, see Section 10.
+
+   Its provisional type is 0x706b66.
+
+   When sent by a client, the content of the transport parameter is as
+   follows:
+
+   {
+       Config ID (8),
+       Public Key (..),
+   }
+
+   These fields are populated using the ECHConfig that the client
+   attempted to use.  The length of the Public Key is inferred from the
+   length field of the transport parameter.
+
+   When sent by a server, the transport parameter has no value field.
+
+   Endpoints MUST respond to a malformed transport parameter by closing
+   the connection with a TRANSPORT_PARAMETER_ERROR.
+
+   Note that this transport parameter is always sent as a result of a
+   fallback from a Protected Initial, and therefore in a connection of a
+   different version.  Therefore, if received in a Protected Initial
+   connection, the receiving endpoint MUST terminate the connection with
+   a TRANSPORT_PARAMETER_ERROR.
+
+11.2.  The ECHConfig Transport Parameter
+
+   The ECHConfig transport parameter allows servers to directly provide
+   clients a valid configuration.
+
+   Its provisional type is 0x454348.
+
+   Its format is equivalent to ECHConfigList, as defined in Section 4 of
+   [ECHO].
+
+   Note that, like public_key_failed, this transport parameter is sent
+   in response to a failed attempt to use Protected Initials, and
+   therefore only occurs in other versions of QUIC.
+
+   If this transport parameter does not match this format, is received
+   by a server, or is received in a connection that uses Protected
+   Initials, the receiver MUST terminate the connection with a
+   TRANSPORT_PARAMETER_ERROR.
+
+12.  Intermediaries
+
+   In the topology proposed in Section 3.1 of [ECHO], where a client-
+   facing server has its own public name and potentially fronts a number
+   of independent domains, only the client-facing server has the private
+   keys.  Thus, it modifies incoming Initial Packets before forwarding
+   to the back-end server.  The back-end server uses a modified
+   technique for decrypting Initial packets.
+
+   A common use case of this topology is a load balancer fronting
+   multiple domains using the same IP address, which makes routing
+   decisions based on the SNI in the Client Hello.
+
+12.1.  Client-Facing Server
+
+   If an incoming client Initial has a non-zero length Encryption
+   Context field, the client-facing server MUST rewrite the Config ID
+   field as zero, replaces the Encapsulated Secret with the shared
+   secret in plaintext, and updates the Encryption Context Length
+   accordingly.
+
+   To avoid authentication failure, the client-facing server MUST re-
+   encrypt the Initial packet with the new header as associated data.
+
+   Non-Initial packets, as well as Initial packets that have a zero-
+   length Encryption Context, pass unmodified through the client-facing
+   server.
+
+   Note that client-facing servers cannot inspect any packet payloads
+   except for Initial packets.
+
+12.2.  Back-End Server
+
+   Back-end servers use the plaintext shared secret to generate Initial
+   keys.
+
+   Back-end servers MUST have an up-to-date copy of the ECHConfigList
+   the client- facing server is using, though it need not hold the
+   private key, in order to properly process the relevant transport
+   parameters.
+
+   In all other respects they operate as Protected Initial servers.
+
+13.  Applicability
 
    This version of QUIC provides no change from QUIC version 1 relating
    to the capabilities available to applications.  Therefore, all
@@ -384,14 +499,14 @@ nonce = 0x461599d35d632bf2239825bb
    specified to operate over QUICv1 can also operate over this version
    of QUIC.
 
-13.  Security and Privacy Considerations
+14.  Security and Privacy Considerations
 
    Sections 10.2, 10.3, 10.4, and 10.6 of [ECHO] apply to QUIC Protected
    Initials as well.
 
    Section 7.8 of [VERSION-ALIASING] is also applicable.
 
-13.1.  Key Loss and Version Downgrade
+14.1.  Key Loss and Version Downgrade
 
    ECH and Protected Initials both rely on shared cryptographic
    configuration state between client and server, delivered by an out-
@@ -432,34 +547,29 @@ nonce = 0x461599d35d632bf2239825bb
    are invalid with high probability.  Regardless, an attacker with
    these capabilities can always block a secured handshake of any kind,
    and can force the client choose between an insecure handshake and not
-   communicating at all.
+   communicating at all.  However, QUIC is designed to fail the
+   connection if an attacker forces a downgrade.
 
-13.2.  New Attack
+   Unfortunately, the existing detection mechanism in [QUIC-VN] is
+   insufficient to detect these in the case of Protected Initials.
 
-   [TODO: An attacker could easily craft a Client Initial designed to
-   fail, spoofing the target IP.  This will trigger a VN packet, which
-   means that no one will detect subsequent VN injections.]
+   Because some clients may have the correct configuration and others
+   not, servers might send Version Negotiation to a subset of clients
+   that attempt to use Protected Initials.  To validate if it would have
+   accepted a "Previously Attempted Version," the server would have to
+   track the clients to which it recently sent Version Negotiation
+   packets.
 
-13.3.  Intermediaries
+   However, even this is insufficient.  An attacker can simply drop a
+   Protected Initial Packet, send Version Negotiation, and then send an
+   improperly encrypted Initial Packet to the server using the client's
+   IP to trigger a Version Negotiation.  As servers do not authenticate
+   client Initials before sending Version Negotiation, the server has to
+   actually understand the crypto context the client was attempting to
+   use.  This is the reason for the public_key_failed transport
+   parameter.
 
-   Intermediaries that rely on the contents of the Client Hello (e.g., a
-   load balancer that routes between servers with the same IP address
-   based on the SNI field in the Client Hello) MUST have access to the
-   ECHConfig and the corresponding Private Keys, as described in
-   Section 3.1 of [ECHO], to function properly.
-
-   Note that in the event of multiple mistrustful entities behind the
-   same such router, sharing the context between entities would increase
-   the likelihood of leakage of the private key to outside observers.
-   Furthermore, assigning each entity its own config ID will reveal the
-   target of each client Initial in cleartext.  Therefore, there is no
-   alternative but for the load balancer to trial decrypt with each
-   entity's ECHConfig to obtain the correct routing.
-
-   [TODO: If they all fail, then what?  What VN do we send?  It's not
-   clear how the client can recover the ECHConfig from the public_name.]
-
-13.4.  Initial Packet Injection
+14.2.  Initial Packet Injection
 
    QUIC version 1 handshakes are vulnerable to DoS from observers for
    the short interval that endpoints keep Initial keys (usually ~1.5
@@ -467,7 +577,7 @@ nonce = 0x461599d35d632bf2239825bb
    aliasing, attackers do not have the necessary keys to launch such an
    attack.
 
-13.5.  Retry Injection
+14.3.  Retry Injection
 
    This version of QUIC does not improve the security of Retry packets
    with respect to QUIC version 1.  The Retry Integrity Tag uses a well-
@@ -495,7 +605,7 @@ nonce = 0x461599d35d632bf2239825bb
    decryption to verify the configuration is correct, but this cost is
    negligible compared to extracting the shared secret.
 
-13.6.  Less Trial Decryption
+14.4.  Less Trial Decryption
 
    Unlike ECH, Protected Initials can use the Packet Length Offset
    mechanism to detect key mismatches without trial decryption, saving
@@ -504,7 +614,9 @@ nonce = 0x461599d35d632bf2239825bb
    decryption that will ultimately result in the packet being silently
    dropped.
 
-14.  IANA Considerations
+15.  IANA Considerations
+
+15.1.  QUIC Version Registry
 
    This document request that IANA add the following entry to the QUIC
    version registry:
@@ -519,9 +631,26 @@ nonce = 0x461599d35d632bf2239825bb
 
    Contact: QUIC WG
 
-15.  References
+15.2.  QUIC Transport Parameter Registry
 
-15.1.  Normative References
+   This document request that IANA add the following two entries to the
+   QUIC Transport Parameters registry:
+
+   Value: TBD
+
+   Parameter Name: public_key_failed
+
+   Specification: This document
+
+   Value: TBD
+
+   Parameter Name: ECHConfig
+
+   Specification: This document
+
+16.  References
+
+16.1.  Normative References
 
    [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
               Encrypted Client Hello", Work in Progress, Internet-Draft,
@@ -548,13 +677,6 @@ nonce = 0x461599d35d632bf2239825bb
               14 January 2021, <https://datatracker.ietf.org/doc/html/
               draft-ietf-quic-tls-34.txt>.
 
-   [I-D.ietf-quic-version-negotiation]
-              Schinazi, D. and E. Rescorla, "Compatible Version
-              Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-03, 4 February 2021,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-03.txt>.
-
    [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
               Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
               14 January 2021, <https://datatracker.ietf.org/doc/html/
@@ -567,7 +689,13 @@ nonce = 0x461599d35d632bf2239825bb
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
               transport-34.txt>.
 
-15.2.  Informative References
+   [QUIC-VN]  Schinazi, D. and E. Rescorla, "Compatible Version
+              Negotiation for QUIC", Work in Progress, Internet-Draft,
+              draft-ietf-quic-version-negotiation-03, 4 February 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              version-negotiation-03.txt>.
+
+16.2.  Informative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -598,6 +726,9 @@ Appendix A.  Change Log
 A.1.  since draft-duke-quic-protected-initials-00
 
    *  Additional text comparing ECH, Version Aliasing
+
+   *  Adapted to foreground the split-mode use case -- Handshake and
+      1-RTT keys are no longer separated from v1.
 
    *  Clarified server initials are encrypted
 
