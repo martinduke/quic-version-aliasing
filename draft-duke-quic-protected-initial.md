@@ -86,14 +86,12 @@ following table summarizes the advantages and disadvantages of each.
 | :--- | :---: | :---: | :---: |
 | Fields Protected | Some of Client Hello | All Initial Payloads | All Initial Payloads |
 | Delay when server loses its keys | 1 RTT | 2 RTT | 2 RTT |
-| No key sharing with Multiple Entities | Yes | No | No |
 | Works with TLS over TCP | Yes | No | No |
 | First-connection protection | Yes | Yes | No |
 | No trial decryption | No | Yes | Yes |
+| Prevents Initial packet injection attacks | No | Yes | Yes |
 | All-Symmetric Encryption | No | No | Yes |
 | Greases the Version Field | No | No | Yes |
-| All state exchange in-band | No | No | Yes |
-| Prevents Initial packet injection attacks | No | Yes | Yes |
 | Prevents Retry injection attacks | No | No | Yes |
 
 The more complex properties in the table are discussed in
@@ -102,7 +100,8 @@ The more complex properties in the table are discussed in
 Both ECH and Protected Initials are complimentary with Version Aliasing: they
 provide a computationally expensive way to protect parts of the Initial packet
 during the first connection between client and server, after which Version
-Aliasing can protect future exchanges with several desirable properties.
+Aliasing can protect future exchanges with several additional desirable
+properties.
 
 # Conventions
 
@@ -212,7 +211,7 @@ This derivation is performed once per connection. Subsequent Initial Packets
 use the same keys and the same offset to the packet number, regardless of
 additional Encryption Context fields or changed connection IDs.
 
-# Server Packet Protection Procedure
+# Server Packet Protection Procedure {#server-procedure}
 
 The server reads the Config ID and Encapsulated Secret (enc) from the Initial
 Packet. It looks up its private key (skR) associated with the Config ID.
@@ -227,9 +226,7 @@ assurance that the client's received ECHConfig does not match the server's
 state, possibly due to a misconfiguration. The probability this test results in
 a false negative, when an incorrect key generates a result less than the
 datagram size, is typically less than 1 in 2^51. The server MUST discard the
-packet and SHOULD send a Version Negotiation packet that does not advertise the
-current QUIC version, as the endpoints do not have the necessary shared state to
-use QUIC Protected Initials.
+packet and SHOULD send a Version Negotiation packet (see {{fallback}}).
 
 Otherwise, the server generates the Initial secrets:
 
@@ -257,32 +254,138 @@ key = 0xbe0c690b9f66575a1d766b54e368c84e
 nonce = 0x461599d35d632bf2239825bb
 ~~~
 
-# The ECHConfig Transport Parameter
-
-[TODO]
-
-# Version Negotiation
+# Fallback {#fallback}
 
 Endpoints that support QUIC Protected Initials MUST support at least one other
 version of QUIC (in case the endpoints cannot agree on the ECHConfig), and
-therefore MUST also support {{!I-D.ietf-quic-version-negotiation}}.
-
-In contrast to Section 5 of that document, clients MUST be prepared to receive
-a version negotiation packet that contains QUIC Protected Initial, and then
-receive a second version negotiation packet that does not, should the attempt
-to identify a common ECHConfig fail.
-
-Servers MAY continue to advertise QUIC Protected Initials in its Server
-Handshake Version Information, even if shared secret extraction failed. However,
-they SHOULD track the clients to which they have recently sent Version
-Negotiation packets as a result of key mismatch, as this is important to
-server detection of injected Version Negotiation packets.
+therefore MUST also support {{!QUIC-VN=I-D.ietf-quic-version-negotiation}}.
 
 Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
 does not contain the information necessary to generate subsequent Initial
 packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
 version 1. However, since the versions have identical properties after the
-Initial packet exchange, there is little value in such a trasition.
+Initial packet exchange, there is little value in such a transition.
+
+When decoding a client Initial packet length, the server may conclude that the
+client does not have the server's correct configuration (see
+{{server-procedure}}). In this case, it SHOULD send a Version Negotiation packet
+and that packet MUST include the version the client attempted to connect with.
+This contradicts the usual semantics in Section 5 of {{QUIC-VN}},
+and clients that support Protected Initials MUST accept these packets, as well
+as further transport parameters that advertise support for Protected Initials.
+
+Because of the vulnerabilities described in {{downgrade}}, additional measures
+are required to protect against an attacker forcing version downgrade. If the
+client chooses to attempt a reconnection, it MUST choose a version listed in
+the Version Negotiation packet that does not include Protected Initials.
+
+When connecting with that version, the client MUST include the public_key_failed
+transport parameter with the Config ID and public key it attempted to use.
+
+The server checks the Config ID and public key to see if it should successfully
+process a Protected Initial with these parameters. If it would have, it MUST
+terminate the connection with a VERSION_NEGOTIATION_ERROR to indicate that there
+has been a downgrade attack.
+
+If the server would not have successfully decoded the packet with those
+parameters, it MUST send its own public_key_failed transport parameter to
+acknowledge the parameter was successfully processed. It MAY also send a
+ECHConfig transport parameter to allow use of Protected Initials in subsequent
+connections, a Version Aliasing transport parameter (see {{VERSION-ALIASING}})
+to enable a different means of Initial Protection, both, or neither.
+
+If the client does not receive a public_key_failed transport parameter in
+response to sending a public_key_failed transport parameter, it MUST terminate
+the connection with a TRANSPORT_PARAMETER_ERROR.
+
+# New Transport Parameters
+
+## public_key_failed
+
+The system to detect version downgrade in {{QUIC-VN}} is
+insufficient to do so for Protection Initials (see {{downgrade}}). The
+public_key_failed transport parameter solves this problem. For details on use,
+see {{fallback}}.
+
+Its provisional type is 0x706b66.
+
+When sent by a client, the content of the transport parameter is as follows:
+
+~~~
+{
+    Config ID (8),
+    Public Key (..),
+}
+~~~
+
+These fields are populated using the ECHConfig that the client attempted to use.
+The length of the Public Key is inferred from the length field of the transport
+parameter.
+
+When sent by a server, the transport parameter has no value field.
+
+Endpoints MUST respond to a malformed transport parameter by closing the
+connection with a TRANSPORT_PARAMETER_ERROR.
+
+Note that this transport parameter is always sent as a result of a fallback from
+a Protected Initial, and therefore in a connection of a different version.
+Therefore, if received in a Protected Initial connection, the receiving endpoint
+MUST terminate the connection with a TRANSPORT_PARAMETER_ERROR.
+
+## The ECHConfig Transport Parameter
+
+The ECHConfig transport parameter allows servers to directly provide clients a
+valid configuration.
+
+Its provisional type is 0x454348.
+
+Its format is equivalent to ECHConfigList, as defined in Section 4 of {{ECHO}}.
+
+Note that, like public_key_failed, this transport parameter is sent in response
+to a failed attempt to use Protected Initials, and therefore only occurs in
+other versions of QUIC.
+
+If this transport parameter does not match this format, is received by a server,
+or is received in a connection that uses Protected Initials, the receiver MUST
+terminate the connection with a TRANSPORT_PARAMETER_ERROR.
+
+# Intermediaries
+
+In the topology proposed in Section 3.1 of {{ECHO}}, where a client-facing
+server has its own public name and potentially fronts a number of independent
+domains, only the client-facing server has the private keys. Thus, it modifies
+incoming Initial Packets before forwarding to the back-end server. The back-end
+server uses a modified technique for decrypting Initial packets.
+
+A common use case of this topology is a load balancer fronting multiple domains
+using the same IP address, which makes routing decisions based on the SNI in the
+Client Hello.
+
+## Client-Facing Server
+
+If an incoming client Initial has a non-zero length Encryption Context field,
+the client-facing server MUST rewrite the Config ID field as zero, replaces the
+Encapsulated Secret with the shared secret in plaintext, and updates the
+Encryption Context Length accordingly.
+
+To avoid authentication failure, the client-facing server MUST re-encrypt the
+Initial packet with the new header as associated data.
+
+Non-Initial packets, as well as Initial packets that have a zero-length
+Encryption Context, pass unmodified through the client-facing server.
+
+Note that client-facing servers cannot inspect any packet payloads except for
+Initial packets.
+
+## Back-End Server
+
+Back-end servers use the plaintext shared secret to generate Initial keys.
+
+Back-end servers MUST have an up-to-date copy of the ECHConfigList the client-
+facing server is using, though it need not hold the private key, in order to
+properly process the relevant transport parameters.
+
+In all other respects they operate as Protected Initial servers.
 
 # Applicability
 
@@ -298,7 +401,7 @@ as well.
 
 Section 7.8 of {{VERSION-ALIASING}} is also applicable.
 
-## Key Loss and Version Downgrade
+## Key Loss and Version Downgrade {#downgrade}
 
 ECH and Protected Initials both rely on shared cryptographic configuration state
 between client and server, delivered by an out-of-band method, usually DNS.
@@ -334,31 +437,25 @@ an updated context from the public name and then assume subsequent Version
 Negotiation packets are invalid with high probability. Regardless, an attacker
 with these capabilities can always block a secured handshake of any kind, and
 can force the client choose between an insecure handshake and not communicating
-at all.
+at all. However, QUIC is designed to fail the connection if an attacker forces
+a downgrade.
 
-## New Attack
+Unfortunately, the existing detection mechanism in {{QUIC-VN}} is
+insufficient to detect these in the case of Protected Initials.
 
-[TODO: An attacker could easily craft a Client Initial designed to fail,
-spoofing the target IP. This will trigger a VN packet, which means that no one
-will detect subsequent VN injections.]
+Because some clients may have the correct configuration and others not, servers
+might send Version Negotiation to a subset of clients that attempt to use
+Protected Initials. To validate if it would have accepted a "Previously
+Attempted Version," the server would have to track the clients to which it
+recently sent Version Negotiation packets.
 
-## Intermediaries
-
-Intermediaries that rely on the contents of the Client Hello (e.g., a load
-balancer that routes between servers with the same IP address based on the SNI
-field in the Client Hello) MUST have access to the ECHConfig and the
-corresponding Private Keys, as described in Section 3.1 of {{ECHO}}, to function
-properly.
-
-Note that in the event of multiple mistrustful entities behind the same such
-router, sharing the context between entities would increase the likelihood of
-leakage of the private key to outside observers. Furthermore, assigning each
-entity its own config ID will reveal the target of each client Initial in
-cleartext. Therefore, there is no alternative but for the load balancer to
-trial decrypt with each entity's ECHConfig to obtain the correct routing.
-
-[TODO: If they all fail, then what? What VN do we send? It's not clear how the
-client can recover the ECHConfig from the public_name.]
+However, even this is insufficient. An attacker can simply drop a Protected
+Initial Packet, send Version Negotiation, and then send an improperly encrypted
+Initial Packet to the server using the client's IP to trigger a Version
+Negotiation. As servers do not authenticate client Initials before sending
+Version Negotiation, the server has to actually understand the crypto context
+the client was attempting to use.  This is the reason for the public_key_failed
+transport parameter.
 
 ## Initial Packet Injection
 
@@ -402,6 +499,8 @@ packet being silently dropped.
 
 # IANA Considerations
 
+## QUIC Version Registry
+
 This document request that IANA add the following entry to the QUIC version
 registry:
 
@@ -415,6 +514,23 @@ Change Controller: IETF
 
 Contact: QUIC WG
 
+## QUIC Transport Parameter Registry
+
+This document request that IANA add the following two entries to the QUIC
+Transport Parameters registry:
+
+Value: TBD
+
+Parameter Name: public_key_failed
+
+Specification: This document
+
+Value: TBD
+
+Parameter Name: ECHConfig
+
+Specification: This document
+
 --- back
 
 # Change Log
@@ -425,6 +541,8 @@ Contact: QUIC WG
 ## since draft-duke-quic-protected-initials-00
 
 * Additional text comparing ECH, Version Aliasing
+* Adapted to foreground the split-mode use case -- Handshake and 1-RTT keys are
+no longer separated from v1.
 * Clarified server initials are encrypted
 * Retry keys are no longer generated from the shared secret
 * Complete Rewrite of Version Aliasing
