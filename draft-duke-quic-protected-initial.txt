@@ -82,7 +82,7 @@ Table of Contents
    10. Fallback
    11. New Transport Parameters
      11.1.  public_key_failed
-     11.2.  The ECHConfig Transport Parameter
+     11.2.  ECHConfig
    12. Intermediaries
      12.1.  Client-Facing Server
      12.2.  Back-End Server
@@ -444,7 +444,7 @@ nonce = 0x461599d35d632bf2239825bb
    connection, the receiving endpoint MUST terminate the connection with
    a TRANSPORT_PARAMETER_ERROR.
 
-11.2.  The ECHConfig Transport Parameter
+11.2.  ECHConfig
 
    The ECHConfig transport parameter allows servers to directly provide
    clients a valid configuration.
@@ -659,17 +659,15 @@ nonce = 0x461599d35d632bf2239825bb
    This document request that IANA add the following two entries to the
    QUIC Transport Parameters registry:
 
-   Value: TBD
+               +=======+===================+===============+
+               | Value |   Parameter Name  | Specification |
+               +=======+===================+===============+
+               |  TBD  | public_key_failed | This document |
+               +-------+-------------------+---------------+
+               |  TBD  |     ECHConfig     | This document |
+               +-------+-------------------+---------------+
 
-   Parameter Name: public_key_failed
-
-   Specification: This document
-
-   Value: TBD
-
-   Parameter Name: ECHConfig
-
-   Specification: This document
+                                  Table 2
 
 16.  References
 
