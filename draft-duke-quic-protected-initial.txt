@@ -734,7 +734,7 @@ A.1.  since draft-duke-quic-protected-initials-00
 
    *  Retry keys are no longer generated from the shared secret
 
-   *  Complete Rewrite of Version Aliasing
+   *  Complete Rewrite of Fallback
 
 Author's Address
 
