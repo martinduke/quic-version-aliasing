@@ -347,7 +347,7 @@ a Protected Initial, and therefore in a connection of a different version.
 Therefore, if received in a Protected Initial connection, the receiving endpoint
 MUST terminate the connection with a TRANSPORT_PARAMETER_ERROR.
 
-## The ECHConfig Transport Parameter
+## ECHConfig
 
 The ECHConfig transport parameter allows servers to directly provide clients a
 valid configuration.
@@ -541,17 +541,10 @@ Contact: QUIC WG
 This document request that IANA add the following two entries to the QUIC
 Transport Parameters registry:
 
-Value: TBD
-
-Parameter Name: public_key_failed
-
-Specification: This document
-
-Value: TBD
-
-Parameter Name: ECHConfig
-
-Specification: This document
+| Value | Parameter Name | Specification |
+| :---: | :---: | :---: |
+| TBD | public_key_failed | This document |
+| TBD | ECHConfig | This document |
 
 --- back
 
