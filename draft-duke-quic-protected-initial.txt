@@ -174,8 +174,8 @@ Table of Contents
      | packet injection  |              |             |             |
      | attacks           |              |             |             |
      +-------------------+--------------+-------------+-------------+
-     | All-Symmetric     |      No      |      No     |     Yes     |
-     | Encryption        |              |             |             |
+     | Symmetric         |      No      |      No     |     Yes     |
+     | Encryption Only   |              |             |             |
      +-------------------+--------------+-------------+-------------+
      | Greases the       |      No      |      No     |     Yes     |
      | Version Field     |              |             |             |
@@ -755,14 +755,17 @@ A.1.  since draft-duke-quic-protected-initials-00
 
    *  Additional text comparing ECH, Version Aliasing
 
-   *  Adapted to foreground the split-mode use case -- Handshake and
-      1-RTT keys are no longer separated from v1.
+   *  Adapted to foreground the split-mode use case
 
    *  Clarified server initials are encrypted
 
    *  Retry keys are no longer generated from the shared secret
 
    *  Complete Rewrite of Fallback
+
+   *  New transport parameters
+
+   *  Added crypto agility
 
 Author's Address
 
