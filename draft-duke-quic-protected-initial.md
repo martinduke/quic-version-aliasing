@@ -164,20 +164,35 @@ packet has a zero Encryption Context Length, and the server has not sent an
 Initial Packet, the server MUST either discard the packet or generate a
 connection error of type PROTOCOL_VIOLATION.
 
-## Encryption Context
+## Encryption Context {#encryption-context}
 
 The encryption context, if nonzero length, has the following format:
 
 ~~~
 Encryption Context {
     Config ID (8),
+    SCKDF (16),
+    SCAEADID (16),
     Encapsulated Secret (..),
 }
 ~~~
 
-The client obtains the Config ID (an 8-bit unsigned integer) from the ECHConfig.
-It corresponds to a public key and Key Encapsulation Mechanism (KEM) that are
-not sent over the wire.
+Config ID: An 8-bit integer identifying the configuration parameters, obtained
+from the ECHConfig. This ID implicitly identifies the public key, Key
+Encapsulation Mechanism, and the set of symmetric suites from which the
+following fields are selected.
+
+SCKDF: Symmetric Cipher Key Derivation Function. The client selects this from
+the cipher suites listed in the ECHConfig. This is the cipher used to encrypt
+the Initial Packet. The values are listed in Section 7.2 of {{HPKE}}. All
+endpoints MUST support HKDF-SHA256 (0x0001), which is used for QUIC Version 1
+Initial packets.
+
+SCAEADID: Symmetric Cipher Key Derivation Function. The client selects this
+from the cipher suites listed in the ECHConfig. This is the cipher used to
+encrypt the Initial Packet. The values are listed in Section 7.3 of {{HPKE}}.
+all endpoints MUST support AES-128-GCM (0x0001), which is used for QUIC Version
+1 Initial packets.
 
 The Encapsulated Secret is HPKE encapsulated. Its length is inferred from the
 Encryption Context Length field.
@@ -463,6 +478,13 @@ QUIC version 1 handshakes are vulnerable to DoS from observers for the short
 interval that endpoints keep Initial keys (usually ~1.5 RTTS), since Initial
 Packets are not authenticated. With version aliasing, attackers do not have
 the necessary keys to launch such an attack.
+
+QUIC version 1 can use a fixed symmetric cipher for its Initial Packets because
+the encryption is not providing true security. As this design aspires to
+stonger guarantees, the Encryption Context field of the Initial header provides
+the codepoints to enable use of other symmetric ciphers should AES-128-GCM be
+compromised in the future. This is to provide cryptographic agility in
+accordance with {{?RFC7696}}.
 
 ## Retry Injection
 
