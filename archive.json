@@ -1,0 +1,750 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2021-05-09T00:26:39.346531+00:00",
+  "repo": "martinduke/quic-version-aliasing",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    },
+    {
+      "name": "editorial",
+      "description": "",
+      "color": "2E88B4"
+    }
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "id": "MDU6SXNzdWU2ODQ5NTAzMjc=",
+      "title": "Grease packet type?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/1",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Version aliasing greases most of what is left of the version-specific signature of QUIC. But there are a few holes:\r\nLong header:\r\nQUIC Bit, Packet Type, Token Length, Token, Packet Length\r\nShort header: QUIC Bit, Spin Bit\r\n\r\n@martinthomson's draft already takes care of the QUIC Bit, and the spin bit must not be obscured, by design.\r\n\r\nMessing with the token or token length would make it very hard to use the ITE. \r\n\r\nHowever, it's clear that Version Aliasing could use an alternate mapping for packet type, i.e. initial, handshake, retry, and 0rtt could be assigned arbitrary codepoints for each aliased version. This does not help with privacy but does provide even more incentive to stick with the invariants.\r\n\r\nI'll talk about packet length in a separate issue.\r\n\r\n\r\n",
+      "createdAt": "2020-08-24T20:39:11Z",
+      "updatedAt": "2020-12-10T00:57:14Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "For this to work, the mapping would have to be encoded in the version. There's no way to know if there's an ITE until you get the packet type.",
+          "createdAt": "2020-10-16T05:41:02Z",
+          "updatedAt": "2020-10-16T05:41:02Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "A much simpler version would simply switch the codepoints for packet types in a consistent way, possibly even based on the last bit of the version number. This would simplify the problems and avoid ossification on packet types.\r\n\r\nE.g. The last two bits of the VN indicate what an \"Initial Packet\" codepoint is, and the others go in the normal order modulo 4. It wouldn't be secret, but would avoid ossification.",
+          "createdAt": "2020-12-10T00:56:32Z",
+          "updatedAt": "2020-12-10T00:57:14Z"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "id": "MDU6SXNzdWU2ODQ5NTM5NDI=",
+      "title": "Grease packet length?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/2",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "We could have each aliased version also be associated with an arbitrary integer that is added to the packet length field in Long Headers.\r\n\r\nThis has two advantages\r\n(1) Middleboxes can't ossify on certain packet length field signatures (e.g. computing from 1200B Initial Packets) or \"help\" by checking the length isn't obviously bogus (which would break future attempts to encrypt or move this field)\r\n(2) We could avoid the pain of trial decryption when things go wrong. If the client is bogus or the server has lost all state and is using a new key to generate the salt, the packet length would probably turn out to be obviously wrong. If we don't need to trial decrypt to figure out that we're in that state, that saves cycles and also simplifies some of the current ambiguity in the VA Retry logic.",
+      "createdAt": "2020-08-24T20:45:12Z",
+      "updatedAt": "2020-09-21T22:49:50Z",
+      "closedAt": "2020-09-21T22:49:50Z",
+      "comments": [
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Would the addition be done modulo some number?  Maybe modulo 2^6/2^14/2^30/2^62?",
+          "createdAt": "2020-08-24T23:23:36Z",
+          "updatedAt": "2020-08-24T23:23:36Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "If the offset is max (2^61-1), there's no need for modulo addition and assuming a practical MTU of ~2000 would reduce the probability of having to try to decrypt a packet that you can't decrypt to roughly 1/2^49.",
+          "createdAt": "2020-08-24T23:26:37Z",
+          "updatedAt": "2020-08-24T23:26:37Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "The problem with non-modulo addition is that you increase the size of the encoding, which interferes with packet size calculations.  I suggested the split modulo because you could retain the length that way.",
+          "createdAt": "2020-08-24T23:30:29Z",
+          "updatedAt": "2020-08-24T23:30:29Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Hmm. Admittedly this is a drawback. In practice most QUIC implementations never have to go over 14 bits, but to get sufficient entropy we'd need at least 30.\r\n\r\nThe constraint here is that if the server reboots and loses its salt derivation key, it might send a Retry packet if the packet length is valid, and if the salt is wrong but the packet length is OK the integrity check will fail.",
+          "createdAt": "2020-08-24T23:39:07Z",
+          "updatedAt": "2020-08-24T23:39:07Z"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "id": "MDU6SXNzdWU3MTM3OTYzNTg=",
+      "title": "Request Forgery",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/4",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Sec 21.4 of quic-transport discusses how server-controlled fields can lead to request forgery attacks. The arbitrary version number, ITE, and PLO all provide the opportunity for the server to control the content of client-generated packets. Add this to security considerations.",
+      "createdAt": "2020-10-02T17:47:20Z",
+      "updatedAt": "2020-10-30T14:20:01Z",
+      "closedAt": "2020-10-30T14:20:01Z",
+      "comments": []
+    },
+    {
+      "number": 5,
+      "id": "MDU6SXNzdWU3MjY2MjU3MTA=",
+      "title": "Specify 0RTT status of transport parameter.",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/5",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The definition of a new transport parameter (Section 7.4.2) MUST\r\n   specify whether storing the transport parameter for 0-RTT is\r\n   mandatory, optional, or prohibited.  A client need not store a\r\n   transport parameter it cannot process.",
+      "createdAt": "2020-10-21T15:51:04Z",
+      "updatedAt": "2020-10-30T14:20:38Z",
+      "closedAt": "2020-10-30T14:20:38Z",
+      "comments": []
+    },
+    {
+      "number": 7,
+      "id": "MDU6SXNzdWU3MzU2Nzk4ODM=",
+      "title": "Improve IANA section",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/7",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Include value, name, and specification in the IANA Considerations",
+      "createdAt": "2020-11-03T22:36:11Z",
+      "updatedAt": "2021-01-14T00:26:43Z",
+      "closedAt": "2021-01-14T00:26:43Z",
+      "comments": []
+    },
+    {
+      "number": 8,
+      "id": "MDU6SXNzdWU3NDUxOTkwNDM=",
+      "title": "SNI-switching and VA",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/8",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "With version aliasing, there is no hope for SNI load balancing unless the devices have access to the salt generation keys.",
+      "createdAt": "2020-11-18T00:49:25Z",
+      "updatedAt": "2021-01-14T00:32:08Z",
+      "closedAt": "2021-01-14T00:32:08Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Upon further reflection, there's nothing to say here. Obviously anything that tries to inspect Initial Packets will break with VA, so best not to depend on those.",
+          "createdAt": "2021-01-14T00:32:08Z",
+          "updatedAt": "2021-01-14T00:32:08Z"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "id": "MDU6SXNzdWU3NjA3NjQ3ODM=",
+      "title": "Address s",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/9",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2020-12-09T23:57:16Z",
+      "updatedAt": "2021-01-13T23:49:32Z",
+      "closedAt": "2021-01-13T23:49:32Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Not sure what this is; deleting it",
+          "createdAt": "2021-01-13T23:49:32Z",
+          "updatedAt": "2021-01-13T23:49:32Z"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "id": "MDU6SXNzdWU3NjA3NjU2MzA=",
+      "title": "Address Sec. 15 of quic-transport",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/10",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Version aliasing steps all over this section:\r\n\r\n00000001-0000ffff are reserved for RFCs;\r\n\r\n?a?a?a?a is grease (though some additional language about VN packets might resolve this)\r\n\r\nBut it also says \"Reserved version numbers will never represent a real protocol.\"\r\n\r\n",
+      "createdAt": "2020-12-09T23:59:27Z",
+      "updatedAt": "2021-01-14T00:30:33Z",
+      "closedAt": "2021-01-14T00:30:33Z",
+      "comments": []
+    },
+    {
+      "number": 11,
+      "id": "MDU6SXNzdWU3ODU1Mzk3OTg=",
+      "title": "Describe Relation to ECHO",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/11",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "There are some overlaps here; talk through those overlaps",
+      "createdAt": "2021-01-13T23:50:14Z",
+      "updatedAt": "2021-01-14T00:13:58Z",
+      "closedAt": "2021-01-14T00:13:58Z",
+      "comments": []
+    },
+    {
+      "number": 13,
+      "id": "MDU6SXNzdWU4NjU1MzY0Njk=",
+      "title": "Wait to authenticate before accepting the TP",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/13",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "It might be tempting for endpoints to start a connection with the server, collect the TP from encrypted extensions, and then immediately quit to do a secret connection. This is a bad idea, because the TP might come from an impostor. \r\n\r\nIn fact, we can't verify the authenticity of the handshake until complete, so we need to verify the quality of 1-RTT keys before aborting.\r\n\r\nThis might be in response to a (possibly spoofed) VN packet, or the first time we connect to a server.",
+      "createdAt": "2021-04-22T22:23:14Z",
+      "updatedAt": "2021-05-05T00:07:25Z",
+      "closedAt": "2021-05-05T00:07:25Z",
+      "comments": []
+    },
+    {
+      "number": 14,
+      "id": "MDU6SXNzdWU4NzY1MzY1MTE=",
+      "title": "Oops, I broke VN",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/14",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "In Section 10:\r\n\r\n>Servers MAY continue to advertise QUIC Protected Initials in its Server Handshake Version Information, even if shared >secret extraction failed, to avoid tracking state as to which clients have failed such extraction. This does not effect the >Version Downgrade mechanism, which is executed by servers.\r\n\r\nServers absolutely have to track this, or they won't detect version downgrades!\r\n",
+      "createdAt": "2021-05-05T14:51:51Z",
+      "updatedAt": "2021-05-06T21:59:21Z",
+      "closedAt": "2021-05-06T21:59:21Z",
+      "comments": []
+    },
+    {
+      "number": 15,
+      "id": "MDU6SXNzdWU4NzY2Njc2NzA=",
+      "title": "TP for ECHConfig",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/15",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "If people are using Protected Initials without version aliasing, there should be a transport parameter that provides the correct ECHConfig if there's evidence of a problem.",
+      "createdAt": "2021-05-05T17:12:16Z",
+      "updatedAt": "2021-05-07T20:37:29Z",
+      "closedAt": "2021-05-07T20:37:29Z",
+      "comments": []
+    },
+    {
+      "number": 16,
+      "id": "MDU6SXNzdWU4NzY2OTUwMTQ=",
+      "title": "1RTT penalty on fallback",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/16",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "It's worth pointing out that sending a VN packet implies 1 RTT penalty that does not exist with ECHO.\r\n\r\nThis applies in cases of genuine misconfiguration, as well as attacks that both inject a VN and drop the Server Initial.",
+      "createdAt": "2021-05-05T17:48:05Z",
+      "updatedAt": "2021-05-06T21:56:10Z",
+      "closedAt": "2021-05-06T21:56:10Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Resolved by https://github.com/martinduke/quic-version-aliasing/commit/7acbb5128bc23c3c1550c3ab5c59cf59d9f0ee51",
+          "createdAt": "2021-05-06T21:56:06Z",
+          "updatedAt": "2021-05-06T21:56:06Z"
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "id": "MDU6SXNzdWU4NzY4MDE4NTA=",
+      "title": "Protected Initial makes retries very expensive",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/17",
+      "state": "CLOSED",
+      "author": "DavidSchinazi",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "draft-duke-quic-protected-initial-00 uses the HPKE shared_secret in the computation of the Retry Integrity Tag. This means that servers (or load balancers) will need to perform asymmetric cryptography operations in order to send RETRY packets. That's probably too expensive. What's the benefit of using the shared_secret for retries?",
+      "createdAt": "2021-05-05T20:19:37Z",
+      "updatedAt": "2021-05-06T18:15:23Z",
+      "closedAt": "2021-05-06T18:15:23Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "The benefit is that Retries are not spoofable anymore, which I agree isn't huge.\r\n\r\nI borrowed this from version aliasing, which was all-symmetric and therefore inexpensive. Your two issues together absolutely present an alternative design -- purely v1 Retries (with a different standard key) and no packet length offset.",
+          "createdAt": "2021-05-05T21:19:23Z",
+          "updatedAt": "2021-05-05T21:19:23Z"
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "id": "MDU6SXNzdWU4NzY4MDU1Nzk=",
+      "title": "Why is the HPKE public XORed with the packet Length field?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/18",
+      "state": "CLOSED",
+      "author": "DavidSchinazi",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "draft-duke-quic-protected-initial-00 XORs the HPKE public key with the long header Length field, but doesn't explain why. What's the purpose of this? It sounds like it allows the server to detect mismatched keys without trying to decrypt the initial, but it isn't clear to me that this is a desirable feature.",
+      "createdAt": "2021-05-05T20:24:52Z",
+      "updatedAt": "2021-05-06T18:15:23Z",
+      "closedAt": "2021-05-06T18:15:23Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "yes, that is exactly the purpose. For normal operation, this is strictly nice-to-have. When in Retry mode, however, it allows the server to send a Retry that the client can actually understand -- if the keys don't match, it's going to have to revert to v1, get another Initial, and then send Retry.\r\n\r\nOtherwise we can't authenticate Retry the way this envisions.",
+          "createdAt": "2021-05-05T21:14:32Z",
+          "updatedAt": "2021-05-05T21:14:32Z"
+        },
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'm not sure I understand what you meant by \"it allows the server to send a Retry that the client can actually understand\". Doesn't the server need the keys to match in order to derive the shared_secret which is required for the Retry Integrity Tag?",
+          "createdAt": "2021-05-05T22:02:44Z",
+          "updatedAt": "2021-05-05T22:02:44Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Yes -- so if the keys don't match, the server sends VN, because the Retry Integrity check would fail.",
+          "createdAt": "2021-05-05T22:09:02Z",
+          "updatedAt": "2021-05-05T22:09:02Z"
+        },
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I see. So this allows the server to skip the (symmetric AES-GCM) initial decryption to find out whether the ECHO keys are correct. But the server has already had to perform the (asymmetric HPKE) decryption to derive shared_secret. Since asymmetric is generally orders of magnitude more CPU-expensive than symmetric, I'm not sure if this extra complexity is worth it.",
+          "createdAt": "2021-05-05T22:15:12Z",
+          "updatedAt": "2021-05-05T22:15:12Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "So there are two separate design decisions here:\r\n\r\nDetect key mismatch by\r\n(1) This packet length thing\r\n(2) Trial Decrypt\r\n\r\nSend Retry with\r\n(A) a fixed integrity tag key\r\n(B) One derived from shared_secret\r\n\r\nIn #17 you make a compelling case for (B) being quite expensive. If we were to end up doing (B) anyway, (2) seems like a trivial expense.\r\n\r\nHowever, if we choose (A), Retries are cheap. We can't send a Retry without checking for key mismatch, because then if the keys we send Retry followed by a VN, which is bad. We must check for key mismatch before sending either VN or Retry, and it would be nice to not do a trial decrypt.\r\n\r\nIMO the best equilibria are (1A) and (2B). (1A) has cheap retries; (2b) has secure (but very expensive) ones. The draft currently has (1B), which has expensive, secure retries but also the complex mechanism that saves very little except in the corner case where we send VN.\r\n\r\n\r\n\r\n",
+          "createdAt": "2021-05-05T23:01:33Z",
+          "updatedAt": "2021-05-05T23:01:33Z"
+        }
+      ]
+    },
+    {
+      "number": 19,
+      "id": "MDU6SXNzdWU4NzY4ODczNTY=",
+      "title": "Why not ECHO?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/19",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "editorial"
+      ],
+      "body": "the protected initial document could use a more carefully crafted section on why one might use this instead of ECHO. The value proposition is quite similar.",
+      "createdAt": "2021-05-05T21:50:24Z",
+      "updatedAt": "2021-05-06T21:55:53Z",
+      "closedAt": "2021-05-06T21:55:53Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Resolved by https://github.com/martinduke/quic-version-aliasing/commit/7acbb5128bc23c3c1550c3ab5c59cf59d9f0ee51",
+          "createdAt": "2021-05-06T21:55:53Z",
+          "updatedAt": "2021-05-06T21:55:53Z"
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "id": "MDU6SXNzdWU4NzY4OTM1NDQ=",
+      "title": "Clarify whether server initials are encrypted",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/20",
+      "state": "CLOSED",
+      "author": "DavidSchinazi",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In draft-duke-quic-protected-initial-00 it's not obvious to me that initials are encrypted in both directions. I had initially assumed that only client-to-server initials were encrypted. It might be worth making this clearer.",
+      "createdAt": "2021-05-05T22:01:21Z",
+      "updatedAt": "2021-05-06T17:29:47Z",
+      "closedAt": "2021-05-06T17:29:47Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "will do",
+          "createdAt": "2021-05-05T22:15:46Z",
+          "updatedAt": "2021-05-05T22:15:46Z"
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "id": "MDU6SXNzdWU4Nzc5Mjg5Mzg=",
+      "title": "Crypto Agility?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/23",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "AES128-GCM is fine fixed choice for QUICv1, because its strength really isn't all that relevant. But it would be good to explictly negotiate the cipher to allow negotiation of new ciphers if AES128-GCM is compromised.\r\n\r\nHPKE/ECHO have provisions for this; simply use them.",
+      "createdAt": "2021-05-06T19:38:59Z",
+      "updatedAt": "2021-05-07T20:56:37Z",
+      "closedAt": "2021-05-07T20:56:37Z",
+      "comments": []
+    },
+    {
+      "number": 24,
+      "id": "MDU6SXNzdWU4Nzk3ODk4NTk=",
+      "title": "Alternate fallback design",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/24",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "@DavidSchinazi proposes:\r\n\r\n- No packet length offset\r\n- Protected Initial endpoints MUST also support v1\r\n- In response to protected Initial, servers MAY send Retry, then VN.\r\n- In response to VN, clients use the token from the Retry (across versions)\r\n\r\nWe could even use a new packet type, instead of VN, if the fallback is defined to be V1, thus keeping this clear of the mangled VN semantics entirely.",
+      "createdAt": "2021-05-07T21:37:56Z",
+      "updatedAt": "2021-05-07T23:25:31Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "We chatted, and he came up with something even better:\r\n\r\n- No packet length offset (this would be chrome to eliminate trial decryption, but meh)\r\n- The client ALWAYS includes a public_key_failed TP (which will be renamed)\r\n- When the keys don't work, the server sends a 0RTT Packet (contents TBD) that means \"the keys didn't work\"\r\n- The client resends the Initial with a zero-length Encryption Context, with keys from a known secret. Version is unchanged. The CIDs are the same, but the CHLO might change.\r\n- The server understands the new initial to mean it's encrypted with the standard keys (and thus unprotected). When zero-length, the server validates the client TP and sends its own.\r\n- the original CHLO is not included in the handshake transcript\r\n\r\nThus we don't have to misuse the VN mechanism to communicate the key failure, and avoid the bad outcomes that arise there.",
+          "createdAt": "2021-05-07T23:12:01Z",
+          "updatedAt": "2021-05-07T23:12:01Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "revision: don't always send the public_key_failed TP. That causes problems for split-mode.",
+          "createdAt": "2021-05-07T23:25:31Z",
+          "updatedAt": "2021-05-07T23:25:31Z"
+        }
+      ]
+    }
+  ],
+  "pulls": [
+    {
+      "number": 3,
+      "id": "MDExOlB1bGxSZXF1ZXN0NDcyODM3ODk0",
+      "title": "Grease the packet length field",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/3",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Resolves #2 ",
+      "createdAt": "2020-08-24T23:28:38Z",
+      "updatedAt": "2020-09-21T22:49:50Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "e7838070554134e930ba991134473c0661940a57",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "grease-pkt-len",
+      "headRefOid": "32e7a8c3e7dd274ffd23b95a9b9f0ed600da7103",
+      "closedAt": "2020-09-21T22:49:50Z",
+      "mergedAt": "2020-09-21T22:49:50Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "6d3ad744858b697faeb72c8cfcc6b061832b5320"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 6,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTEyNTg3MTE3",
+      "title": "0RTT text, request forgery",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/6",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #4 and #5",
+      "createdAt": "2020-10-29T21:42:25Z",
+      "updatedAt": "2020-10-30T14:20:01Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "6d3ad744858b697faeb72c8cfcc6b061832b5320",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "request-forgery",
+      "headRefOid": "25e69b88989b9a6bf8ba9128887ca93ba1243807",
+      "closedAt": "2020-10-30T14:20:01Z",
+      "mergedAt": "2020-10-30T14:20:01Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "69e538c00840f7efbe714a1c134435b7ff9fb872"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTIwMTM5NDc1",
+          "commit": {
+            "abbreviatedOid": "defb7bf"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-29T22:42:05Z",
+          "updatedAt": "2020-10-29T22:42:59Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "This seems like a tautology, doesn't it?  The question you need to ask is whether a server will accept 0-RTT without an aliased version.",
+              "createdAt": "2020-10-29T22:42:05Z",
+              "updatedAt": "2020-10-30T14:19:24Z"
+            },
+            {
+              "originalPosition": 21,
+              "body": "```suggestion\r\nand part of the token field in Initial packets sent by the client, potentially\r\n```",
+              "createdAt": "2020-10-29T22:42:46Z",
+              "updatedAt": "2020-10-30T14:19:24Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTIwNjk0MjI0",
+          "commit": {
+            "abbreviatedOid": "4dbca1d"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-30T13:59:14Z",
+          "updatedAt": "2020-10-30T13:59:14Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Yeah, I'm just trying to follow the letter of quic-transport even though it's a little silly in this case. I'll add something about the server.",
+              "createdAt": "2020-10-30T13:59:14Z",
+              "updatedAt": "2020-10-30T14:19:24Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTU0NTYwMjM4",
+      "title": "Relationship to ECH",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/12",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Resolves #11",
+      "createdAt": "2021-01-14T00:13:46Z",
+      "updatedAt": "2021-01-14T00:13:58Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "0727f8799b25bc9a6bb460c61325ff9d59dd10fa",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "echo",
+      "headRefOid": "543a0819d3f393ef6c71abb526e072b1c398bcc1",
+      "closedAt": "2021-01-14T00:13:58Z",
+      "mergedAt": "2021-01-14T00:13:58Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "605c60e7aca71258dd471ffe5d5574d853b90f7c"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 21,
+      "id": "MDExOlB1bGxSZXF1ZXN0NjMwOTgyMDk1",
+      "title": "Fix #20 - server initials are protected, too",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/21",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2021-05-05T23:08:18Z",
+      "updatedAt": "2021-05-06T17:29:47Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "c503641ee52898af3327a7b4dca00b5a732ec5f2",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "draft01",
+      "headRefOid": "88eb01693b6556b20e8149365c13dc5d82dde3f5",
+      "closedAt": "2021-05-06T17:29:47Z",
+      "mergedAt": "2021-05-06T17:29:47Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "1636182d9a62cb647b67a3a9c66fe745d6989de7"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 22,
+      "id": "MDExOlB1bGxSZXF1ZXN0NjMxNzA5MTA5",
+      "title": "Fix #17, fix #18: simpler retries",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/22",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "See the new appendix for the design tradeoff here.",
+      "createdAt": "2021-05-06T18:08:51Z",
+      "updatedAt": "2021-05-06T18:15:22Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "1636182d9a62cb647b67a3a9c66fe745d6989de7",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "simple-retry",
+      "headRefOid": "a74dd9a8a59fcb46df23dabb1023756325f682fc",
+      "closedAt": "2021-05-06T18:15:22Z",
+      "mergedAt": "2021-05-06T18:15:22Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "bb3b12c11efd39dab99313b2074dab62dc243a30"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjUzNzUzMzk5",
+          "commit": {
+            "abbreviatedOid": "26b46eb"
+          },
+          "author": "DavidSchinazi",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2021-05-06T18:11:49Z",
+          "updatedAt": "2021-05-06T18:13:43Z",
+          "comments": [
+            {
+              "originalPosition": 8,
+              "body": "```suggestion\r\nThe Retry packet is identical to QUIC version 1, except that\r\nthe key and nonce used for the Retry Integrity Tag (Sec 5.8 of\r\n```",
+              "createdAt": "2021-05-06T18:11:49Z",
+              "updatedAt": "2021-05-06T18:15:18Z"
+            },
+            {
+              "originalPosition": 43,
+              "body": "```suggestion\r\ncannot accept two Retries in the same connection.\r\n```",
+              "createdAt": "2021-05-06T18:12:34Z",
+              "updatedAt": "2021-05-06T18:15:18Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 25,
+      "id": "MDExOlB1bGxSZXF1ZXN0NjMzNjU3NTAx",
+      "title": "fix #24: no VN in fallback",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/25",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2021-05-08T00:10:31Z",
+      "updatedAt": "2021-05-08T00:10:31Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "03923f2273088691053fb129f62c8eaf1383dad9",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "new-fallback",
+      "headRefOid": "4dc2808e3de873c2a9d096530ca9226bf9058879",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}
