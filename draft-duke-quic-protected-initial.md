@@ -252,28 +252,20 @@ nonce = 0x461599d35d632bf2239825bb
 
 When decoding a client Initial packet length, the server may conclude that the
 client does not have the server's correct configuration (see
-{{server-procedure}}). In this case, it replies with a packet that uses the
-0RTT packet type (0x01), which in QUIC version 1 only goes from client to
-server, and discards the Initial.
+{{server-procedure}}). In this case, it replies with a Fallback packet (see
+{{fallback-packet}}), and discards the Initial.
 
-The payload of this packet is TBD, but it contains a hash of the encrypted
-Client Hello.
-
-The packet is encrypted with Initial keys derived from the following well-known
-"fallback salt" 0xbd62319ad6eeb17a9ed0d3bf75e37e4a8e7e6ac7, instead of the
-shared secret that the server cannot decode.
-
-The client checks the hash against its own record of the Initial Packet. If
-they do not match, the packet may have been corrupted, and the client MAY treat
-the packet as lost. If they do match, the client MUST assume that does not have
-the correct ECHConfig.
+The client checks the hash in the packet against its own record of the Initial
+Packet. If they do not match, the packet may have been corrupted, and the client
+MAY treat the packet as lost. If they do match, the client MUST assume that does
+not have the correct ECHConfig.
 
 When it has the incorrect config, the client composes a new Client Hello. It
 MUST include the public_key_failed transport parameter with the Config ID and
 public key it attempted to use. It MUST use a Encryption Context Length of zero,
-and encrypt it with keys derived from the fallback salt above. The Client Hello
-also MUST include any Retry Token the previous Initial contained and MAY include
-a token from a NEW_TOKEN frame.
+and encrypt it with keys derived from the fallback salt defined in
+{{fallback-packet}}. The Client Hello also MUST include any Retry Token the
+previous Initial contained and MAY include a token from a NEW_TOKEN frame.
 
 Note that the fallback salt does not provide confidentiality to the client, and
 the client SHOULD NOT include privacy-sensitive information there. See
@@ -301,6 +293,19 @@ the connection with a TRANSPORT_PARAMETER_ERROR.
 
 The client MUST NOT include the original client hello in its TLS transcript
 hash for key computation, as the server has no access to this message.
+
+# The Fallback Packet {#fallback-packet}
+
+The Fallback packet uses the 0x1 packet type code, which it shares with 0RTT.
+Since 0RTT is only sent by clients and Fallback is only sent by servers, these
+two types are distinguished by the endpoint's role in the handshake.
+
+The packet is encrypted with Initial keys derived from the following well-known
+"fallback salt" 0xbd62319ad6eeb17a9ed0d3bf75e37e4a8e7e6ac7, instead of the
+shared secret that the server cannot decode.
+
+The format of this packet is TBD. However, it contains a hash of the entire
+client Initial packet that triggered the Fail.
 
 # New Transport Parameters
 
@@ -431,16 +436,21 @@ allowing a resumed attempt after 1 RTT.
 
 With Protected Initials, when decryption fails there is not enough context to
 complete any sort of authentication to update the crypto context. Instead, the
-server sends a 0RTT packet that causes the client to fall back to keys that do
-not offer confidentiality, with which it could connect to the public name and
+server sends a Fallback packet that causes the client to fall back to keys that
+do not offer confidentiality, with which it could connect to the public name and
 only then acquire the updated crypto context. Note that this incurs an
 additional 1-RTT penalty over ECH, although loss of key synchronization is
 hopefully a rare occurrence.
 
-An attacker could inject 0RTT packets to force the client to use the fallback
-salt and lose confidentiality. The public_key_failed transport parameter is
-designed to confirm that the server could have sent the 0RTT packet, thus
-validating that there is no downgrade attack.
+An attacker could inject Fallback packets to force the client to use the
+fallback salt and lose confidentiality. The public_key_failed transport
+parameter is designed to confirm that the server could have sent the Fallback
+packet, thus validating that there is no downgrade attack.
+
+Upon receipt of a Fallback packet, a client SHOULD wait for a probe timeout
+(PTO) before sending a client hello using the fallback salt. This verifies that
+the attacker can not only observe Initial packets and inject Fallbacks, but also
+drop either the client or server Initial.
 
 ## Initial Packet Injection
 
