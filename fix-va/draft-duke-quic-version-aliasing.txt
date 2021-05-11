@@ -99,8 +99,9 @@ Table of Contents
      8.9.  Increased Retry Overhead
      8.10. Request Forgery
    9.  IANA Considerations
-     9.1.  QUIC Transport Parameter Registry
-     9.2.  QUIC Transport Error Codes Registry
+     9.1.  QUIC Version Registry
+     9.2.  QUIC Transport Parameter Registry
+     9.3.  QUIC Transport Error Codes Registry
    10. References
      10.1.  Normative References
      10.2.  Informative References
@@ -871,7 +872,22 @@ Table of Contents
 
 9.  IANA Considerations
 
-9.1.  QUIC Transport Parameter Registry
+9.1.  QUIC Version Registry
+
+   This document request that IANA add the following entry to the QUIC
+   version registry:
+
+   Value: TBD
+
+   Status: permanent
+
+   Specification: This document
+
+   Change Controller: IETF
+
+   Contact: QUIC WG
+
+9.2.  QUIC Transport Parameter Registry
 
    This draft chooses a transport parameter (0x5641) to minimize the
    risk of collision.  IANA should assign a permanent value from the
@@ -883,7 +899,7 @@ Table of Contents
 
    Specification: This document
 
-9.2.  QUIC Transport Error Codes Registry
+9.3.  QUIC Transport Error Codes Registry
 
    This document requests that IANA add the following entry to the QUIC
    Transport Error Codes registry:
