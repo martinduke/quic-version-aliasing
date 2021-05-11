@@ -354,11 +354,11 @@ nonce = 0x461599d35d632bf2239825bb
 
    When it has the incorrect config, the client composes a new Client
    Hello.  It MUST include the public_key_failed transport parameter
-   with the Config ID and public key it attempted to use.  It MUST use a
-   Encryption Context Length of zero, and encrypt it with keys derived
-   from the fallback salt defined in Section 11.  The Client Hello also
-   MUST include any Retry Token the previous Initial contained and MAY
-   include a token from a NEW_TOKEN frame.
+   with the Config ID and public key it attempted to use.  It MUST use
+   an Encryption Context Length of zero, and encrypt it with keys
+   derived from the fallback salt defined in Section 11.  The Client
+   Hello also MUST include any Retry Token the previous Initial
+   contained and MAY include a token from a NEW_TOKEN frame.
 
    Note that the fallback salt does not provide confidentiality to the
    client, and the client SHOULD NOT include privacy-sensitive
