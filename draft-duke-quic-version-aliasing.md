@@ -735,6 +735,21 @@ increasing the potency of this attack.
 
 # IANA Considerations
 
+## QUIC Version Registry
+
+This document request that IANA add the following entry to the QUIC version
+registry:
+
+Value: TBD
+
+Status: permanent
+
+Specification: This document
+
+Change Controller: IETF
+
+Contact: QUIC WG
+
 ## QUIC Transport Parameter Registry
 
 This draft chooses a transport parameter (0x5641) to minimize the risk of
