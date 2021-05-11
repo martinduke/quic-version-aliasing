@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-05-09T00:26:39.346531+00:00",
+  "timestamp": "2021-05-11T00:24:43.640156+00:00",
   "repo": "martinduke/quic-version-aliasing",
   "labels": [
     {
@@ -732,13 +732,13 @@
       "labels": [],
       "body": "",
       "createdAt": "2021-05-08T00:10:31Z",
-      "updatedAt": "2021-05-08T00:10:31Z",
+      "updatedAt": "2021-05-10T21:55:18Z",
       "baseRepository": "martinduke/quic-version-aliasing",
       "baseRefName": "master",
       "baseRefOid": "03923f2273088691053fb129f62c8eaf1383dad9",
       "headRepository": "martinduke/quic-version-aliasing",
       "headRefName": "new-fallback",
-      "headRefOid": "4dc2808e3de873c2a9d096530ca9226bf9058879",
+      "headRefOid": "9c044c7bb2e24d644f9f20fa9965469afd825fd1",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
