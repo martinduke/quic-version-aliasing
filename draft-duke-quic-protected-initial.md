@@ -262,7 +262,7 @@ not have the correct ECHConfig.
 
 When it has the incorrect config, the client composes a new Client Hello. It
 MUST include the public_key_failed transport parameter with the Config ID and
-public key it attempted to use. It MUST use a Encryption Context Length of zero,
+public key it attempted to use. It MUST use an Encryption Context Length of zero,
 and encrypt it with keys derived from the fallback salt defined in
 {{fallback-packet}}. The Client Hello also MUST include any Retry Token the
 previous Initial contained and MAY include a token from a NEW_TOKEN frame.
