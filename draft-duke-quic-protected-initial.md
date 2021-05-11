@@ -257,7 +257,7 @@ client does not have the server's correct configuration (see
 
 The client checks the hash in the packet against its own record of the Initial
 Packet. If they do not match, the packet may have been corrupted, and the client
-MAY treat the packet as lost. If they do match, the client MUST assume that does
+MAY treat the packet as lost. If they do match, the client MUST assume that it does
 not have the correct ECHConfig.
 
 When it has the incorrect config, the client composes a new Client Hello. It
