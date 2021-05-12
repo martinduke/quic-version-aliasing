@@ -307,6 +307,7 @@ shared secret that the server cannot decode.
 
 The Fallback packet has the following format:
 
+~~~
 Fallback Packet {
   Header Form (1) = 1,
   Fixed Bit (1) = 1,
@@ -319,6 +320,7 @@ Fallback Packet {
   Source Connection ID (0..160),
   Integrity Tag (128),
 }
+~~~
 
 The server computes the Integrity Tag by prepending the entire UDP payload that
 contained the client Initial to the Fallback packet contents (minus the tag
