@@ -531,6 +531,10 @@ and parameters it just tried to connect with.
 Once it sends this transport parameter, the client MUST NOT attempt to connect
 with that aliased version again.
 
+The original Client Initial is not part of the new connection. Therefore, the
+Connection IDs can change, and the original client hello is not part of the
+transcript for TLS key derivation.
+
 Note that the client never sends this transport parameter with an aliased
 version. A server that receives such a packet MUST terminate the connection with
 a TRANSPORT_PARAMETER_ERROR.
