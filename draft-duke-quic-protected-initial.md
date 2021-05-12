@@ -144,10 +144,10 @@ Initial Packet {
    Destination Connection ID (0..160),
    Source Connection ID Length (8),
    Source Connection ID (0..160),
-   Encryption Context Length (8),
-   Encryption Context (..),
    Token Length (i),
    Token (..),
+   Encryption Context Length (8),
+   Encryption Context (..),
    Length (i),
    Packet Number (8..32),
 }
