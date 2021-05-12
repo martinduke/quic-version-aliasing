@@ -81,11 +81,12 @@ Table of Contents
      3.6.  Multiple Servers for One Domain
      3.7.  Multiple Entities With One Load Balancer
    4.  Client Behavior
+     4.1.  The aliasing_parameters Transport Parameter
    5.  Server Actions on Aliased Version Numbers
    6.  Fallback
      6.1.  Bad Salt Packets
      6.2.  Client Response to Bad Salt
-     6.3.  Server Response to Transport Parameter
+     6.3.  Server Response to version_aliasing Transport Parameter
    7.  Considerations for Retry Packets
    8.  Security and Privacy Considerations
      8.1.  Endpoint Impersonation
@@ -511,6 +512,9 @@ Table of Contents
    frame, if it is using the associated aliased version.  If there is no
    such token, it simply includes the ITE as the entire token.
 
+   When using an aliased version, the client MUST include a
+   aliasing_parameters transport parameter in its Client Hello.
+
    The QUIC Token Length field MUST include the length of both any Retry
    or NEW_TOKEN token and the ITE.
 
@@ -532,6 +536,29 @@ Table of Contents
 
    If the response to an Initial packet is a Bad Salt packet, the client
    follows the procedures in Section 6.
+
+4.1.  The aliasing_parameters Transport Parameter
+
+   This transport parameter has the following format.  Its provisional
+   type is 0x4150.
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Version (32)                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                      Initial Token (variable)                 |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   The Version field matches the one in the packet header.
+
+   The Initial Token field matches the Initial Token in the packet
+   header, including any Retry token, NEW_TOKEN token, and Initial Token
+   Extension.  Its length is inferred from the specified length of the
+   parameter.
+
+   The purpose of this parameter is to validate the contents of these
+   header fields by including it in the TLS handshake transcript.
 
 5.  Server Actions on Aliased Version Numbers
 
@@ -568,6 +595,10 @@ Table of Contents
    However, issuing version numbers to a client SHOULD be rate-limited
    to mitigate the salt polling attack Section 8.7 and MAY cease to
    clients that are consistently connecting with standard versions.
+
+   If there is no aliasing_parameters transport parameter, or the
+   contents do not match the fields in the Initial header, the server
+   MUST terminate the connection with a TRANSPORT_PARAMETER_ERROR.
 
 6.  Fallback
 
@@ -679,7 +710,7 @@ Table of Contents
    aliased version.  A server that receives such a packet MUST terminate
    the connection with a TRANSPORT_PARAMETER_ERROR.
 
-6.3.  Server Response to Transport Parameter
+6.3.  Server Response to version_aliasing Transport Parameter
 
    A client version_aliasing transport parameter tells the server that
    the client received a Bad Salt packet.  The server checks if could
@@ -934,11 +965,20 @@ Table of Contents
 
 9.2.  QUIC Transport Parameter Registry
 
-   This draft chooses a transport parameter (0x5641) to minimize the
-   risk of collision.  IANA should assign a permanent value from the
-   QUIC Transport Parameter Registry.
+   This document requests that IANA add the following entries to the
+   QUIC Transport Parameters Registry:
 
-   Value: TBD
+              +=======+=====================+===============+
+              | Value |    Parameter Name   | Specification |
+              +=======+=====================+===============+
+              |  TBD  |   Version Aliasing  | This Document |
+              +-------+---------------------+---------------+
+              |  TBD  | aliasing_parameters | This Document |
+              +-------+---------------------+---------------+
+
+                                  Table 1
+
+   Value: TBD (provisional: 0x5641)
 
    Parameter Name: Version Aliasing
 
