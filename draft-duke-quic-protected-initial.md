@@ -161,6 +161,10 @@ connection error of type PROTOCOL_VIOLATION.
 Clients MUST include a nonzero Encryption Context Length in all Initial packets,
 unless executing fallback procedures (see {{fallback}}).
 
+When the client includes a non-zero-length Encryption Context, it MUST include
+an initial_encryption_context in its Client Hello, so that this header field
+is included in the TLS handshake transcript.
+
 ## Encryption Context {#encryption-context}
 
 The encryption context, if nonzero length, has the following format:
@@ -235,6 +239,19 @@ The remainder is identical to the client procedure. All server-generated
 Initial packets use the keys generated in this process.
 
 If packet decryption fails, see {{fallback}}.
+
+The server terminates the connection with a TRANSPORT_PARAMETER_ERROR under the
+following conditions:
+
+* There is a zero-length Encryption Context field, but the
+initial_encryption_context transport parameter is present
+
+* There is a non-zero-length Encryption Context field, but the
+initial_encryption_context transport parameter is absent or does not match the
+header.
+
+However, see {{intermediaries}} for exceptions to this transport parameter
+processing rule.
 
 # Retry Integrity Tag {#retry}
 
@@ -377,7 +394,14 @@ or is received in a connection where the client's most recent Initial had a
 non-zero-length Encryption Context, the receiver MUST terminate the connection
 with a TRANSPORT_PARAMETER_ERROR.
 
-# Intermediaries
+## initial_encryption_context
+
+The format of this transport parameter is identical to the Encryption Context
+described in {{encryption-context}}.
+
+Its provisional type is 0x696563.
+
+# Intermediaries {#intermediaries}
 
 In the topology proposed in Section 3.1 of {{ECHO}}, where a client-facing
 server has its own public name and potentially fronts a number of independent
@@ -399,6 +423,10 @@ forwarding to the back-end server, it encrypts the plaintext version of this
 modified packet with keys derived from the fallback salt. Thus, between
 client-facing server and back-end server the packet is inspectable by observers.
 
+The client-facing server MUST enforce correct use of the
+initial_encryption_context parameter, as described in {{server-procedure}}, and
+terminate the connection if necessary.
+
 Similarly, if the client is using the shared secret, the client-facing server
 MUST decrypt server Initial packets encrypted with keys derived from the
 fallback secret, and re-encrypt them with keys derived from the shared secret.
@@ -413,6 +441,10 @@ Initial packets.
 Back-end servers MUST have an up-to-date copy of the ECHConfigList the client-
 facing server is using, though it need not hold the private key, in order to
 properly process and generate the relevant transport parameters.
+
+Back-end servers MUST NOT take any action based on the presence or contents of
+the initial_encryption_context transport parameter, as the client-facing server
+has likely stripped the Encryption Context out of the header.
 
 In all other respects they operate as Protected Initial servers.
 
@@ -535,13 +567,14 @@ Contact: QUIC WG
 
 ## QUIC Transport Parameter Registry
 
-This document requests that IANA add the following two entries to the QUIC
+This document requests that IANA add the following three entries to the QUIC
 Transport Parameters registry:
 
 | Value | Parameter Name | Specification |
 | :---: | :---: | :---: |
 | TBD | public_key_failed | This document |
 | TBD | ECHConfig | This document |
+| TBD | initial_encryption_context | This document |
 
 ## QUIC Transport Error Codes Registry
 

@@ -406,6 +406,9 @@ token it is including from a Retry packet or NEW_TOKEN frame, if it is using
 the associated aliased version. If there is no such token, it simply includes
 the ITE as the entire token.
 
+When using an aliased version, the client MUST include a aliasing_parameters
+transport parameter in its Client Hello.
+
 The QUIC Token Length field MUST include the length of both any Retry or
 NEW_TOKEN token and the ITE.
 
@@ -426,11 +429,35 @@ version aliasing and attempt to connect with one of the advertised versions
 If the response to an Initial packet is a Bad Salt packet, the client follows
 the procedures in {{fallback}}.
 
+## The aliasing_parameters Transport Parameter
+
+This transport parameter has the following format. Its provisional type is
+0x4150.
+
+~~~
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           Version (32)                        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      Initial Token (variable)                 |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~
+
+The Version field matches the one in the packet header.
+
+The Initial Token field matches the Initial Token in the packet header,
+including any Retry token, NEW_TOKEN token, and Initial Token Extension. Its
+length is inferred from the specified length of the parameter.
+
+The purpose of this parameter is to validate the contents of these header
+fields by including it in the TLS handshake transcript.
+
 # Server Actions on Aliased Version Numbers {#server-actions}
 
 When a server receives an Initial packet with an unsupported version number, it
-SHOULD send a Version Negotiation Packet if it is configured not to generate that
-version number at random.
+SHOULD send a Version Negotiation Packet if it is configured not to generate
+that version number at random.
 
 Otherwise, it extracts the ITE, if any, and either looks up the corresponding
 salt in its database or computes it using the technique originally used to
@@ -461,6 +488,10 @@ client SHOULD be rate-limited to mitigate the salt polling attack
 {{salt-polling}} and MAY cease to clients that are consistently connecting with
 standard versions.
 
+If there is no aliasing_parameters transport parameter, or the contents do not
+match the fields in the Initial header, the server MUST terminate the
+connection with a TRANSPORT_PARAMETER_ERROR.
+
 # Fallback {#fallback}
 
 If the server has lost its encryption state, it may not be able to generate
@@ -468,10 +499,10 @@ the correct salts from previously provided versions and ITEs. The fallback
 mechanism provides a means of recovering from this state while protecting
 against injection of messages by attackers.
 
-When the packet length computation in {{server-actions}} fails, it signals either
-that the packet has been corrupted in transit, or the client is using a transport
-parameter issued before a server failure. In either case, the server sends a
-Bad Salt packet.
+When the packet length computation in {{server-actions}} fails, it signals
+either that the packet has been corrupted in transit, or the client is using a
+transport parameter issued before a server failure. In either case, the server
+sends a Bad Salt packet.
 
 ## Bad Salt Packets
 
@@ -568,7 +599,7 @@ Note that the client never sends this transport parameter with an aliased
 version. A server that receives such a packet MUST terminate the connection with
 a TRANSPORT_PARAMETER_ERROR.
 
-## Server Response to Transport Parameter
+## Server Response to version_aliasing Transport Parameter
 
 A client version_aliasing transport parameter tells the server that the client
 received a Bad Salt packet. The server checks if could have generated that
@@ -797,11 +828,15 @@ Contact: QUIC WG
 
 ## QUIC Transport Parameter Registry
 
-This draft chooses a transport parameter (0x5641) to minimize the risk of
-collision. IANA should assign a permanent value from the QUIC Transport
-Parameter Registry.
+This document requests that IANA add the following entries to the QUIC
+Transport Parameters Registry:
 
-Value: TBD
+| Value | Parameter Name | Specification |
+| :---: | :---: | :---: |
+| TBD | Version Aliasing | This Document |
+| TBD | aliasing_parameters | This Document |
+
+Value: TBD (provisional: 0x5641)
 
 Parameter Name: Version Aliasing
 
