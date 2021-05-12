@@ -239,10 +239,10 @@ Table of Contents
       Destination Connection ID (0..160),
       Source Connection ID Length (8),
       Source Connection ID (0..160),
-      Encryption Context Length (8),
-      Encryption Context (..),
       Token Length (i),
       Token (..),
+      Encryption Context Length (8),
+      Encryption Context (..),
       Length (i),
       Packet Number (8..32),
    }
@@ -475,12 +475,15 @@ nonce = 0x461599d35d632bf2239825bb
 
    If an incoming client Initial has a non-zero length Encryption
    Context field, the client-facing server MUST delete the Encryption
-   Context field, and re- encrypt the packet with keys derived from the
-   fallback salt.
+   Context field.  When forwarding to the back-end server, it encrypts
+   the plaintext version of this modified packet with keys derived from
+   the fallback salt.  Thus, between client-facing server and back-end
+   server the packet is inspectable by observers.
 
-   If the client is using the shared secret, the client-facing server
-   MUST re- encrypt server Initial packets using keys derived from the
-   shared secret.
+   Similarly, if the client is using the shared secret, the client-
+   facing server MUST decrypt server Initial packets encrypted with keys
+   derived from the fallback secret, and re-encrypt them with keys
+   derived from the shared secret.
 
    Non-Initial packets pass unmodified through the client-facing server.
 
