@@ -146,9 +146,9 @@ Initial Packet {
    Source Connection ID (0..160),
    Token Length (i),
    Token (..),
-   Length (i),
    Encryption Context Length (8),
    Encryption Context (..),
+   Length (i),
    Packet Number (8..32),
 }
 ~~~
