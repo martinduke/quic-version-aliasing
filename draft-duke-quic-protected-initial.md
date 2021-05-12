@@ -88,11 +88,11 @@ following table summarizes the advantages and disadvantages of each.
 | Delay when server loses its keys | 1 RTT | 2 RTT | 2 RTT |
 | Works with TLS over TCP | Yes | No | No |
 | First-connection protection | Yes | Yes | No |
-| No trial decryption | No | Yes | Yes |
 | Prevents Initial packet injection attacks | No | Yes | Yes |
 | Symmetric Encryption Only | No | No | Yes |
 | Greases the Version Field | No | No | Yes |
 | Prevents Retry injection attacks | No | No | Yes |
+| No trial decryption | No | No | Yes |
 
 The more complex properties in the table are discussed in
 {{security-considerations}}.
@@ -158,11 +158,8 @@ the encryption context, in bytes. Servers MUST set this field to zero; a client
 that receives a non-zero length MUST either discard the packet or generate a
 connection error of type PROTOCOL_VIOLATION.
 
-If a client has received a valid Server Initial packet, it SHOULD set this field
-to zero. Until then, clients MUST use a nonzero value.  If a client Initial
-packet has a zero Encryption Context Length, and the server has not sent an
-Initial Packet, the server MUST either discard the packet or generate a
-connection error of type PROTOCOL_VIOLATION.
+Clients MUST include a nonzero Encryption Context Length in all Initial packets,
+unless executing fallback procedures (see {{fallback}}).
 
 ## Encryption Context {#encryption-context}
 
@@ -217,11 +214,6 @@ server_initial_secret as described in Section 5.2 of {{QUIC-TLS}}.
 When applying header protection, the Context Length and Encryption Context are
 not Protected.
 
-Additionally, the client bitwise-XORs the first eight octets of the Destination
-Connection ID with the first eight octets of the public key to form a 64 bit
-unsigned integer. This integer is added to the packet length, modulo 2^62, and
-written into the packet length field instead of the actual packet length.
-
 This derivation is performed once per connection. Subsequent Initial Packets
 use the same keys and the same offset to the packet number, regardless of
 additional Encryption Context fields or changed connection IDs.
@@ -231,18 +223,6 @@ additional Encryption Context fields or changed connection IDs.
 The server reads the Config ID and Encapsulated Secret (enc) from the Initial
 Packet. It looks up its private key (skR) associated with the Config ID.
 
-Prior to any other operations, including sending any Retry packet, the server
-bitwise-XORs the first eight octets of its public key and the destination
-connection ID and subtracts this from the value in the packet length field,
-modulo 2^62, to find the true packet length.
-
-Any result that exceeds the size of the received datagram indicates with high
-assurance that the client's received ECHConfig does not match the server's
-state, possibly due to a misconfiguration. The probability this test results in
-a false negative, when an incorrect key generates a result less than the
-datagram size, is typically less than 1 in 2^51. The server MUST discard the
-packet and SHOULD send a Version Negotiation packet (see {{fallback}}).
-
 Otherwise, the server generates the Initial secrets:
 
 ~~~
@@ -251,11 +231,10 @@ initial_secret = HKDF-Extract(shared_secret,
         client_dst_connection_id || ECHConfig)
 ~~~
 
-The server now has sufficient context to send a Retry packet and MAY choose to
-do so at this point (see {{retry}}). If not, it decrypts the Initial packet.
-
 The remainder is identical to the client procedure. All server-generated
 Initial packets use the keys generated in this process.
+
+If packet decryption fails, see {{fallback}}.
 
 # Retry Integrity Tag {#retry}
 
@@ -271,36 +250,35 @@ nonce = 0x461599d35d632bf2239825bb
 
 # Fallback {#fallback}
 
-Endpoints that support QUIC Protected Initials MUST support at least one other
-version of QUIC (in case the endpoints cannot agree on the ECHConfig), and
-therefore MUST also support {{!QUIC-VN=I-D.ietf-quic-version-negotiation}}.
-
-Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
-does not contain the information necessary to generate subsequent Initial
-packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
-version 1. However, since the versions have identical properties after the
-Initial packet exchange, there is little value in such a transition.
-
 When decoding a client Initial packet length, the server may conclude that the
 client does not have the server's correct configuration (see
-{{server-procedure}}). In this case, it SHOULD send a Version Negotiation packet
-and that packet MUST include the version the client attempted to connect with.
-This contradicts the usual semantics in Section 5 of {{QUIC-VN}},
-and clients that support Protected Initials MUST accept these packets, as well
-as further transport parameters that advertise support for Protected Initials.
+{{server-procedure}}). In this case, it replies with a Fallback packet (see
+{{fallback-packet}}), and discards the Initial.
 
-Because of the vulnerabilities described in {{downgrade}}, additional measures
-are required to protect against an attacker forcing version downgrade. If the
-client chooses to attempt a reconnection, it MUST choose a version listed in
-the Version Negotiation packet that does not include Protected Initials.
+The client checks the hash in the packet against its own record of the Initial
+Packet. If they do not match, the packet may have been corrupted, and the client
+MAY treat the packet as lost. If they do match, the client MUST assume that it does
+not have the correct ECHConfig.
 
-When connecting with that version, the client MUST include the public_key_failed
-transport parameter with the Config ID and public key it attempted to use.
+When it has the incorrect config, the client composes a new Client Hello. It
+MUST include the public_key_failed transport parameter with the Config ID and
+public key it attempted to use. It MUST use an Encryption Context Length of zero,
+and encrypt it with keys derived from the fallback salt defined in
+{{fallback-packet}}. The Client Hello also MUST include any Retry Token the
+previous Initial contained and MAY include a token from a NEW_TOKEN frame.
 
-The server checks the Config ID and public key to see if it should successfully
-process a Protected Initial with these parameters. If it would have, it MUST
-terminate the connection with a VERSION_NEGOTIATION_ERROR to indicate that there
-has been a downgrade attack.
+Note that the fallback salt does not provide confidentiality to the client, and
+the client SHOULD NOT include privacy-sensitive information there. See
+{{downgrade}} for further discussion of this.
+
+A server interprets a client Initial with a zero-length Encryption Context as
+an Initial encrypted with keys derived from the fallback salt and decrypts it
+accordingly.
+
+The server checks the Config ID and public key from the public_key_failed
+transport parameter to see if it should successfully process a Protected Initial
+with these parameters. If it would have, it MUST terminate the connection with a
+INVALID_PROTECTED_INITIAL_DOWNGRADE to indicate that there has been an attack.
 
 If the server would not have successfully decoded the packet with those
 parameters, it MUST send its own public_key_failed transport parameter to
@@ -313,13 +291,28 @@ If the client does not receive a public_key_failed transport parameter in
 response to sending a public_key_failed transport parameter, it MUST terminate
 the connection with a TRANSPORT_PARAMETER_ERROR.
 
+The client MUST NOT include the original client hello in its TLS transcript
+hash for key computation, as the server has no access to this message.
+
+# The Fallback Packet {#fallback-packet}
+
+The Fallback packet uses the 0x1 packet type code, which it shares with 0-RTT.
+Since 0-RTT is only sent by clients and Fallback is only sent by servers, these
+two types are distinguished by the endpoint's role in the handshake.
+
+The packet is encrypted with Initial keys derived from the following well-known
+"fallback salt" 0xbd62319ad6eeb17a9ed0d3bf75e37e4a8e7e6ac7, instead of the
+shared secret that the server cannot decode.
+
+The format of this packet is TBD. However, it contains a hash of the entire
+client Initial packet that triggered the Fail.
+
 # New Transport Parameters
 
 ## public_key_failed
 
-The system to detect version downgrade in {{QUIC-VN}} is
-insufficient to do so for Protection Initials (see {{downgrade}}). The
-public_key_failed transport parameter solves this problem. For details on use,
+The public_key_failed transport parameter allows detection of an attacker
+injecting messages to force use of the fallback salt. For details on use,
 see {{fallback}}.
 
 Its provisional type is 0x706b66.
@@ -343,9 +336,10 @@ Endpoints MUST respond to a malformed transport parameter by closing the
 connection with a TRANSPORT_PARAMETER_ERROR.
 
 Note that this transport parameter is always sent as a result of a fallback from
-a Protected Initial, and therefore in a connection of a different version.
-Therefore, if received in a Protected Initial connection, the receiving endpoint
-MUST terminate the connection with a TRANSPORT_PARAMETER_ERROR.
+a Protected Initial, and therefore with a zero-length Encryption Context in the
+packet header. Therefore, if received with non-zero-length Encryption Context,
+the receiving endpoint MUST terminate the connection with a
+TRANSPORT_PARAMETER_ERROR.
 
 ## ECHConfig
 
@@ -356,21 +350,17 @@ Its provisional type is 0x454348.
 
 Its format is equivalent to ECHConfigList, as defined in Section 4 of {{ECHO}}.
 
-Note that, like public_key_failed, this transport parameter is sent in response
-to a failed attempt to use Protected Initials, and therefore only occurs in
-other versions of QUIC.
-
 If this transport parameter does not match this format, is received by a server,
-or is received in a connection that uses Protected Initials, the receiver MUST
-terminate the connection with a TRANSPORT_PARAMETER_ERROR.
+or is received in a connection where the client's most recent Initial had a
+non-zero-length Encryption Context, the receiver MUST terminate the connection
+with a TRANSPORT_PARAMETER_ERROR.
 
 # Intermediaries
 
 In the topology proposed in Section 3.1 of {{ECHO}}, where a client-facing
 server has its own public name and potentially fronts a number of independent
 domains, only the client-facing server has the private keys. Thus, it modifies
-incoming Initial Packets before forwarding to the back-end server. The back-end
-server uses a modified technique for decrypting Initial packets.
+incoming Initial Packets before forwarding to the back-end server.
 
 A common use case of this topology is a load balancer fronting multiple domains
 using the same IP address, which makes routing decisions based on the SNI in the
@@ -378,29 +368,39 @@ Client Hello.
 
 ## Client-Facing Server
 
+The client-facing server is responsible for verifying the Initial packet is
+decryptable, and sending a 0-RTT packet (and dropping the Initial) if it is not.
+
 If an incoming client Initial has a non-zero length Encryption Context field,
-the client-facing server MUST rewrite the Config ID field as zero, replaces the
-Encapsulated Secret with the shared secret in plaintext, and updates the
-Encryption Context Length accordingly.
+the client-facing server MUST delete the Encryption Context field. When
+forwarding to the back-end server, it encrypts the plaintext version of this
+modified packet with keys derived from the fallback salt. Thus, between
+client-facing server and back-end server the packet is inspectable by observers.
 
-To avoid authentication failure, the client-facing server MUST re-encrypt the
-Initial packet with the new header as associated data.
+Similarly, if the client is using the shared secret, the client-facing server
+MUST decrypt server Initial packets encrypted with keys derived from the
+fallback secret, and re-encrypt them with keys derived from the shared secret.
 
-Non-Initial packets, as well as Initial packets that have a zero-length
-Encryption Context, pass unmodified through the client-facing server.
+Non-Initial packets pass unmodified through the client-facing server.
 
 Note that client-facing servers cannot inspect any packet payloads except for
 Initial packets.
 
 ## Back-End Server
 
-Back-end servers use the plaintext shared secret to generate Initial keys.
-
 Back-end servers MUST have an up-to-date copy of the ECHConfigList the client-
 facing server is using, though it need not hold the private key, in order to
-properly process the relevant transport parameters.
+properly process and generate the relevant transport parameters.
 
 In all other respects they operate as Protected Initial servers.
+
+# Version Negotiation
+
+Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
+does not contain the information necessary to generate subsequent Initial
+packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
+version 1. However, since the versions have identical properties after the
+Initial packet exchange, there is little value in such a transition.
 
 # Applicability
 
@@ -416,7 +416,18 @@ as well.
 
 Section 7.8 of {{VERSION-ALIASING}} is also applicable.
 
-## Key Loss and Version Downgrade {#downgrade}
+## Version Downgrade Attack
+
+An attacker might inject Version Negotiation to force the connection to migrate
+to a version of QUIC that does not protect Initials. Endpoints MUST implement
+{{!I-D.ietf-quic-version-negotiation}} if they support multiple versions to
+mitigate this attack.
+
+Note that detection does not occur until after the client has sent a new,
+unprotected Initial. When composing this Initial, the client should therefore
+consider the points in {{downgrade}} below.
+
+## Key Loss and Downgrade {#downgrade}
 
 ECH and Protected Initials both rely on shared cryptographic configuration state
 between client and server, delivered by an out-of-band method, usually DNS.
@@ -428,49 +439,21 @@ allowing a resumed attempt after 1 RTT.
 
 With Protected Initials, when decryption fails there is not enough context to
 complete any sort of authentication to update the crypto context. Instead, the
-server sends a Version Negotiation Packet that causes the client to fall back
-to a version of QUIC with unprotected Initials, in which it could connect to the
-public name and only then acquire the updated crypto context. Note that this
-incurs an additional 1-RTT penalty over ECH, although loss of key
-synchronization is hopefully a rare occurrence.
+server sends a Fallback packet that causes the client to fall back to keys that
+do not offer confidentiality, with which it could connect to the public name and
+only then acquire the updated crypto context. Note that this incurs an
+additional 1-RTT penalty over ECH, although loss of key synchronization is
+hopefully a rare occurrence.
 
-Furthermore, Version Negotiation Packets are not authenticated, which opens
-up the possibility of Version Downgrade attacks.
+An attacker could inject Fallback packets to force the client to use the
+fallback salt and lose confidentiality. The public_key_failed transport
+parameter is designed to confirm that the server could have sent the Fallback
+packet, thus validating that there is no downgrade attack.
 
-The weak form of this attack simply observes the Client Initial and delivers a
-Version Negotiation Packet before the client responds. Clients SHOULD wait for
-an interval (roughly the QUIC Probe Timeout, see {{!I-D.ietf-quic-recovery}})
-before acting on a Version Negotiation Packet that indicates a lack of support
-for Protected Initials when a DNS record indicating such support exists, to
-allow a later valid server response to arrive. If it does, the client MUST
-ignore the Version Negotiation packet.
-
-The strong form of this attack requires the attacker to drop either the Client
-Initial or the Server Initial. In this case, the client has no recourse but to
-connect with an unprotected Initial. As described above, the client can obtain
-an updated context from the public name and then assume subsequent Version
-Negotiation packets are invalid with high probability. Regardless, an attacker
-with these capabilities can always block a secured handshake of any kind, and
-can force the client choose between an insecure handshake and not communicating
-at all. However, QUIC is designed to fail the connection if an attacker forces
-a downgrade.
-
-Unfortunately, the existing detection mechanism in {{QUIC-VN}} is
-insufficient to detect these in the case of Protected Initials.
-
-Because some clients may have the correct configuration and others not, servers
-might send Version Negotiation to a subset of clients that attempt to use
-Protected Initials. To validate if it would have accepted a "Previously
-Attempted Version," the server would have to track the clients to which it
-recently sent Version Negotiation packets.
-
-However, even this is insufficient. An attacker can simply drop a Protected
-Initial Packet, send Version Negotiation, and then send an improperly encrypted
-Initial Packet to the server using the client's IP to trigger a Version
-Negotiation. As servers do not authenticate client Initials before sending
-Version Negotiation, the server has to actually understand the crypto context
-the client was attempting to use.  This is the reason for the public_key_failed
-transport parameter.
+Upon receipt of a Fallback packet, a client SHOULD wait for a probe timeout
+(PTO) before sending a client hello using the fallback salt. This verifies that
+the attacker can not only observe Initial packets and inject Fallbacks, but also
+drop either the client or server Initial.
 
 ## Initial Packet Injection
 
@@ -511,19 +494,11 @@ with adding an arbitrary value to the Packet Length field. The purpose of this
 addition is to avoid trial decryption to verify the configuration is correct,
 but this cost is negligible compared to extracting the shared secret.
 
-## Less Trial Decryption
-
-Unlike ECH, Protected Initials can use the Packet Length Offset mechanism to
-detect key mismatches without trial decryption, saving resources in the case
-of genuine misconfiguration. However, an attacker attempting to force trial
-decryption can easily force a decryption that will ultimately result in the
-packet being silently dropped.
-
 # IANA Considerations
 
 ## QUIC Version Registry
 
-This document request that IANA add the following entry to the QUIC version
+This document requests that IANA add the following entry to the QUIC version
 registry:
 
 Value: TBD
@@ -538,7 +513,7 @@ Contact: QUIC WG
 
 ## QUIC Transport Parameter Registry
 
-This document request that IANA add the following two entries to the QUIC
+This document requests that IANA add the following two entries to the QUIC
 Transport Parameters registry:
 
 | Value | Parameter Name | Specification |
@@ -546,12 +521,29 @@ Transport Parameters registry:
 | TBD | public_key_failed | This document |
 | TBD | ECHConfig | This document |
 
+## QUIC Transport Error Codes Registry
+
+This document requests that IANA add the following entry to the QUIC Transport
+Error Codes registry:
+
+Value: TBD
+
+Code: INVALID_PROTECTED_INITIAL_DOWNGRADE
+
+Description: Attacker is forcing insecure Initial
+
+Specification: This document
+
 --- back
 
 # Change Log
 
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
+
+## since draft-duke-quic-protected-initials-01
+
+* Redesigned fallback again without Version Negotiation
 
 ## since draft-duke-quic-protected-initials-00
 
