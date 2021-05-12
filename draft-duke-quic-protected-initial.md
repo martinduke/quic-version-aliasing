@@ -255,15 +255,16 @@ client does not have the server's correct configuration (see
 {{server-procedure}}). In this case, it replies with a Fallback packet (see
 {{fallback-packet}}), and discards the Initial.
 
-The client checks the hash in the packet against its own record of the Initial
-Packet. If they do not match, the packet may have been corrupted, and the client
-MAY treat the packet as lost. If they do match, the client MUST assume that it does
-not have the correct ECHConfig.
+The client checks the Integrity Tag in the packet against the received Fallback
+Packet and its own record of the Initial Packet. If they do not match, the
+packet may have been corrupted, and the client MAY treat the packet as lost. If
+they do match, the client MUST assume that it does not have the correct
+ECHConfig.
 
 When it has the incorrect config, the client composes a new Client Hello. It
 MUST include the public_key_failed transport parameter with the Config ID and
-public key it attempted to use. It MUST use an Encryption Context Length of zero,
-and encrypt it with keys derived from the fallback salt defined in
+public key it attempted to use. It MUST use an Encryption Context Length of
+zero, and encrypt it with keys derived from the fallback salt defined in
 {{fallback-packet}}. The Client Hello also MUST include any Retry Token the
 previous Initial contained and MAY include a token from a NEW_TOKEN frame.
 
@@ -304,8 +305,27 @@ The packet is encrypted with Initial keys derived from the following well-known
 "fallback salt" 0xbd62319ad6eeb17a9ed0d3bf75e37e4a8e7e6ac7, instead of the
 shared secret that the server cannot decode.
 
-The format of this packet is TBD. However, it contains a hash of the entire
-client Initial packet that triggered the Fail.
+The Fallback packet has the following format:
+
+Fallback Packet {
+  Header Form (1) = 1,
+  Fixed Bit (1) = 1,
+  Long Packet Type (2) = 1,
+  Unused (4),
+  Version (32),
+  Destination Connection ID Length (8),
+  Destination Connection ID (0..160),
+  Source Connection ID Length (8),
+  Source Connection ID (0..160),
+  Integrity Tag (128),
+}
+
+The server computes the Integrity Tag by prepending the entire UDP payload that
+contained the client Initial to the Fallback packet contents (minus the tag
+itself, of course) to form a pseudo-packet. The server then computes the
+Integrity Tag as the output of AEAD_AES_128_GCM with the key and nonce from
+{{retry}}, no plaintext, and the pseudo-packet as the Additional Data. This
+thus confirms the integrity of both packets in the exchange.
 
 # New Transport Parameters
 
