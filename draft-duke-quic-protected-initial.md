@@ -278,7 +278,7 @@ accordingly.
 The server checks the Config ID and public key from the public_key_failed
 transport parameter to see if it should successfully process a Protected Initial
 with these parameters. If it would have, it MUST terminate the connection with a
-FAKE_FAILURE_MESSAGE to indicate that there has been an attack.
+INVALID_PROTECTED_INITIAL_DOWNGRADE to indicate that there has been an attack.
 
 If the server would not have successfully decoded the packet with those
 parameters, it MUST send its own public_key_failed transport parameter to
@@ -296,8 +296,8 @@ hash for key computation, as the server has no access to this message.
 
 # The Fallback Packet {#fallback-packet}
 
-The Fallback packet uses the 0x1 packet type code, which it shares with 0RTT.
-Since 0RTT is only sent by clients and Fallback is only sent by servers, these
+The Fallback packet uses the 0x1 packet type code, which it shares with 0-RTT.
+Since 0-RTT is only sent by clients and Fallback is only sent by servers, these
 two types are distinguished by the endpoint's role in the handshake.
 
 The packet is encrypted with Initial keys derived from the following well-known
@@ -525,7 +525,7 @@ Error Codes registry:
 
 Value: TBD
 
-Code: FAKE_FAILURE_MESSAGE
+Code: INVALID_PROTECTED_INITIAL_DOWNGRADE
 
 Description: Attacker is forcing insecure Initial
 
