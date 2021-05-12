@@ -4,8 +4,8 @@
 
 quic                                                             M. Duke
 Internet-Draft                                         F5 Networks, Inc.
-Intended status: Standards Track                             11 May 2021
-Expires: 12 November 2021
+Intended status: Standards Track                             12 May 2021
+Expires: 13 November 2021
 
 
                      Protected QUIC Initial Packets
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 November 2021.
+   This Internet-Draft will expire on 13 November 2021.
 
 Copyright Notice
 
@@ -372,7 +372,8 @@ nonce = 0x461599d35d632bf2239825bb
    public_key_failed transport parameter to see if it should
    successfully process a Protected Initial with these parameters.  If
    it would have, it MUST terminate the connection with a
-   FAKE_FAILURE_MESSAGE to indicate that there has been an attack.
+   INVALID_PROTECTED_INITIAL_DOWNGRADE to indicate that there has been
+   an attack.
 
    If the server would not have successfully decoded the packet with
    those parameters, it MUST send its own public_key_failed transport
@@ -394,7 +395,7 @@ nonce = 0x461599d35d632bf2239825bb
 11.  The Fallback Packet
 
    The Fallback packet uses the 0x1 packet type code, which it shares
-   with 0RTT.  Since 0RTT is only sent by clients and Fallback is only
+   with 0-RTT.  Since 0-RTT is only sent by clients and Fallback is only
    sent by servers, these two types are distinguished by the endpoint's
    role in the handshake.
 
@@ -646,7 +647,7 @@ nonce = 0x461599d35d632bf2239825bb
 
    Value: TBD
 
-   Code: FAKE_FAILURE_MESSAGE
+   Code: INVALID_PROTECTED_INITIAL_DOWNGRADE
 
    Description: Attacker is forcing insecure Initial
 

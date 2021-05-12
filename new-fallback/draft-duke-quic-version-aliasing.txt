@@ -4,8 +4,8 @@
 
 QUIC                                                             M. Duke
 Internet-Draft                                         F5 Networks, Inc.
-Intended status: Experimental                                11 May 2021
-Expires: 12 November 2021
+Intended status: Experimental                                12 May 2021
+Expires: 13 November 2021
 
 
                          QUIC Version Aliasing
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 November 2021.
+   This Internet-Draft will expire on 13 November 2021.
 
 Copyright Notice
 
