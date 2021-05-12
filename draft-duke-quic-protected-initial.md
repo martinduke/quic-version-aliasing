@@ -372,11 +372,14 @@ The client-facing server is responsible for verifying the Initial packet is
 decryptable, and sending a 0-RTT packet (and dropping the Initial) if it is not.
 
 If an incoming client Initial has a non-zero length Encryption Context field,
-the client-facing server MUST delete the Encryption Context field, and re-
-encrypt the packet with keys derived from the fallback salt.
+the client-facing server MUST delete the Encryption Context field. When
+forwarding to the back-end server, it encrypts the plaintext version of this
+modified packet with keys derived from the fallback salt. Thus, between
+client-facing server and back-end server the packet is inspectable by observers.
 
-If the client is using the shared secret, the client-facing server MUST re-
-encrypt server Initial packets using keys derived from the shared secret.
+Similarly, if the client is using the shared secret, the client-facing server
+MUST decrypt server Initial packets encrypted with keys derived from the
+fallback secret, and re-encrypt them with keys derived from the shared secret.
 
 Non-Initial packets pass unmodified through the client-facing server.
 
