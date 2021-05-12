@@ -85,7 +85,7 @@ token as if it were a QUIC version 1 initial packet. That is:
 
 * The most significant bit MUST be 1.
 
-* The third and fourth most significant bits must be zero.
+* The third and fourth most significant bits MUST be zero.
 
 * The first field after the Source Connection ID MUST be a variable-length
 integer including the length of a token.
@@ -489,7 +489,6 @@ Bad Salt Packet {
     Source Connection ID Length (8),
     Source Connection ID (0..2040),
     Supported Version (32) ...,
-    Client Initial Hash (256),
     Integrity Tag (128),
 }
 ~~~
@@ -506,10 +505,41 @@ the destination fields of the Bad Salt, and vice versa.
 Supported Version: A list of standard QUIC version numbers which the server
 supports. The number of versions is inferred from the length of the datagram.
 
-Client Initial Hash: A 256-bit hash of the entire UDP payload that contained the
-Client Initial. The details of this hash are TBD.
+Integrity Tag: To compute the integrity tag, the server creates a pseudo-packet
+by contents of the entire client Initial UDP payload, including any coalesced
+packets, with the Bad Salt packet:
 
-Integrity Tag: TBD.
+~~~
+Bad Salt Pseudo-Packet {
+    Client UDP Payload (9600..),
+    Header Form (1) = 1,
+    Unused (7),
+    Version (32) = TBD (provisional value = 0x56415641),
+    Destination Connection ID Length (8),
+    Destination Connection ID (0..2040),
+    Source Connection ID Length (8),
+    Source Connection ID (0..2040),
+    Supported Version (32) ...,
+}
+~~~
+
+In a process similar to the Retry Integrity Tag, the Bad Salt Integrity Tag is
+computed as the output of AEAD_AES_128_GCM with the following inputs:
+
+* The secret key, K, is 0xbe0c690b9f66575a1d766b54e368c84e.
+
+* The nonce, N, is 0x461599d35d632bf2239825bb.
+
+* The plaintext, P, is empty.
+
+* The associated data, A, is the Bad Salt pseudo-packet.
+
+These values are derived using HKDF-Expand-Label from the secret
+0x767fedaff519a2aad117d8fd3ce0a04178ed205ab0d43425723e436853c4b3e2 and labels
+"quicva key" and "quicva iv".
+
+The integrity tag serves to validate the integrity of both the Bad Salt packet
+itself and the Initial packet that triggered it.
 
 ## Client Response to Bad Salt
 
@@ -517,16 +547,15 @@ Upon receipt of a Bad Salt packet, the client SHOULD wait for a Probe Timeout
 (PTO) to check if the Bad Salt packet was injected by an attacker, and a valid
 response arrives from the actual server.
 
-After waiting, the client verifies that the Client Initial Hash field matches
-its record of the Initial it sent, and that the Integrity Tag correctly
-authenticates the content of the Bad Salt packet. If either of these tests fail,
-the client SHOULD assume packet corruption and resend the Initial Packet.
+After waiting, the client checks the Integrity Tag using its record of the
+Initial it sent. If this fails, the client SHOULD assume packet corruption and
+resend the Initial packet.
 
-If the verification steps succeed, the client SHOULD attempt to connect with
-one of the listed standard versions. It SHOULD observe the privacy
-considerations in {{first-connection}}. It MUST include a version_aliaising
-Transport Parameter in the Client Hello, that enumerates the aliased version
-and parameters it just tried to connect with.
+If the verification succeeds, the client SHOULD attempt to connect with one of
+the listed standard versions. It SHOULD observe the privacy considerations in
+{{first-connection}}. It MUST include a version_aliaising Transport Parameter
+in the Client Hello, that enumerates the aliased version and parameters it just
+tried to connect with.
 
 Once it sends this transport parameter, the client MUST NOT attempt to connect
 with that aliased version again.
@@ -701,6 +730,18 @@ amplify an attack. Observers will generally be on the path to the client and be
 able to mimic having an identical IP address. Segmentation in this way would
 dramatically reduce the search space for attackers. Thus, servers are prohibited
 from using this mechanism.
+
+## Server Fingerprinting
+
+The server chooses its own ITE length, and the length of this ITE is likely to
+be discoverable to an observer. Therefore, the destination server of a client
+Initial packet might be decipherable with an ITE length along with other
+observables. A four-octet ITE is RECOMMENDED. Deviations from this value should
+be carefully considered in light of this property.
+
+Servers with acute needs for higher or lower entropy than provided by a four-
+octet ITE are RECOMMENDED to converge on common lengths to reduce the
+uniqueness of their signatures.
 
 ## Increased Processing of Garbage UDP Packets
 
