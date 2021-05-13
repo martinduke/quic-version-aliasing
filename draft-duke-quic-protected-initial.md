@@ -285,8 +285,9 @@ ECHConfig.
 When it has the incorrect config, the client composes a new Client Hello. It
 MUST include the public_key_failed transport parameter with the Config ID and
 public key it attempted to use. It MUST use an Encryption Context Length of
-zero, and encrypt it with keys derived from the fallback salt defined in
-{{fallback-packet}}. The Client Hello also MUST include any Retry Token the
+zero, and encrypt it with keys derived from the "fallback salt"
+0xbd62319ad6eeb17a9ed0d3bf75e37e4a8e7e6ac7, instead of the shared secret that
+the server cannot decode. The Client Hello also MUST include any Retry Token the
 previous Initial contained and MAY include a token from a NEW_TOKEN frame.
 
 This new Initial packet is part of the same connection and MUST use the same
@@ -327,10 +328,6 @@ transport parameter, which will be in the transcript.
 The Fallback packet uses the 0x1 packet type code, which it shares with 0-RTT.
 Since 0-RTT is only sent by clients and Fallback is only sent by servers, these
 two types are distinguished by the endpoint's role in the handshake.
-
-The packet is encrypted with Initial keys derived from the following well-known
-"fallback salt" 0xbd62319ad6eeb17a9ed0d3bf75e37e4a8e7e6ac7, instead of the
-shared secret that the server cannot decode.
 
 The Fallback packet has the following format:
 
