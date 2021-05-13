@@ -89,20 +89,19 @@ Table of Contents
    4.  Intermediaries
      4.1.  Client-Facing Server
      4.2.  Back-End Server
-   5.  Version Negotiation
-   6.  Applicability
-   7.  Security and Privacy Considerations
-     7.1.  Version Downgrade Attack
-     7.2.  Key Loss and Downgrade
-     7.3.  Initial Packet Injection
-     7.4.  Retry Injection
-   8.  IANA Considerations
-     8.1.  QUIC Version Registry
-     8.2.  QUIC Transport Parameter Registry
-     8.3.  QUIC Transport Error Codes Registry
-   9.  References
-     9.1.  Normative References
-     9.2.  Informative References
+   5.  Applicability
+   6.  Security and Privacy Considerations
+     6.1.  Version Downgrade Attack
+     6.2.  Key Loss and Downgrade
+     6.3.  Initial Packet Injection
+     6.4.  Retry Injection
+   7.  IANA Considerations
+     7.1.  QUIC Version Registry
+     7.2.  QUIC Transport Parameter Registry
+     7.3.  QUIC Transport Error Codes Registry
+   8.  References
+     8.1.  Normative References
+     8.2.  Informative References
    Appendix A.  Change Log
      A.1.  since draft-duke-quic-protected-initials-01
      A.2.  since draft-duke-quic-protected-initials-00
@@ -188,7 +187,7 @@ Table of Contents
 
                                  Table 1
 
-   The more complex properties in the table are discussed in Section 7.
+   The more complex properties in the table are discussed in Section 6.
 
    Both ECH and Protected Initials are complimentary with Version
    Aliasing: they provide a computationally expensive way to protect
@@ -385,7 +384,7 @@ nonce = 0x461599d35d632bf2239825bb
 
    Note that the fallback salt does not provide confidentiality to the
    client, and the client SHOULD NOT include privacy-sensitive
-   information there.  See Section 7.2 for further discussion of this.
+   information there.  See Section 6.2 for further discussion of this.
 
    A server interprets a client Initial with a zero-length Encryption
    Context as an Initial encrypted with keys derived from the fallback
@@ -566,16 +565,7 @@ nonce = 0x461599d35d632bf2239825bb
 
    In all other respects, they operate as Protected Initial servers.
 
-5.  Version Negotiation
-
-   Note that QUIC version 1 is not compatible with QUIC Protected
-   Initials, as it does not contain the information necessary to
-   generate subsequent Initial packets correctly.  In contrast, QUIC
-   Protected Initials are compatible with QUIC version 1.  However,
-   since the versions have identical properties after the Initial packet
-   exchange, there is little value in such a transition.
-
-6.  Applicability
+5.  Applicability
 
    This version of QUIC provides no change from QUIC version 1 relating
    to the capabilities available to applications.  Therefore, all
@@ -583,35 +573,37 @@ nonce = 0x461599d35d632bf2239825bb
    specified to operate over QUICv1 can also operate over this version
    of QUIC.
 
-7.  Security and Privacy Considerations
+6.  Security and Privacy Considerations
 
    Sections 10.2, 10.3, 10.4, and 10.6 of [ECHO] apply to QUIC Protected
    Initials as well.
 
    Section 7.8 of [VERSION-ALIASING] is also applicable.
 
-7.1.  Version Downgrade Attack
+6.1.  Version Downgrade Attack
 
    An attacker might inject Version Negotiation to force the connection
-   to migrate to a version of QUIC that does not protect Initials.
-   Endpoints MUST implement [I-D.ietf-quic-version-negotiation] if they
-   support multiple versions to mitigate this attack.
+   to migrate to a version of QUIC that does not protect Initials.  If
+   the client and server mutually support another version of QUIC, and
+   the client does not support a downgrade prevention mechanism such as
+   [I-D.ietf-quic-version-negotiation], the client MUST fail the
+   connection and not restart on a different version.
 
-   Note that endpoints do not detect the attack until after the client
-   has sent a new, unprotected Initial.
+   Note that a downgrade prevention mechanism might not detect the
+   attack until after the client has sent a new, unprotected Initial.
 
    Upon receipt of a Version Negotation packet, a client SHOULD wait for
    a probe timeout (PTO) before sending an Initial using another
-   version.  If it receives a valid Server Initial, it SHOULD ignore the
-   Version Negotation.  This eliminates attacks by observers that can
+   version.  If it receives a valid Server Initial, it ignores the
+   Version Negotiation.  This eliminates attacks by observers that can
    inject Version Negotiation packets, but not drop Initial packets.
 
    When composing an Initial for a different version, the client is
    likely to expose the information in it.  The client MAY alter its
    Initial to sanitize sensitive information, considering the advice in
-   Section 7.2 regarding the composition of these Initials.
+   Section 6.2 regarding the composition of these Initials.
 
-7.2.  Key Loss and Downgrade
+6.2.  Key Loss and Downgrade
 
    ECH and Protected Initials both rely on shared cryptographic
    configuration state between client and server, delivered by an out-
@@ -651,7 +643,7 @@ nonce = 0x461599d35d632bf2239825bb
    (possibly the public_name from the ECHConfig).  Advice for the Outer
    ClientHello in Section 10.5 of [ECHO] applies here.
 
-7.3.  Initial Packet Injection
+6.3.  Initial Packet Injection
 
    QUIC version 1 handshakes are vulnerable to DoS from observers for
    the short interval that endpoints keep Initial keys (usually ~1.5
@@ -667,7 +659,7 @@ nonce = 0x461599d35d632bf2239825bb
    future.  This is to provide cryptographic agility in accordance with
    [RFC7696].
 
-7.4.  Retry Injection
+6.4.  Retry Injection
 
    This version of QUIC does not improve the security of Retry packets
    with respect to QUIC version 1.  The Retry Integrity Tag uses a well-
@@ -695,9 +687,9 @@ nonce = 0x461599d35d632bf2239825bb
    decryption to verify the configuration is correct, but this cost is
    negligible compared to extracting the shared secret.
 
-8.  IANA Considerations
+7.  IANA Considerations
 
-8.1.  QUIC Version Registry
+7.1.  QUIC Version Registry
 
    This document requests that IANA add the following entry to the QUIC
    version registry:
@@ -712,7 +704,7 @@ nonce = 0x461599d35d632bf2239825bb
 
    Contact: QUIC WG
 
-8.2.  QUIC Transport Parameter Registry
+7.2.  QUIC Transport Parameter Registry
 
    This document requests that IANA add the following three entries to
    the QUIC Transport Parameters registry:
@@ -729,7 +721,7 @@ nonce = 0x461599d35d632bf2239825bb
 
                                  Table 2
 
-8.3.  QUIC Transport Error Codes Registry
+7.3.  QUIC Transport Error Codes Registry
 
    This document requests that IANA add the following entry to the QUIC
    Transport Error Codes registry:
@@ -742,9 +734,9 @@ nonce = 0x461599d35d632bf2239825bb
 
    Specification: This document
 
-9.  References
+8.  References
 
-9.1.  Normative References
+8.1.  Normative References
 
    [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
               Encrypted Client Hello", Work in Progress, Internet-Draft,
@@ -764,13 +756,6 @@ nonce = 0x461599d35d632bf2239825bb
               14 January 2021, <https://datatracker.ietf.org/doc/html/
               draft-ietf-quic-tls-34.txt>.
 
-   [I-D.ietf-quic-version-negotiation]
-              Schinazi, D. and E. Rescorla, "Compatible Version
-              Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-03, 4 February 2021,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-03.txt>.
-
    [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
               Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
               14 January 2021, <https://datatracker.ietf.org/doc/html/
@@ -783,7 +768,14 @@ nonce = 0x461599d35d632bf2239825bb
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
               transport-34.txt>.
 
-9.2.  Informative References
+8.2.  Informative References
+
+   [I-D.ietf-quic-version-negotiation]
+              Schinazi, D. and E. Rescorla, "Compatible Version
+              Negotiation for QUIC", Work in Progress, Internet-Draft,
+              draft-ietf-quic-version-negotiation-03, 4 February 2021,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
+              version-negotiation-03.txt>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
