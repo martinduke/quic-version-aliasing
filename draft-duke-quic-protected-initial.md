@@ -270,6 +270,8 @@ key = 0xbe0c690b9f66575a1d766b54e368c84e
 nonce = 0x461599d35d632bf2239825bb
 ~~~
 
+This key and nonce are also used in Fallback packets ({{fallback-packet}}).
+
 ## Fallback {#fallback}
 
 If decryption fails, the client may not have the server's correct configuration.
