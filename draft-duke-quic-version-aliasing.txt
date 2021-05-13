@@ -977,12 +977,6 @@ Table of Contents
 
                                   Table 1
 
-   Value: TBD (provisional: 0x5641)
-
-   Parameter Name: Version Aliasing
-
-   Specification: This document
-
 9.3.  QUIC Transport Error Codes Registry
 
    This document requests that IANA add the following entry to the QUIC
