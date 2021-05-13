@@ -91,7 +91,7 @@ Table of Contents
    8.  Security and Privacy Considerations
      8.1.  Endpoint Impersonation
      8.2.  First-Connection Privacy
-     8.3.  Version Downgrade
+     8.3.  Forcing Downgrade
      8.4.  Initial Packet Injection
      8.5.  Retry Injection
      8.6.  Increased Linkability
@@ -217,11 +217,6 @@ Table of Contents
    token extension into the salt.  The two options provide a simple
    tradeoff between computational complexity and storage requirements.
 
-   Note that clients and servers MUST implement [QUIC-VN] to use this
-   specification.  Therefore, servers list supported versions in Version
-   Negotiation Packets.  Both clients and servers list supported
-   versions in Version Negotiation Transport Parameters.
-
 2.1.  Relationship to ECH and QUIC Protected Initials
 
    The TLS Encrypted Client Hello [ECHO] shares some goals with this
@@ -265,8 +260,8 @@ Table of Contents
    standard version Client Hello to exclude privacy-sensitive
    information.  However, ECH will allow confidential transmission of
    data in 1 RTT, while Version Aliasing requires 2 RTTs to resume.
-   This mechanism is also relevant to Version Aliasing mitigation of
-   Version Downgrade attacks Section 8.3.
+   This mechanism is also relevant to mitigation of downgrade attacks
+   (see Section 8.3).
 
    Similarly, the QUIC Protected Initial [QUIC-PI] uses the ECH
    distribution mechanism to generate secure initial keys and Retry
@@ -790,33 +785,37 @@ Table of Contents
    Endpoints are encouraged to instead use [ECHO] or [QUIC-PI] to
    increase privacy on the first connection between a client and server.
 
-8.3.  Version Downgrade
+8.3.  Forcing Downgrade
 
-   When servers lose their cryptographic state, they send a Version
-   Negotiation packet to force the server to use a standard version.  As
-   these packets are not authenticated, this opens the possibility of
-   Version Downgrade attacks to force insecure communication.
+   An attacker can attempt to force a client to send an Initial that
+   uses a standard version by injecting a Version Negotiation packet
+   (which implies the server no longer supports aliasing) or a Bad Salt
+   packet (which implies the server has a new cryptographic context).
 
-   [QUIC-VN] reveals that a Version Negotiation packet is invalid after
-   the Initial Packets have exchanged, with any associated privacy
-   leakage.
+   The weak form of this attack observes the Initial and injects the
+   Version Negotiation or Bad Salt packet, but cannot drop the Initial.
+   To counteract this, a client SHOULD NOT respond to these packets
+   until they have waited for Probe Timeout (PTO) for a valid server
+   Initial to arrive.
 
-   The weak form of this attack simply observes the Client Initial and
-   delivers a Version Negotiation Packet before the client responds.
-   Clients SHOULD wait for an interval (roughly the QUIC Probe Timeout,
-   see [I-D.ietf-quic-recovery]) before acting on a Version Negotiation
-   Packet that indicates a loss of crypto state.  If a valid Initial
-   arrives, the client MUST ignore the Version Negotiation packet.
+   The strong form features an attacker that can drop Initial packets.
+   In this case, the client can either abandon the connection attempt or
+   connect with an standard version.
 
-   The strong form of this attack requires the attacker to drop either
-   the Client Initial or the Server Initial.  In this case, the client
-   has no recourse but to connect with a standard version.  As described
-   in Section 8.2, the client can obtain an updated context and then
-   assume subsequent Version Negotiation packets are invalid with high
-   probability.  Regardless, an attacker with these capabilities can
-   always block a secured handshake of any kind, and can force the
-   client choose between an insecure handshake and not communicating at
-   all.
+   If it connects with a standard version, it should consider the
+   privacy advice in Section 8.2.
+
+   Furthermore, if it received a Bad Salt packet, the client sends a
+   Version Aliasing transport parameter to detect the downgrade attack,
+   and the server will terminate the connection if the Bad Salt packet
+   was an attack.
+
+   If the client received a Version Negotiation packet, it MUST
+   implement a downgrade detection mechanism such as
+   [I-D.ietf-quic-version-negotiation] or abandon the connection
+   attempt.  If it subsequent detects a downgrade detection, or
+   discovers that the server does not support the same mechanism, it
+   terminates the connection attempt.
 
 8.4.  Initial Packet Injection
 
@@ -997,12 +996,12 @@ Table of Contents
 
 10.1.  Normative References
 
-   [I-D.ietf-quic-recovery]
-              Iyengar, J. and I. Swett, "QUIC Loss Detection and
-              Congestion Control", Work in Progress, Internet-Draft,
-              draft-ietf-quic-recovery-34, 14 January 2021,
+   [I-D.ietf-quic-version-negotiation]
+              Schinazi, D. and E. Rescorla, "Compatible Version
+              Negotiation for QUIC", Work in Progress, Internet-Draft,
+              draft-ietf-quic-version-negotiation-03, 4 February 2021,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              recovery-34.txt>.
+              version-negotiation-03.txt>.
 
    [QUIC-PI]  Duke, M., "Protected QUIC Initial Packets", Work in
               Progress, Internet-Draft, draft-duke-quic-protected-
@@ -1021,12 +1020,6 @@ Table of Contents
               draft-ietf-quic-transport-34, 14 January 2021,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
               transport-34.txt>.
-
-   [QUIC-VN]  Schinazi, D. and E. Rescorla, "Compatible Version
-              Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-03, 4 February 2021,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-03.txt>.
 
 10.2.  Informative References
 
