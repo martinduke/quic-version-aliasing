@@ -65,15 +65,12 @@ packets.
 This mechanism leverages the public key that would be distributed via DNS (or
 other out-of-band mechanism) to support Encrypted Client Hello
 {{!ECHO=I-D.ietf-tls-esni}}. That design uses Hybrid Public Key Exchange (HPKE)
-({{!HPKE=I-D.irtf-cfrg-hpke}} to authenticate some HPKE configuration
+{{!HPKE=I-D.irtf-cfrg-hpke}} to authenticate some HPKE configuration
 information and the "outer client hello" that is in plaintext, while encrypting
 the "inner client hello" that contains privacy-sensitive information. This
 document uses the widespread configuration that will exist if ECHO is widely
 deployed, but only sends the subset of information necessary to seed the QUIC
 key generation process.
-
-The version of QUIC described in this specification is identical to QUIC version
-1 {{QUIC-TRANSPORT}} except where described in this document.
 
 ## Relationship to ECH and Version Aliasing
 
@@ -109,25 +106,30 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
 interpreted as described in RFC 2119 {{?RFC2119}}.
 
-# Key Configuration
+# Differences with QUIC Version 1
+
+The version of QUIC described in this specification is identical to QUIC version
+1 {{QUIC-TRANSPORT}} except where described in this document.
+
+## Version Number
+
+The version field in long headers is TBD. Note: for interoperability
+exercises, use the provisional value 0xff454900.
+
+## Key Configuration
 
 The client obtains the Encrypted ClientHello Configuration (ECHConfig) described
 in Section 4 of {{ECHO}}, which provides the context that allows protection of
 Initial packets. The ECHConfig is available via a DNS record or other out-of-
 band system.
 
-# Version Number
-
-The version field in long headers is TBD. Note: for interoperability
-exercises, use the provisional value 0xff454900.
-
-# Key Derivation Labels {#labels}
+## Key Derivation Labels {#labels}
 
 The labels used to derive keying material in {{QUIC-TLS}} change from
 "quic key", "quic iv", "quic hp", and "quic ku" to "quicpi key", "quicpi iv",
 "quicpi hp", and "quicpi ku", respectively.
 
-# Initial Packet Header
+## Initial Packet Header
 
 The figure below is presented in the format from {{QUIC-TRANSPORT}}, and adds a
 variable-length Encryption Context preceded by a length field:
@@ -165,7 +167,7 @@ When the client includes a non-zero-length Encryption Context, it MUST include
 an initial_encryption_context in its Client Hello, so that this header field
 is included in the TLS handshake transcript.
 
-## Encryption Context {#encryption-context}
+### Encryption Context {#encryption-context}
 
 The encryption context, if nonzero length, has the following format:
 
@@ -192,13 +194,13 @@ Initial packets.
 SCAEADID: Symmetric Cipher Key Derivation Function. The client selects this
 from the cipher suites listed in the ECHConfig. This is the cipher used to
 encrypt the Initial Packet. The values are listed in Section 7.3 of {{HPKE}}.
-all endpoints MUST support AES-128-GCM (0x0001), which is used for QUIC Version
+All endpoints MUST support AES-128-GCM (0x0001), which is used for QUIC Version
 1 Initial packets.
 
 The Encapsulated Secret is HPKE encapsulated. Its length is inferred from the
 Encryption Context Length field.
 
-# Client Packet Protection Procedure
+## Client Packet Protection Procedure
 
 An client extracts the public key pkR and uses it to generate a shared_secret:
 
@@ -222,7 +224,7 @@ This derivation is performed once per connection. Subsequent Initial Packets
 use the same keys and the same offset to the packet number, regardless of
 additional Encryption Context fields or changed connection IDs.
 
-# Server Packet Protection Procedure {#server-procedure}
+## Server Packet Protection Procedure {#server-procedure}
 
 The server reads the Config ID and Encapsulated Secret (enc) from the Initial
 Packet. It looks up its private key (skR) associated with the Config ID.
@@ -253,7 +255,7 @@ header.
 However, see {{intermediaries}} for exceptions to this transport parameter
 processing rule.
 
-# Retry Integrity Tag {#retry}
+## Retry Integrity Tag {#retry}
 
 The Retry packet is identical to QUIC version 1, except that
 the key and nonce used for the Retry Integrity Tag (Sec 5.8 of
@@ -265,17 +267,16 @@ key = 0xbe0c690b9f66575a1d766b54e368c84e
 nonce = 0x461599d35d632bf2239825bb
 ~~~
 
-# Fallback {#fallback}
+## Fallback {#fallback}
 
-When decoding a client Initial packet length, the server may conclude that the
-client does not have the server's correct configuration (see
-{{server-procedure}}). In this case, it replies with a Fallback packet (see
+If decryption fails, the client may not have the server's correct configuration.
+In this case, the server replies with a Fallback packet (see
 {{fallback-packet}}), and discards the Initial.
 
 The client checks the Integrity Tag in the packet against the received Fallback
 Packet and its own record of the Initial Packet. If they do not match, the
-packet may have been corrupted, and the client MAY treat the packet as lost. If
-they do match, the client MUST assume that it does not have the correct
+packet may have been corrupted, and the client SHOULD treat the packet as lost.
+If they do match, the client MUST assume that it does not have the correct
 ECHConfig.
 
 When it has the incorrect config, the client composes a new Client Hello. It
@@ -284,6 +285,9 @@ public key it attempted to use. It MUST use an Encryption Context Length of
 zero, and encrypt it with keys derived from the fallback salt defined in
 {{fallback-packet}}. The Client Hello also MUST include any Retry Token the
 previous Initial contained and MAY include a token from a NEW_TOKEN frame.
+
+This new Initial packet is part of the same connection and MUST use the same
+Connection IDs and packet number space.
 
 Note that the fallback salt does not provide confidentiality to the client, and
 the client SHOULD NOT include privacy-sensitive information there. See
@@ -295,8 +299,9 @@ accordingly.
 
 The server checks the Config ID and public key from the public_key_failed
 transport parameter to see if it should successfully process a Protected Initial
-with these parameters. If it would have, it MUST terminate the connection with a
-INVALID_PROTECTED_INITIAL_DOWNGRADE to indicate that there has been an attack.
+with these parameters. If it would have, it MUST terminate the connection with
+an INVALID_PROTECTED_INITIAL_DOWNGRADE error to indicate that there has been an
+attack.
 
 If the server would not have successfully decoded the packet with those
 parameters, it MUST send its own public_key_failed transport parameter to
@@ -310,9 +315,11 @@ response to sending a public_key_failed transport parameter, it MUST terminate
 the connection with a TRANSPORT_PARAMETER_ERROR.
 
 The client MUST NOT include the original client hello in its TLS transcript
-hash for key computation, as the server has no access to this message.
+hash for key computation, as the server has no access to this message. However,
+the client hello is an input to the Integrity tag in the public_key_failed
+transport parameter, which will be in the transcript.
 
-# The Fallback Packet {#fallback-packet}
+## The Fallback Packet {#fallback-packet}
 
 The Fallback packet uses the 0x1 packet type code, which it shares with 0-RTT.
 Since 0-RTT is only sent by clients and Fallback is only sent by servers, these
@@ -346,9 +353,9 @@ Integrity Tag as the output of AEAD_AES_128_GCM with the key and nonce from
 {{retry}}, no plaintext, and the pseudo-packet as the Additional Data. This
 thus confirms the integrity of both packets in the exchange.
 
-# New Transport Parameters
+## New Transport Parameters
 
-## public_key_failed
+### public_key_failed
 
 The public_key_failed transport parameter allows detection of an attacker
 injecting messages to force use of the fallback salt. For details on use,
@@ -360,14 +367,17 @@ When sent by a client, the content of the transport parameter is as follows:
 
 ~~~
 {
+    Integrity Tag (128),
     Config ID (8),
     Public Key (..),
 }
 ~~~
 
-These fields are populated using the ECHConfig that the client attempted to use.
-The length of the Public Key is inferred from the length field of the transport
-parameter.
+The Integrity Tag is copied from the Fallback packet.
+
+The other fields are populated using the ECHConfig that the client attempted to
+use.  The length of the Public Key is inferred from the length field of the
+transport parameter.
 
 When sent by a server, the transport parameter has no value field.
 
@@ -380,7 +390,7 @@ packet header. Therefore, if received with non-zero-length Encryption Context,
 the receiving endpoint MUST terminate the connection with a
 TRANSPORT_PARAMETER_ERROR.
 
-## ECHConfig
+### ECHConfig
 
 The ECHConfig transport parameter allows servers to directly provide clients a
 valid configuration.
@@ -394,7 +404,7 @@ or is received in a connection where the client's most recent Initial had a
 non-zero-length Encryption Context, the receiver MUST terminate the connection
 with a TRANSPORT_PARAMETER_ERROR.
 
-## initial_encryption_context
+### initial_encryption_context
 
 The format of this transport parameter is identical to the Encryption Context
 described in {{encryption-context}}.
@@ -415,7 +425,11 @@ Client Hello.
 ## Client-Facing Server
 
 The client-facing server is responsible for verifying the Initial packet is
-decryptable, and sending a 0-RTT packet (and dropping the Initial) if it is not.
+decryptable, sending a Fallback packet (and dropping the Initial) if it is not,
+and otherwise forwarding the packet encrypted with a different key.
+
+If an incoming Initial packet is not decryptable, the client-facing server
+sends a Fallback packet and drops the Initial.
 
 If an incoming client Initial has a non-zero length Encryption Context field,
 the client-facing server MUST delete the Encryption Context field. When
@@ -423,18 +437,17 @@ forwarding to the back-end server, it encrypts the plaintext version of this
 modified packet with keys derived from the fallback salt. Thus, between
 client-facing server and back-end server the packet is inspectable by observers.
 
-The client-facing server MUST enforce correct use of the
-initial_encryption_context parameter, as described in {{server-procedure}}, and
-terminate the connection if necessary.
-
 Similarly, if the client is using the shared secret, the client-facing server
 MUST decrypt server Initial packets encrypted with keys derived from the
 fallback secret, and re-encrypt them with keys derived from the shared secret.
 
-Non-Initial packets pass unmodified through the client-facing server.
+The client-facing server MUST enforce correct use of the
+initial_encryption_context parameter, as described in {{server-procedure}}, and
+terminate the connection if necessary.
 
-Note that client-facing servers cannot inspect any packet payloads except for
-Initial packets.
+Non-Initial packets pass unmodified through the client-facing server. Note that
+client-facing servers cannot inspect any packet payloads except for Initial
+packets.
 
 ## Back-End Server
 
@@ -446,14 +459,14 @@ Back-end servers MUST NOT take any action based on the presence or contents of
 the initial_encryption_context transport parameter, as the client-facing server
 has likely stripped the Encryption Context out of the header.
 
-In all other respects they operate as Protected Initial servers.
+In all other respects, they operate as Protected Initial servers.
 
 # Version Negotiation
 
 Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
 does not contain the information necessary to generate subsequent Initial
-packets correctly. Conversely, QUIC Protected Initials are compatible with QUIC
-version 1. However, since the versions have identical properties after the
+packets correctly. In contrast, QUIC Protected Initials are compatible with
+QUIC version 1. However, since the versions have identical properties after the
 Initial packet exchange, there is little value in such a transition.
 
 # Applicability
@@ -599,6 +612,7 @@ Specification: This document
 ## since draft-duke-quic-protected-initials-01
 
 * Redesigned fallback again without Version Negotiation
+* Added the initial_encryption_context transport parameter
 
 ## since draft-duke-quic-protected-initials-00
 
