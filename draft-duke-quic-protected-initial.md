@@ -490,9 +490,19 @@ to a version of QUIC that does not protect Initials. Endpoints MUST implement
 {{!I-D.ietf-quic-version-negotiation}} if they support multiple versions to
 mitigate this attack.
 
-Note that detection does not occur until after the client has sent a new,
-unprotected Initial. When composing this Initial, the client should therefore
-consider the points in {{downgrade}} below.
+Note that endpoints do not detect the attack until after the client has sent a
+new, unprotected Initial.
+
+Upon receipt of a Version Negotation packet, a client SHOULD wait for a probe
+timeout (PTO) before sending an Initial using another version. If it receives a
+valid Server Initial, it SHOULD ignore the Version Negotation. This eliminates
+attacks by observers that can inject Version Negotiation packets, but not drop
+Initial packets.
+
+When composing an Initial for a different version, the client is likely to
+expose the information in it. The client MAY alter its Initial to sanitize
+sensitive information, considering the advice in {{downgrade}} regarding the
+composition of these Initials.
 
 ## Key Loss and Downgrade {#downgrade}
 
@@ -518,9 +528,16 @@ parameter is designed to confirm that the server could have sent the Fallback
 packet, thus validating that there is no downgrade attack.
 
 Upon receipt of a Fallback packet, a client SHOULD wait for a probe timeout
-(PTO) before sending a client hello using the fallback salt. This verifies that
-the attacker can not only observe Initial packets and inject Fallbacks, but also
-drop either the client or server Initial.
+(PTO) before sending a client hello using the fallback salt, to check if a
+valid server Initial arrives. This neutralizes attackers that can inject
+Fallback packets but not drop Initials.
+
+The client MAY alter its Initial Packet to sanitize sensitive information and
+obtain either a correct ECHConfig or an aliased version before proceeding with
+its true connection attempt. However, the client Initial MUST lead to the
+authentication of a domain name the client trusts to provide accurate
+cryptographic information (possibly the public_name from the ECHConfig). Advice
+for the Outer ClientHello in Section 10.5 of {{ECHO}} applies here.
 
 ## Initial Packet Injection
 
