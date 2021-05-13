@@ -16,6 +16,14 @@ author:
     name: Martin Duke
     org: F5 Networks, Inc.
     email: martin.h.duke@gmail.com
+  -
+    ins: "D. Schinazi"
+    name: "David Schinazi"
+    organization: "Google LLC"
+    street: "1600 Amphitheatre Parkway"
+    city: "Mountain View, California 94043"
+    country: "United States of America"
+    email: dschinazi.ietf@gmail.com
 
 normative:
 
