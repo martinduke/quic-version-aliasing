@@ -461,14 +461,6 @@ has likely stripped the Encryption Context out of the header.
 
 In all other respects, they operate as Protected Initial servers.
 
-# Version Negotiation
-
-Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
-does not contain the information necessary to generate subsequent Initial
-packets correctly. In contrast, QUIC Protected Initials are compatible with
-QUIC version 1. However, since the versions have identical properties after the
-Initial packet exchange, there is little value in such a transition.
-
 # Applicability
 
 This version of QUIC provides no change from QUIC version 1 relating to the
@@ -486,16 +478,17 @@ Section 7.8 of {{VERSION-ALIASING}} is also applicable.
 ## Version Downgrade Attack
 
 An attacker might inject Version Negotiation to force the connection to migrate
-to a version of QUIC that does not protect Initials. Endpoints MUST implement
-{{!I-D.ietf-quic-version-negotiation}} if they support multiple versions to
-mitigate this attack.
+to a version of QUIC that does not protect Initials. If the client and server
+mutually support another version of QUIC, and the client does not support a
+downgrade prevention mechanism such as {{?I-D.ietf-quic-version-negotiation}},
+the client MUST fail the connection and not restart on a different version.
 
-Note that endpoints do not detect the attack until after the client has sent a
-new, unprotected Initial.
+Note that a downgrade prevention mechanism might not detect the attack until
+after the client has sent a new, unprotected Initial.
 
 Upon receipt of a Version Negotation packet, a client SHOULD wait for a probe
 timeout (PTO) before sending an Initial using another version. If it receives a
-valid Server Initial, it SHOULD ignore the Version Negotation. This eliminates
+valid Server Initial, it ignores the Version Negotiation. This eliminates
 attacks by observers that can inject Version Negotiation packets, but not drop
 Initial packets.
 
