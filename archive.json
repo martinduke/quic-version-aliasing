@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-05-11T00:24:43.640156+00:00",
+  "timestamp": "2021-05-13T00:35:37.431719+00:00",
   "repo": "martinduke/quic-version-aliasing",
   "labels": [
     {
@@ -478,15 +478,15 @@
       "id": "MDU6SXNzdWU4Nzk3ODk4NTk=",
       "title": "Alternate fallback design",
       "url": "https://github.com/martinduke/quic-version-aliasing/issues/24",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "martinduke",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "@DavidSchinazi proposes:\r\n\r\n- No packet length offset\r\n- Protected Initial endpoints MUST also support v1\r\n- In response to protected Initial, servers MAY send Retry, then VN.\r\n- In response to VN, clients use the token from the Retry (across versions)\r\n\r\nWe could even use a new packet type, instead of VN, if the fallback is defined to be V1, thus keeping this clear of the mangled VN semantics entirely.",
       "createdAt": "2021-05-07T21:37:56Z",
-      "updatedAt": "2021-05-07T23:25:31Z",
-      "closedAt": null,
+      "updatedAt": "2021-05-12T22:12:06Z",
+      "closedAt": "2021-05-12T22:12:06Z",
       "comments": [
         {
           "author": "martinduke",
@@ -503,6 +503,78 @@
           "updatedAt": "2021-05-07T23:25:31Z"
         }
       ]
+    },
+    {
+      "number": 27,
+      "id": "MDU6SXNzdWU4OTAxOTAzNzk=",
+      "title": "Add a TP in the non-fallback case",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/27",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "@DavidSchinazi suggests that in both drafts, there should be a transport parameter in the non-fallback case that protects the integrity of the header bits that these techniques add (version/ITE and the Encryption Context).",
+      "createdAt": "2021-05-12T15:10:01Z",
+      "updatedAt": "2021-05-12T23:37:51Z",
+      "closedAt": "2021-05-12T23:37:51Z",
+      "comments": []
+    },
+    {
+      "number": 28,
+      "id": "MDU6SXNzdWU4OTAxOTMyNzI=",
+      "title": "Rework Fallback and Bad Salt packets",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/28",
+      "state": "CLOSED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Settle on a format, and clean up the integrity checks.\r\n\r\nSuggestion: use the entire client Initial as part of the pseudoheader, combined with the packet contents itself",
+      "createdAt": "2021-05-12T15:13:09Z",
+      "updatedAt": "2021-05-12T23:05:46Z",
+      "closedAt": "2021-05-12T23:05:46Z",
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "The VA part of this is fixed in this commit: https://github.com/martinduke/quic-version-aliasing/commit/fd14cf96804aa195f23ca9a4bbe4bfe58eddd09c",
+          "createdAt": "2021-05-12T22:02:29Z",
+          "updatedAt": "2021-05-12T22:02:29Z"
+        }
+      ]
+    },
+    {
+      "number": 29,
+      "id": "MDU6SXNzdWU4OTA1MjUyNjE=",
+      "title": "Remove Version Negotation section from Protected Initials?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/29",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "@DavidSchinazi says:\r\n\r\n> I would simply remove this section. Versions are assumed incompatible by default and this doesn't provide anything useful?\r\n\r\nI replied:\r\n> But later on, it says that Protected Initials is compatible with version 1. Aren't we supposed to say that when we propose new versions?\r\n\r\nNot sure what the right answer is, so I opened this issue",
+      "createdAt": "2021-05-12T22:09:26Z",
+      "updatedAt": "2021-05-12T22:09:26Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 30,
+      "id": "MDU6SXNzdWU4OTA1MjYyMzg=",
+      "title": "Are there Version Downgrade Protections?",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/30",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "As @DavidSchinazi points out, a version downgrade is just like any other version of QUIC, so it's not all that unique.\r\n\r\nOTOH, since 100% of the value of these versions occurs in the Initial, before we can validate version negotiation, there are unique attacks and unique considerations. I'm inclined to leave it in but this issue can capture the discussion.",
+      "createdAt": "2021-05-12T22:11:23Z",
+      "updatedAt": "2021-05-12T22:11:23Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -725,24 +797,317 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NjMzNjU3NTAx",
       "title": "fix #24: no VN in fallback",
       "url": "https://github.com/martinduke/quic-version-aliasing/pull/25",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "martinduke",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2021-05-08T00:10:31Z",
-      "updatedAt": "2021-05-10T21:55:18Z",
+      "updatedAt": "2021-05-12T22:12:05Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "fd14cf96804aa195f23ca9a4bbe4bfe58eddd09c",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "new-fallback",
+      "headRefOid": "7028868a8cbc369b200cfac8b82e63da65314352",
+      "closedAt": "2021-05-12T22:12:05Z",
+      "mergedAt": "2021-05-12T22:12:05Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "942817882d8194d0af1da93652f0cdbdead8e8eb"
+      },
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "All open items punted to future issues. Merging to keep making progress.",
+          "createdAt": "2021-05-12T22:12:01Z",
+          "updatedAt": "2021-05-12T22:12:01Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU3MDUzNTIz",
+          "commit": {
+            "abbreviatedOid": "9c044c7"
+          },
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Nice!",
+          "createdAt": "2021-05-11T18:06:47Z",
+          "updatedAt": "2021-05-11T18:17:22Z",
+          "comments": [
+            {
+              "originalPosition": 112,
+              "body": "```suggestion\r\nMAY treat the packet as lost. If they do match, the client MUST assume that it does\r\n```",
+              "createdAt": "2021-05-11T18:06:48Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 117,
+              "body": "```suggestion\r\npublic key it attempted to use. It MUST use an Encryption Context Length of zero,\r\n```",
+              "createdAt": "2021-05-11T18:07:15Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 119,
+              "body": "```suggestion\r\n{{fallback-packet}}. The Initial also MUST include any Retry Token the\r\n```",
+              "createdAt": "2021-05-11T18:07:42Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 164,
+              "body": "I would suggest also adding a separate transport parameter in the non-fallback case to duplicate the contents of the `Encryption Context` field to ensure they are authenticated. (Or the same transport parameter with an additional field)",
+              "createdAt": "2021-05-11T18:09:47Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 146,
+              "body": "nit: the QUIC specs use `0-RTT` not `0RTT`",
+              "createdAt": "2021-05-11T18:12:04Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 154,
+              "body": "I'd suggest just using GMAC like we did for the retry integrity tag, and then just having that be the full contents of the packet (no packet number or length)",
+              "createdAt": "2021-05-11T18:13:14Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 226,
+              "body": "What does re-encrypt mean?",
+              "createdAt": "2021-05-11T18:14:30Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 248,
+              "body": "I would simply remove this section. Versions are assumed incompatible by default and this doesn't provide anything useful?",
+              "createdAt": "2021-05-11T18:15:25Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 264,
+              "body": "This section can be removed: this document has no dependency on VN",
+              "createdAt": "2021-05-11T18:15:52Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            },
+            {
+              "originalPosition": 383,
+              "body": "How about INVALID_PROTECTED_INITIAL_DOWNGRADE?",
+              "createdAt": "2021-05-11T18:17:14Z",
+              "updatedAt": "2021-05-11T18:17:22Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU3MjE2NTc4",
+          "commit": {
+            "abbreviatedOid": "1e2151b"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-11T20:45:04Z",
+          "updatedAt": "2021-05-11T20:45:04Z",
+          "comments": [
+            {
+              "originalPosition": 164,
+              "body": "I do not quite see the threat model but agree that I should do that. Shortly!",
+              "createdAt": "2021-05-11T20:45:04Z",
+              "updatedAt": "2021-05-11T20:45:09Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU3MjE5MzE0",
+          "commit": {
+            "abbreviatedOid": "1e2151b"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-11T20:48:36Z",
+          "updatedAt": "2021-05-11T20:48:36Z",
+          "comments": [
+            {
+              "originalPosition": 226,
+              "body": "What I am trying to say is that the client-facing server is a gateway between an Initial encrypted with the shared secret and one encrypted with the fallback salt. Do you have a better wording?",
+              "createdAt": "2021-05-11T20:48:36Z",
+              "updatedAt": "2021-05-11T20:48:36Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU3MjE5OTQ2",
+          "commit": {
+            "abbreviatedOid": "1e2151b"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-11T20:49:26Z",
+          "updatedAt": "2021-05-11T20:49:26Z",
+          "comments": [
+            {
+              "originalPosition": 248,
+              "body": "But later on, it says that Protected Initials is compatible with version 1. Aren't we supposed to say that when we propose new versions?",
+              "createdAt": "2021-05-11T20:49:26Z",
+              "updatedAt": "2021-05-11T20:49:26Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU4MDEwODUw",
+          "commit": {
+            "abbreviatedOid": "1e2151b"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-12T15:10:18Z",
+          "updatedAt": "2021-05-12T15:10:18Z",
+          "comments": [
+            {
+              "originalPosition": 164,
+              "body": "Filed #27 ",
+              "createdAt": "2021-05-12T15:10:18Z",
+              "updatedAt": "2021-05-12T15:10:18Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU4MDE0NjEw",
+          "commit": {
+            "abbreviatedOid": "1e2151b"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-12T15:13:29Z",
+          "updatedAt": "2021-05-12T15:13:30Z",
+          "comments": [
+            {
+              "originalPosition": 154,
+              "body": "Filed #28 ",
+              "createdAt": "2021-05-12T15:13:29Z",
+              "updatedAt": "2021-05-12T15:13:30Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU4MDIwMjcy",
+          "commit": {
+            "abbreviatedOid": "1e2151b"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-12T15:17:58Z",
+          "updatedAt": "2021-05-12T15:17:59Z",
+          "comments": [
+            {
+              "originalPosition": 264,
+              "body": "I disagree. This is uniquely vulnerable to version downgrade, because the entire added value occurs in the Initial Packets, which happen before the endpoints can detect a downgrade. At the very least, I think we need the text about waiting around when there's a VN packet before sending a new Initial.",
+              "createdAt": "2021-05-12T15:17:58Z",
+              "updatedAt": "2021-05-12T15:17:59Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU4NDIyNDI3",
+          "commit": {
+            "abbreviatedOid": "7028868"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-12T22:07:58Z",
+          "updatedAt": "2021-05-12T22:07:58Z",
+          "comments": [
+            {
+              "originalPosition": 226,
+              "body": "reworded",
+              "createdAt": "2021-05-12T22:07:58Z",
+              "updatedAt": "2021-05-12T22:07:58Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU4NDIzMzA5",
+          "commit": {
+            "abbreviatedOid": "7028868"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-12T22:09:34Z",
+          "updatedAt": "2021-05-12T22:09:35Z",
+          "comments": [
+            {
+              "originalPosition": 248,
+              "body": "Opened #29 ",
+              "createdAt": "2021-05-12T22:09:34Z",
+              "updatedAt": "2021-05-12T22:09:35Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU4NDI0NDA5",
+          "commit": {
+            "abbreviatedOid": "7028868"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-05-12T22:11:33Z",
+          "updatedAt": "2021-05-12T22:11:34Z",
+          "comments": [
+            {
+              "originalPosition": 264,
+              "body": "Opened #30",
+              "createdAt": "2021-05-12T22:11:33Z",
+              "updatedAt": "2021-05-12T22:11:34Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 26,
+      "id": "MDExOlB1bGxSZXF1ZXN0NjQzMjQ1MzI1",
+      "title": "Fix va",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/26",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2021-05-12T15:06:35Z",
+      "updatedAt": "2021-05-12T15:06:53Z",
       "baseRepository": "martinduke/quic-version-aliasing",
       "baseRefName": "master",
       "baseRefOid": "03923f2273088691053fb129f62c8eaf1383dad9",
       "headRepository": "martinduke/quic-version-aliasing",
-      "headRefName": "new-fallback",
-      "headRefOid": "9c044c7bb2e24d644f9f20fa9965469afd825fd1",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefName": "fix-va",
+      "headRefOid": "dcf73cbb05fd223eea46726cf61248b6de320a2f",
+      "closedAt": "2021-05-12T15:06:53Z",
+      "mergedAt": "2021-05-12T15:06:53Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "7d7422a55fc57b0d1053fb340f0df4ba4579b73f"
+      },
       "comments": [],
       "reviews": []
     }
