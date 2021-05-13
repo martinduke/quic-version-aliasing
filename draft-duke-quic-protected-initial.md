@@ -483,62 +483,45 @@ as well.
 
 Section 7.8 of {{VERSION-ALIASING}} is also applicable.
 
-## Version Downgrade Attack
+## Forcing Downgrade {#downgrade}
 
-An attacker might inject Version Negotiation to force the connection to migrate
-to a version of QUIC that does not protect Initials. If the client and server
-mutually support another version of QUIC, and the client does not support a
-downgrade prevention mechanism such as {{?I-D.ietf-quic-version-negotiation}},
-the client MUST fail the connection and not restart on a different version.
+An attacker attempts to force a client to send an Initial that uses unprotected
+Initials by injecting a Version Negotiation packet (which implies the server no
+longer supports Protected Initials) or a Fallback packet (which implies the
+server has a new cryptographic context).
 
-Note that a downgrade prevention mechanism might not detect the attack until
-after the client has sent a new, unprotected Initial.
+The weak form of this attack observes the Initial and injects the Version
+Negotiation or Fallback packet, but cannot drop the Initial. To counteract this,
+a client SHOULD NOT respond to these packets until they have waited for Probe
+Timeout (PTO) for a valid server Initial to arrive.
 
-Upon receipt of a Version Negotation packet, a client SHOULD wait for a probe
-timeout (PTO) before sending an Initial using another version. If it receives a
-valid Server Initial, it ignores the Version Negotiation. This eliminates
-attacks by observers that can inject Version Negotiation packets, but not drop
-Initial packets.
+The strong form features an attacker that can drop Initial packets. In this
+case, the client can either abandon the connection attempt or connect with a
+unprotected Initial: using the fallback salt in response to a Fallback packet,
+or a different version in response to Version Negotiation.
 
-When composing an Initial for a different version, the client is likely to
-expose the information in it. The client MAY alter its Initial to sanitize
-sensitive information, considering the advice in {{downgrade}} regarding the
-composition of these Initials.
+If connecting with an unprotected Initial, the client MAY alter it to sanitize
+sensitive information and obtain either a correct ECHConfig or an aliased
+version before proceeding with its true connection attempt. However, the client
+Initial MUST lead to the authentication of a domain name the client trusts to
+provide accurate cryptographic information (usually the public_name from the
+ECHConfig). Advice for the Outer ClientHello in Section 10.5 of {{ECHO}} applies
+here.
 
-## Key Loss and Downgrade {#downgrade}
+Furthermore, if it received a Fallback packet, the client sends a
+public_key_failed transport parameter to detect the downgrade attack, and the
+server will terminate the connection if the Fallback packet was an attack.
 
-ECH and Protected Initials both rely on shared cryptographic configuration state
-between client and server, delivered by an out-of-band method, usually DNS.
+If the client received a Version Negotiation packet, it MUST implement a
+downgrade detection mechanism such as {{!I-D.ietf-quic-version-negotiation}} or
+abandon the connection attempt. If it subsequently detects a downgrade
+detection, or discovers that the server does not support the same mechanism, it
+terminates the connection attempt.
 
-In the event this synchronization fails in ECH, the client-facing server can
-complete the handshake, authenticate itself against the "public name" in the
-unprotected part of the Client Hello, and provide updated configuration state,
-allowing a resumed attempt after 1 RTT.
-
-With Protected Initials, when decryption fails there is not enough context to
-complete any sort of authentication to update the crypto context. Instead, the
-server sends a Fallback packet that causes the client to fall back to keys that
-do not offer confidentiality, with which it could connect to the public name and
-only then acquire the updated crypto context. Note that this incurs an
-additional 1-RTT penalty over ECH, although loss of key synchronization is
-hopefully a rare occurrence.
-
-An attacker could inject Fallback packets to force the client to use the
-fallback salt and lose confidentiality. The public_key_failed transport
-parameter is designed to confirm that the server could have sent the Fallback
-packet, thus validating that there is no downgrade attack.
-
-Upon receipt of a Fallback packet, a client SHOULD wait for a probe timeout
-(PTO) before sending a client hello using the fallback salt, to check if a
-valid server Initial arrives. This neutralizes attackers that can inject
-Fallback packets but not drop Initials.
-
-The client MAY alter its Initial Packet to sanitize sensitive information and
-obtain either a correct ECHConfig or an aliased version before proceeding with
-its true connection attempt. However, the client Initial MUST lead to the
-authentication of a domain name the client trusts to provide accurate
-cryptographic information (possibly the public_name from the ECHConfig). Advice
-for the Outer ClientHello in Section 10.5 of {{ECHO}} applies here.
+Note that ECH is able to retrieve an up-to-date cryptographic context in 1 RTT,
+because the client hello has enough plaintext information to begin a handshake
+with the public_name. Protected Initials require reconnection with the public
+name, incurring a 2 RTT penalty to achieve the same result.
 
 ## Initial Packet Injection
 

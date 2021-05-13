@@ -130,12 +130,6 @@ transform the aliased version number and token extension into the salt. The two
 options provide a simple tradeoff between computational complexity and storage
 requirements.
 
-Note that clients and servers MUST implement
-{{!QUIC-VN=I-D.ietf-quic-version-negotiation}} to use this specification.
-Therefore, servers list supported versions in Version Negotiation Packets. Both
-clients and servers list supported versions in Version Negotiation Transport
-Parameters.
-
 ## Relationship to ECH and QUIC Protected Initials
 
 The TLS Encrypted Client Hello {{ECHO}} shares some goals with
@@ -175,8 +169,8 @@ Aliasing requires a connection using a standard version. In either case,
 maintaining privacy requires the outer or standard version Client Hello to
 exclude privacy-sensitive information. However, ECH will allow confidential
 transmission of data in 1 RTT, while Version Aliasing requires 2 RTTs to resume.
-This mechanism is also relevant to Version Aliasing mitigation of Version
-Downgrade attacks {{version-downgrade}}.
+This mechanism is also relevant to mitigation of downgrade attacks (see
+{{downgrade}}).
 
 Similarly, the QUIC Protected Initial
 {{!QUIC-PI=I-D.duke-quic-protected-initial}} uses the ECH distribution mechanism
@@ -424,7 +418,7 @@ the server using that version number.
 If the response to an Initial packet using the provided version is a Version
 Negotiation Packet, the client SHOULD assume that the server no longer supports
 version aliasing and attempt to connect with one of the advertised versions
-(while observing the considerations in {{version-downgrade}}).
+(while observing the considerations in {{downgrade}}).
 
 If the response to an Initial packet is a Bad Salt packet, the client follows
 the procedures in {{fallback}}.
@@ -674,31 +668,34 @@ for the Outer ClientHello in Section 10.5 of {{ECHO}} applies here.
 Endpoints are encouraged to instead use {{ECHO}} or {{QUIC-PI}} to increase
 privacy on the first connection between a client and server.
 
-## Version Downgrade {#version-downgrade}
+## Forcing Downgrade {#downgrade}
 
-When servers lose their cryptographic state, they send a Version Negotiation
-packet to force the server to use a standard version. As these packets are not
-authenticated, this opens the possibility of Version Downgrade attacks to force
-insecure communication.
+An attacker can attempt to force a client to send an Initial that uses a
+standard version by injecting a Version Negotiation packet (which implies the
+server no longer supports aliasing) or a Bad Salt packet (which implies the
+server has a new cryptographic context).
 
-{{QUIC-VN}} reveals that a Version Negotiation packet is invalid after the
-Initial Packets have exchanged, with any associated privacy leakage.
+The weak form of this attack observes the Initial and injects the Version
+Negotiation or Bad Salt packet, but cannot drop the Initial. To counteract this,
+a client SHOULD NOT respond to these packets until they have waited for Probe
+Timeout (PTO) for a valid server Initial to arrive.
 
-The weak form of this attack simply observes the Client Initial and delivers a
-Version Negotiation Packet before the client responds. Clients SHOULD wait for
-an interval (roughly the QUIC Probe Timeout, see {{!I-D.ietf-quic-recovery}})
-before acting on a Version Negotiation Packet that indicates a loss of crypto
-state. If a valid Initial arrives, the client MUST ignore the Version
-Negotiation packet.
+The strong form features an attacker that can drop Initial packets. In this
+case, the client can either abandon the connection attempt or connect with an
+standard version.
 
-The strong form of this attack requires the attacker to drop either the Client
-Initial or the Server Initial. In this case, the client has no recourse but to
-connect with a standard version. As described in {{first-connection}}, the
-client can obtain an updated context and then assume subsequent Version
-Negotiation packets are invalid with high probability. Regardless, an attacker
-with these capabilities can always block a secured handshake of any kind, and
-can force the client choose between an insecure handshake and not communicating
-at all.
+If it connects with a standard version, it should consider the privacy advice
+in {{first-connection}}.
+
+Furthermore, if it received a Bad Salt packet, the client sends a Version
+Aliasing transport parameter to detect the downgrade attack, and the server will
+terminate the connection if the Bad Salt packet was an attack.
+
+If the client received a Version Negotiation packet, it MUST implement a
+downgrade detection mechanism such as {{!I-D.ietf-quic-version-negotiation}} or
+abandon the connection attempt. If it subsequent detects a downgrade detection,
+or discovers that the server does not support the same mechanism, it terminates
+the connection attempt.
 
 ## Initial Packet Injection
 
