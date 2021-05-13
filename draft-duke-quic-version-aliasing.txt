@@ -746,8 +746,8 @@ Table of Contents
    than the version it used in its Initial Packet.
 
    Servers MUST NOT reply to a packet with an incorrect Length field in
-   its long header with a Retry packet; it SHOULD reply with Version
-   Negotiation as described above.
+   its long header with a Retry packet; it SHOULD reply with Bad Salt as
+   described above.
 
 8.  Security and Privacy Considerations
 
@@ -1003,11 +1003,11 @@ Table of Contents
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
               version-negotiation-03.txt>.
 
-   [QUIC-PI]  Duke, M., "Protected QUIC Initial Packets", Work in
-              Progress, Internet-Draft, draft-duke-quic-protected-
-              initial-01, 7 May 2021,
+   [QUIC-PI]  Duke, M. and D. Schinazi, "Protected QUIC Initial
+              Packets", Work in Progress, Internet-Draft, draft-duke-
+              quic-protected-initial-02, 13 May 2021,
               <https://datatracker.ietf.org/doc/html/draft-duke-quic-
-              protected-initial-01.txt>.
+              protected-initial-02.txt>.
 
    [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
               Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,

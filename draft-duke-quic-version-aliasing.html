@@ -21,7 +21,7 @@ the protocol's privacy properties.
 <meta content="draft-duke-quic-version-aliasing" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.7.0
-    Python 3.8.8
+    Python 3.8.10
     appdirs 1.4.4
     ConfigArgParse 1.2.3
     google-i18n-address 2.4.0
@@ -1734,8 +1734,7 @@ specification.<a href="#section-7-4" class="pilcrow">¶</a></p>
 <p id="section-7-5">Clients MUST ignore Retry packets that contain a QUIC version other than the
 version it used in its Initial Packet.<a href="#section-7-5" class="pilcrow">¶</a></p>
 <p id="section-7-6">Servers MUST NOT reply to a packet with an incorrect Length field in its long
-header with a Retry packet; it SHOULD reply with Version Negotiation as
-described above.<a href="#section-7-6" class="pilcrow">¶</a></p>
+header with a Retry packet; it SHOULD reply with Bad Salt as described above.<a href="#section-7-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-and-privacy-considerations">
@@ -2029,7 +2028,7 @@ Error Codes registry:<a href="#section-9.3-1" class="pilcrow">¶</a></p>
 <dd class="break"></dd>
 <dt id="QUIC-PI">[QUIC-PI]</dt>
         <dd>
-<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"Protected QUIC Initial Packets"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-protected-initial-01</span>, <time datetime="2021-05-07" class="refDate">7 May 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-01.txt">https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-01.txt</a>&gt;</span>. </dd>
+<span class="refAuthor">Duke, M.</span> and <span class="refAuthor">D. Schinazi</span>, <span class="refTitle">"Protected QUIC Initial Packets"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-protected-initial-02</span>, <time datetime="2021-05-13" class="refDate">13 May 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-02.txt">https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-02.txt</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="QUIC-TLS">[QUIC-TLS]</dt>
         <dd>
