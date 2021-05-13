@@ -37,11 +37,6 @@ successfully spoof them. This document proposes a new version of QUIC that
 encrypts Initial Packets more securely by leveraging a Public Key distributed
 via the Domain Name System (DNS) or other out-of-band system.
 
-Discussion of this work is encouraged to happen on the QUIC IETF
-mailing list [](quic@ietf.org) or on the GitHub repository which
-contains the draft:
-[](https://github.com/martinduke/quic-version-aliasing).
-
 --- middle
 
 # Introduction
