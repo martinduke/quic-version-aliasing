@@ -262,7 +262,7 @@ processing rule.
 
 The Retry packet is identical to QUIC version 1, except that
 the key and nonce used for the Retry Integrity Tag (Sec 5.8 of
-{{!I-D.ietf-quic-tls}} change to:
+{{QUIC-TLS}} change to:
 
 ~~~
 secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
