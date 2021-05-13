@@ -348,8 +348,8 @@ Table of Contents
 3.7.  Retry Integrity Tag
 
    The Retry packet is identical to QUIC version 1, except that the key
-   and nonce used for the Retry Integrity Tag (Sec 5.8 of
-   [I-D.ietf-quic-tls] change to:
+   and nonce used for the Retry Integrity Tag (Sec 5.8 of [QUIC-TLS]
+   change to:
 
 secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
 key = 0xbe0c690b9f66575a1d766b54e368c84e
@@ -727,12 +727,6 @@ nonce = 0x461599d35d632bf2239825bb
               Internet-Draft, draft-irtf-cfrg-hpke-08, 15 February 2021,
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
               hpke-08.txt>.
-
-   [I-D.ietf-quic-tls]
-              Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
-              Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
-              14 January 2021, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-quic-tls-34.txt>.
 
    [I-D.ietf-quic-version-negotiation]
               Schinazi, D. and E. Rescorla, "Compatible Version
