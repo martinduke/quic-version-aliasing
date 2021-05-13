@@ -4,8 +4,9 @@
 
 quic                                                             M. Duke
 Internet-Draft                                         F5 Networks, Inc.
-Intended status: Standards Track                             13 May 2021
-Expires: 14 November 2021
+Intended status: Standards Track                             D. Schinazi
+Expires: 14 November 2021                                     Google LLC
+                                                             13 May 2021
 
 
                      Protected QUIC Initial Packets
@@ -106,7 +107,7 @@ Table of Contents
    Appendix A.  Change Log
      A.1.  since draft-duke-quic-protected-initials-01
      A.2.  since draft-duke-quic-protected-initials-00
-   Author's Address
+   Authors' Addresses
 
 1.  Introduction
 
@@ -821,9 +822,18 @@ A.2.  since draft-duke-quic-protected-initials-00
 
    *  Added crypto agility
 
-Author's Address
+Authors' Addresses
 
    Martin Duke
    F5 Networks, Inc.
 
    Email: martin.h.duke@gmail.com
+
+
+   David Schinazi
+   Google LLC
+   1600 Amphitheatre Parkway
+   Mountain View, California 94043,
+   United States of America
+
+   Email: dschinazi.ietf@gmail.com
