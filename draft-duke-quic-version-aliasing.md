@@ -832,12 +832,6 @@ Transport Parameters Registry:
 | TBD | Version Aliasing | This Document |
 | TBD | aliasing_parameters | This Document |
 
-Value: TBD (provisional: 0x5641)
-
-Parameter Name: Version Aliasing
-
-Specification: This document
-
 ## QUIC Transport Error Codes Registry
 
 This document requests that IANA add the following entry to the QUIC Transport
