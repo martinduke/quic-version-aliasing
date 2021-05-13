@@ -469,14 +469,6 @@ has likely stripped the Encryption Context out of the header.
 
 In all other respects, they operate as Protected Initial servers.
 
-# Version Negotiation
-
-Note that QUIC version 1 is not compatible with QUIC Protected Initials, as it
-does not contain the information necessary to generate subsequent Initial
-packets correctly. In contrast, QUIC Protected Initials are compatible with
-QUIC version 1. However, since the versions have identical properties after the
-Initial packet exchange, there is little value in such a transition.
-
 # Applicability
 
 This version of QUIC provides no change from QUIC version 1 relating to the
@@ -494,13 +486,24 @@ Section 7.8 of {{VERSION-ALIASING}} is also applicable.
 ## Version Downgrade Attack
 
 An attacker might inject Version Negotiation to force the connection to migrate
-to a version of QUIC that does not protect Initials. Endpoints MUST implement
-{{!I-D.ietf-quic-version-negotiation}} if they support multiple versions to
-mitigate this attack.
+to a version of QUIC that does not protect Initials. If the client and server
+mutually support another version of QUIC, and the client does not support a
+downgrade prevention mechanism such as {{?I-D.ietf-quic-version-negotiation}},
+the client MUST fail the connection and not restart on a different version.
 
-Note that detection does not occur until after the client has sent a new,
-unprotected Initial. When composing this Initial, the client should therefore
-consider the points in {{downgrade}} below.
+Note that a downgrade prevention mechanism might not detect the attack until
+after the client has sent a new, unprotected Initial.
+
+Upon receipt of a Version Negotation packet, a client SHOULD wait for a probe
+timeout (PTO) before sending an Initial using another version. If it receives a
+valid Server Initial, it ignores the Version Negotiation. This eliminates
+attacks by observers that can inject Version Negotiation packets, but not drop
+Initial packets.
+
+When composing an Initial for a different version, the client is likely to
+expose the information in it. The client MAY alter its Initial to sanitize
+sensitive information, considering the advice in {{downgrade}} regarding the
+composition of these Initials.
 
 ## Key Loss and Downgrade {#downgrade}
 
@@ -526,9 +529,16 @@ parameter is designed to confirm that the server could have sent the Fallback
 packet, thus validating that there is no downgrade attack.
 
 Upon receipt of a Fallback packet, a client SHOULD wait for a probe timeout
-(PTO) before sending a client hello using the fallback salt. This verifies that
-the attacker can not only observe Initial packets and inject Fallbacks, but also
-drop either the client or server Initial.
+(PTO) before sending a client hello using the fallback salt, to check if a
+valid server Initial arrives. This neutralizes attackers that can inject
+Fallback packets but not drop Initials.
+
+The client MAY alter its Initial Packet to sanitize sensitive information and
+obtain either a correct ECHConfig or an aliased version before proceeding with
+its true connection attempt. However, the client Initial MUST lead to the
+authentication of a domain name the client trusts to provide accurate
+cryptographic information (possibly the public_name from the ECHConfig). Advice
+for the Outer ClientHello in Section 10.5 of {{ECHO}} applies here.
 
 ## Initial Packet Injection
 
