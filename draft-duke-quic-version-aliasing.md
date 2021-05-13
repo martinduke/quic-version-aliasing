@@ -632,8 +632,7 @@ Clients MUST ignore Retry packets that contain a QUIC version other than the
 version it used in its Initial Packet.
 
 Servers MUST NOT reply to a packet with an incorrect Length field in its long
-header with a Retry packet; it SHOULD reply with Version Negotiation as
-described above.
+header with a Retry packet; it SHOULD reply with Bad Salt as described above.
 
 # Security and Privacy Considerations
 
