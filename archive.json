@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-05-13T00:35:37.431719+00:00",
+  "timestamp": "2021-05-16T00:37:32.289821+00:00",
   "repo": "martinduke/quic-version-aliasing",
   "labels": [
     {
@@ -549,30 +549,128 @@
       "id": "MDU6SXNzdWU4OTA1MjUyNjE=",
       "title": "Remove Version Negotation section from Protected Initials?",
       "url": "https://github.com/martinduke/quic-version-aliasing/issues/29",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "martinduke",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "@DavidSchinazi says:\r\n\r\n> I would simply remove this section. Versions are assumed incompatible by default and this doesn't provide anything useful?\r\n\r\nI replied:\r\n> But later on, it says that Protected Initials is compatible with version 1. Aren't we supposed to say that when we propose new versions?\r\n\r\nNot sure what the right answer is, so I opened this issue",
       "createdAt": "2021-05-12T22:09:26Z",
-      "updatedAt": "2021-05-12T22:09:26Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2021-05-13T17:21:19Z",
+      "closedAt": "2021-05-13T17:21:18Z",
+      "comments": [
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "body": "What's the benefit of marking these two versions as compatible? Do you foresee a use-case where you would want to perform compatible Version negotiation from one to the other?",
+          "createdAt": "2021-05-13T01:36:15Z",
+          "updatedAt": "2021-05-13T01:36:15Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "I'm struggling to find one. I don't feel a desperate need to keep this text, but want to follow whatever formal requirements are necessary regarding declaring compatibility because\r\n\r\n(1) we shouldn't get lazy about following the rules before VN is even done yet; and\r\n(2) authors of other new versions may use this as a template.",
+          "createdAt": "2021-05-13T15:19:38Z",
+          "updatedAt": "2021-05-13T15:19:38Z"
+        },
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "body": "My point is that VN is designed so that if you define a new version without saying anything then it's incompatible. Since that's what we want here, I'd rather not say anything. Authors of new versions should do the same and not say anything unless they want to be compatible, which we don't.",
+          "createdAt": "2021-05-13T16:47:52Z",
+          "updatedAt": "2021-05-13T16:47:52Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Fixed by #32",
+          "createdAt": "2021-05-13T17:21:18Z",
+          "updatedAt": "2021-05-13T17:21:18Z"
+        }
+      ]
     },
     {
       "number": 30,
       "id": "MDU6SXNzdWU4OTA1MjYyMzg=",
       "title": "Are there Version Downgrade Protections?",
       "url": "https://github.com/martinduke/quic-version-aliasing/issues/30",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "martinduke",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "As @DavidSchinazi points out, a version downgrade is just like any other version of QUIC, so it's not all that unique.\r\n\r\nOTOH, since 100% of the value of these versions occurs in the Initial, before we can validate version negotiation, there are unique attacks and unique considerations. I'm inclined to leave it in but this issue can capture the discussion.",
       "createdAt": "2021-05-12T22:11:23Z",
-      "updatedAt": "2021-05-12T22:11:23Z",
+      "updatedAt": "2021-05-13T17:21:00Z",
+      "closedAt": "2021-05-13T17:21:00Z",
+      "comments": [
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I see what you're saying, if the client receives VN and restarts with QUICv1 we need that to fail. I would suggest we instead just say that the if a client receives VN, it MUST fail the connection and not restart on a different version unless it has a downgrade-prevention mechanism such as draft-ietf-quic-version-negotiation. That way if it has that draft it works, and if someone builds a better VN later we can also use it.",
+          "createdAt": "2021-05-13T01:40:19Z",
+          "updatedAt": "2021-05-13T01:40:19Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "Oops, some text I wanted in here was lost in the cut-and-paste from VA. PR to come.\r\n\r\nHowever, I'm just saying you MUST support VN if you multiple versions. Good enough, or would you allow non-support with your text?",
+          "createdAt": "2021-05-13T15:34:06Z",
+          "updatedAt": "2021-05-13T15:34:06Z"
+        },
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "body": "My fundamental point is that the VN draft is *a* way to secure VN, it's not *the* way to secure VN. We shouldn't have a normative requirement to support *that* particular way.",
+          "createdAt": "2021-05-13T16:52:43Z",
+          "updatedAt": "2021-05-13T16:52:43Z"
+        }
+      ]
+    },
+    {
+      "number": 33,
+      "id": "MDU6SXNzdWU4OTE0MjcxNTQ=",
+      "title": "Handling of 0RTT upon fallback/Bad Salt",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/33",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Upon fallback (PI), the draft currently says that the client sends an Initial with the fallback support that is part of the same connection, with the same CIDs. It is silent on the fate of any 0-RTT packets from that connection.\r\n\r\nIn VA, it's a new connection so the 0-RTT packets are dead.\r\n\r\nThere are some problems here:\r\n- If the fallback client hello uses a different SNI or ALPN, it may not be decipherable by the server if the server didn't generate the ticket, or it might be inappropriate input for the new target application. We could just specify it's a new connection and sidestep these problems, like VA.\r\n\r\n- In that case, we have potentially new 0-RTT packets, with the same sequence numbers. Is there a security risk here, or do the new CIDs in the AD imply different cipher text? If I read section 8.1 of RFC 8446 correctly, reusing a ticket can result in replay attacks but do not compromise the data confidentiality.\r\n\r\n@DavidSchinazi suggested forbidding including the ticket in the second client hello, but this would appear to add yet another 1RTT penalty, which is less than optimal.\r\n\r\nI do not completely understand the tradeoffs here, nor have I fully thought through all the use cases.",
+      "createdAt": "2021-05-13T22:14:03Z",
+      "updatedAt": "2021-05-14T18:03:25Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "body": "To clarify, I only suggested forbidding including the 0-RTT ticket identity if any part of the client hello was changed (such as the SNI or ALPN). In that scenario, the second connection only exists to get an updated ECHConfig so 0-RTT is irrelevant.",
+          "createdAt": "2021-05-14T00:05:42Z",
+          "updatedAt": "2021-05-14T00:05:42Z"
+        },
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "See https://github.com/tlswg/draft-ietf-tls-esni/issues/408 for the first person to realize this, in a TCP context.",
+          "createdAt": "2021-05-14T18:03:25Z",
+          "updatedAt": "2021-05-14T18:03:25Z"
+        }
+      ]
+    },
+    {
+      "number": 34,
+      "id": "MDU6SXNzdWU4OTE0Mzc2NTA=",
+      "title": "Version Aliasing should put the Bad Salt Integrity tag in the transport parameter",
+      "url": "https://github.com/martinduke/quic-version-aliasing/issues/34",
+      "state": "OPEN",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "to put it all in the transcript.",
+      "createdAt": "2021-05-13T22:36:16Z",
+      "updatedAt": "2021-05-13T22:36:16Z",
       "closedAt": null,
       "comments": []
     }
@@ -1110,6 +1208,118 @@
       },
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 31,
+      "id": "MDExOlB1bGxSZXF1ZXN0NjQzNjE4NTEx",
+      "title": "Add dschinazi as co-author of draft-duke-quic-protected-initial",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/31",
+      "state": "MERGED",
+      "author": "DavidSchinazi",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2021-05-13T01:42:47Z",
+      "updatedAt": "2021-05-13T15:15:03Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "1b6300a1dab2c5fa761c1825cf251725ce418dab",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "dschinazi-author",
+      "headRefOid": "5c3d0ded956b51e136e0b768b921b383a269c75e",
+      "closedAt": "2021-05-13T15:15:03Z",
+      "mergedAt": "2021-05-13T15:15:03Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "568d6ced60bda642e773f5b0833496cfb3efb819"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU5MDExNTg0",
+          "commit": {
+            "abbreviatedOid": "5c3d0de"
+          },
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "It's all spelled correctly!",
+          "createdAt": "2021-05-13T15:14:58Z",
+          "updatedAt": "2021-05-13T15:14:58Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 32,
+      "id": "MDExOlB1bGxSZXF1ZXN0NjQ0MDc2NTEy",
+      "title": "Revise Version downgrade text",
+      "url": "https://github.com/martinduke/quic-version-aliasing/pull/32",
+      "state": "MERGED",
+      "author": "martinduke",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Fix #30",
+      "createdAt": "2021-05-13T16:00:53Z",
+      "updatedAt": "2021-05-13T17:21:01Z",
+      "baseRepository": "martinduke/quic-version-aliasing",
+      "baseRefName": "master",
+      "baseRefOid": "568d6ced60bda642e773f5b0833496cfb3efb819",
+      "headRepository": "martinduke/quic-version-aliasing",
+      "headRefName": "version-downgrade",
+      "headRefOid": "16c8165316bf24acafffc3c837cf16131a802ce6",
+      "closedAt": "2021-05-13T17:21:00Z",
+      "mergedAt": "2021-05-13T17:21:00Z",
+      "mergedBy": "martinduke",
+      "mergeCommit": {
+        "oid": "1d2048f66ff62831b573d00002bf6eefb76ba4d5"
+      },
+      "comments": [
+        {
+          "author": "martinduke",
+          "authorAssociation": "OWNER",
+          "body": "also now fixing #29 ",
+          "createdAt": "2021-05-13T17:06:26Z",
+          "updatedAt": "2021-05-13T17:06:26Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU5MDk5NDIw",
+          "commit": {
+            "abbreviatedOid": "e25c512"
+          },
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "This PR LGTM but it doesn't address #30.",
+          "createdAt": "2021-05-13T16:48:49Z",
+          "updatedAt": "2021-05-13T16:51:46Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "This SHOULD is a MUST in QUICv1 so we don't need to say anything. Or if we want to point it out, we should reference that MUST.",
+              "createdAt": "2021-05-13T16:49:55Z",
+              "updatedAt": "2021-05-13T16:51:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NjU5MTI2MDg1",
+          "commit": {
+            "abbreviatedOid": "16c8165"
+          },
+          "author": "DavidSchinazi",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2021-05-13T17:20:08Z",
+          "updatedAt": "2021-05-13T17:20:08Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
