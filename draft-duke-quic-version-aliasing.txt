@@ -4,8 +4,8 @@
 
 QUIC                                                             M. Duke
 Internet-Draft                                         F5 Networks, Inc.
-Intended status: Experimental                                13 May 2021
-Expires: 14 November 2021
+Intended status: Experimental                                2 June 2021
+Expires: 4 December 2021
 
 
                          QUIC Version Aliasing
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 November 2021.
+   This Internet-Draft will expire on 4 December 2021.
 
 Copyright Notice
 
@@ -993,9 +993,9 @@ Table of Contents
    [I-D.ietf-quic-version-negotiation]
               Schinazi, D. and E. Rescorla, "Compatible Version
               Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-03, 4 February 2021,
+              draft-ietf-quic-version-negotiation-04, 26 May 2021,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-03.txt>.
+              version-negotiation-04.txt>.
 
    [QUIC-PI]  Duke, M. and D. Schinazi, "Protected QUIC Initial
               Packets", Work in Progress, Internet-Draft, draft-duke-

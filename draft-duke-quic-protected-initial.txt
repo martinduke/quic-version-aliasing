@@ -5,8 +5,8 @@
 quic                                                             M. Duke
 Internet-Draft                                         F5 Networks, Inc.
 Intended status: Standards Track                             D. Schinazi
-Expires: 14 November 2021                                     Google LLC
-                                                             13 May 2021
+Expires: 4 December 2021                                      Google LLC
+                                                             2 June 2021
 
 
                      Protected QUIC Initial Packets
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 November 2021.
+   This Internet-Draft will expire on 4 December 2021.
 
 Copyright Notice
 
@@ -724,16 +724,16 @@ nonce = 0x461599d35d632bf2239825bb
 
    [HPKE]     Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
               "Hybrid Public Key Encryption", Work in Progress,
-              Internet-Draft, draft-irtf-cfrg-hpke-08, 15 February 2021,
+              Internet-Draft, draft-irtf-cfrg-hpke-09, 26 May 2021,
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
-              hpke-08.txt>.
+              hpke-09.txt>.
 
    [I-D.ietf-quic-version-negotiation]
               Schinazi, D. and E. Rescorla, "Compatible Version
               Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-03, 4 February 2021,
+              draft-ietf-quic-version-negotiation-04, 26 May 2021,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-03.txt>.
+              version-negotiation-04.txt>.
 
    [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
               Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
@@ -771,9 +771,9 @@ nonce = 0x461599d35d632bf2239825bb
 
    [VERSION-ALIASING]
               Duke, M., "QUIC Version Aliasing", Work in Progress,
-              Internet-Draft, draft-duke-quic-version-aliasing-05, 4 May
-              2021, <https://datatracker.ietf.org/doc/html/draft-duke-
-              quic-version-aliasing-05.txt>.
+              Internet-Draft, draft-duke-quic-version-aliasing-06, 13
+              May 2021, <https://datatracker.ietf.org/doc/html/draft-
+              duke-quic-version-aliasing-06.txt>.
 
 Appendix A.  Change Log
 
