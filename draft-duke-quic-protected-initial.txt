@@ -108,11 +108,11 @@ Table of Contents
    DISCLAIMER: This draft is a preliminary proposal with insufficient
    security analysis.  It should not be used in production systems.
 
-   The QUIC Initial Packet [QUIC-TRANSPORT] is encrypted using a key
-   derived from the Destination Connection ID in the packet cleartext
-   and a well-known salt (see Section 5.2 of [QUIC-TLS]).  Section 7 of
-   that draft describes security vulnerabilities resulting from the
-   resulting lack of authentication.
+   The QUIC Initial Packet [RFC9000] is encrypted using a key derived
+   from the Destination Connection ID in the packet cleartext and a
+   well-known salt (see Section 5.2 of [RFC9001]).  Section 7 of that
+   draft describes security vulnerabilities resulting from the resulting
+   lack of authentication.
 
    This also has privacy implications, as observers can decrypt the
    packet and inspect the contents, which contain the TLS Client Hello
@@ -200,8 +200,7 @@ Table of Contents
 3.  Differences with QUIC Version 1
 
    The version of QUIC described in this specification is identical to
-   QUIC version 1 [QUIC-TRANSPORT] except where described in this
-   document.
+   QUIC version 1 [RFC9000] except where described in this document.
 
 3.1.  Version Number
 
@@ -217,15 +216,14 @@ Table of Contents
 
 3.3.  Key Derivation Labels
 
-   The labels used to derive keying material in [QUIC-TLS] change from
+   The labels used to derive keying material in [RFC9001] change from
    "quic key", "quic iv", "quic hp", and "quic ku" to "quicpi key",
    "quicpi iv", "quicpi hp", and "quicpi ku", respectively.
 
 3.4.  Initial Packet Header
 
-   The figure below is presented in the format from [QUIC-TRANSPORT],
-   and adds a variable-length Encryption Context preceded by a length
-   field:
+   The figure below is presented in the format from [RFC9000], and adds
+   a variable-length Encryption Context preceded by a length field:
 
    Initial Packet {
       Header From (1) = 1,
@@ -305,7 +303,7 @@ Table of Contents
    the Encryption Context Field.
 
    The initial_secret above is used to generate client_initial_secret
-   and server_initial_secret as described in Section 5.2 of [QUIC-TLS].
+   and server_initial_secret as described in Section 5.2 of [RFC9001].
 
    When applying header protection, the Context Length and Encryption
    Context are not Protected.
@@ -348,7 +346,7 @@ Table of Contents
 3.7.  Retry Integrity Tag
 
    The Retry packet is identical to QUIC version 1, except that the key
-   and nonce used for the Retry Integrity Tag (Sec 5.8 of [QUIC-TLS]
+   and nonce used for the Retry Integrity Tag (Sec 5.8 of [RFC9001]
    change to:
 
 secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123
@@ -735,17 +733,14 @@ nonce = 0x461599d35d632bf2239825bb
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
               version-negotiation-04.txt>.
 
-   [QUIC-TLS] Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
-              Work in Progress, Internet-Draft, draft-ietf-quic-tls-34,
-              14 January 2021, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-quic-tls-34.txt>.
+   [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
+              Multiplexed and Secure Transport", RFC 9000,
+              DOI 10.17487/RFC9000, May 2021,
+              <https://datatracker.ietf.org/doc/html/rfc9000>.
 
-   [QUIC-TRANSPORT]
-              Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
-              and Secure Transport", Work in Progress, Internet-Draft,
-              draft-ietf-quic-transport-34, 14 January 2021,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              transport-34.txt>.
+   [RFC9001]  Thomson, M., Ed. and S. Turner, Ed., "Using TLS to Secure
+              QUIC", RFC 9001, DOI 10.17487/RFC9001, May 2021,
+              <https://datatracker.ietf.org/doc/html/rfc9001>.
 
 8.2.  Informative References
 
