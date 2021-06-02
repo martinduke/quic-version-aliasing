@@ -44,11 +44,10 @@ via the Domain Name System (DNS) or other out-of-band system.
 DISCLAIMER: This draft is a preliminary proposal with insufficient security
 analysis. It should not be used in production systems.
 
-The QUIC Initial Packet {{!QUIC-TRANSPORT=I-D.ietf-quic-transport}} is encrypted
-using a key derived from the Destination Connection ID in the packet cleartext
-and a well-known salt (see Section 5.2 of {{!QUIC-TLS=I-D.ietf-quic-tls}}).
-Section 7 of that draft describes security vulnerabilities resulting from the
-resulting lack of authentication.
+The QUIC Initial Packet {{!RFC9000}} is encrypted using a key derived from the
+Destination Connection ID in the packet cleartext and a well-known salt (see
+Section 5.2 of {{!RFC9001}}). Section 7 of that draft describes security
+vulnerabilities resulting from the resulting lack of authentication.
 
 This also has privacy implications, as observers can decrypt the packet and
 inspect the contents, which contain the TLS Client Hello and Server Hello
@@ -112,7 +111,7 @@ interpreted as described in RFC 2119 {{?RFC2119}}.
 # Differences with QUIC Version 1
 
 The version of QUIC described in this specification is identical to QUIC version
-1 {{QUIC-TRANSPORT}} except where described in this document.
+1 {{RFC9000}} except where described in this document.
 
 ## Version Number
 
@@ -128,13 +127,13 @@ band system.
 
 ## Key Derivation Labels {#labels}
 
-The labels used to derive keying material in {{QUIC-TLS}} change from
-"quic key", "quic iv", "quic hp", and "quic ku" to "quicpi key", "quicpi iv",
-"quicpi hp", and "quicpi ku", respectively.
+The labels used to derive keying material in {{RFC9001}} change from "quic key",
+"quic iv", "quic hp", and "quic ku" to "quicpi key", "quicpi iv", "quicpi hp",
+ and "quicpi ku", respectively.
 
 ## Initial Packet Header
 
-The figure below is presented in the format from {{QUIC-TRANSPORT}}, and adds a
+The figure below is presented in the format from {{RFC9000}}, and adds a
 variable-length Encryption Context preceded by a length field:
 
 ~~~
@@ -218,7 +217,7 @@ enc is the Encapsulated Secret, and is written into that subfield of the
 Encryption Context Field.
 
 The initial_secret above is used to generate client_initial_secret and
-server_initial_secret as described in Section 5.2 of {{QUIC-TLS}}.
+server_initial_secret as described in Section 5.2 of {{RFC9001}}.
 
 When applying header protection, the Context Length and Encryption Context are
 not Protected.
@@ -260,9 +259,8 @@ processing rule.
 
 ## Retry Integrity Tag {#retry}
 
-The Retry packet is identical to QUIC version 1, except that
-the key and nonce used for the Retry Integrity Tag (Sec 5.8 of
-{{QUIC-TLS}} change to:
+The Retry packet is identical to QUIC version 1, except that the key and nonce
+used for the Retry Integrity Tag (Sec 5.8 of {{RFC9001}} change to:
 
 ~~~
 secret = 0xe453a2e22377289f08a4458ee1c9a90a4e39696e026372ffc33190b8de5a0123

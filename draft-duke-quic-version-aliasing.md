@@ -39,18 +39,17 @@ the protocol's privacy properties.
 # Introduction
 
 The QUIC version number is critical to future extensibility of the protocol
-({{!QUIC-TRANSPORT=I-D.ietf-quic-transport}}). Past experience with other
-protocols, such as TLS1.3 {{?RFC8446}}, shows that middleboxes might attempt to
-enforce that QUIC packets use versions known at the time the middlebox was
-implemented. This has a chilling effect on deploying experimental and standard
-versions on the internet.
+({{!RFC9000}}). Past experience with other protocols, such as TLS1.3
+{{?RFC8446}}, shows that middleboxes might attempt to enforce that QUIC packets
+use versions known at the time the middlebox was implemented. This deters
+deployment of experimental and standard versions on the internet.
 
-Each version of QUIC has a "salt" {{!QUIC-TLS=I-D.ietf-quic-tls}} that is used
-to derive the keys used to encrypt Initial packets. As each salt is published in
-a standards document, any observer can decrypt these packets and inspect the
-contents, including a TLS Client Hello. A subsidiary mechanism like Encrypted
-Client Hello {{?ECHO=I-D.ietf-tls-esni}} might protect some of the TLS fields
-inside a TLS Client Hello.
+Each version of QUIC has a "salt" {{!RFC9001}} that is used to derive the keys
+used to encrypt Initial packets. As each salt is published in a standards
+document, any observer can decrypt these packets and inspect the contents,
+including a TLS Client Hello. A subsidiary mechanism like Encrypted Client Hello
+{{?ECHO=I-D.ietf-tls-esni}} might protect some of the TLS fields inside a TLS
+Client Hello.
 
 This document proposes "QUIC Version Aliasing," a standard way for servers to
 advertise the availability of other versions inside the cryptographic
@@ -197,8 +196,7 @@ confusion at clients, whether or not they have plans to support those
 specifications.
 
 Servers MAY use version numbers reserved for grease in Section 15.1 of
-{{QUIC-TRANSPORT}}, even though they might be advertised in Version Negotiation
-Packets.
+{{RFC9000}}, even though they might be advertised in Version Negotiation Packets.
 
 Servers MUST NOT use client-controlled information (e.g. the client IP address)
 in the random process, see {{salt-polling}}.
@@ -238,7 +236,7 @@ this.
 ## Salt and Packet Length Offset Generation
 
 The salt is an opaque 20-octet field. It is used to generate Initial connection
-keys using the process described in {{QUIC-TLS}}.
+keys using the process described in {{RFC9001}}.
 
 The Packet Length Offset is a 64-bit unsigned integer with a maximum value of
 2^62 - 1. Clients MUST ignore a transport parameter with a value that exceeds
@@ -309,7 +307,7 @@ below.
 
 The definition of the fields is described above. Note that the "Expiration"
 field is in seconds, and its length is encoded using the Variable Length
-Integer encoding from Section 16 of {{QUIC-TRANSPORT}}.
+Integer encoding from Section 16 of {{RFC9000}}.
 
 The Packet Length Offset is also encoded as a Variable Length Integer.
 
@@ -407,8 +405,8 @@ The QUIC Token Length field MUST include the length of both any Retry or
 NEW_TOKEN token and the ITE.
 
 The Length fields of all Initial, Handshake, and 0-RTT packets in the
-connection are set to the value described in {{QUIC-TRANSPORT}} plus the
-provided Packet Length Offset, modulo 2^62.
+connection are set to the value described in {{RFC9000}} plus the provided Packet
+Length Offset, modulo 2^62.
 
 If a client receives an aliased version number that matches a standard version
 that the client supports, it SHOULD assume the server does not support the
@@ -624,7 +622,7 @@ obtains the standard version via lookup or decoding and formats a Retry
 containing the aliased version number accordingly.
 
 Servers generate the Retry Integrity Tag of a Retry Packet using the procedure
-in Section 5.8 of {{QUIC-TLS}}. However, for aliased versions, the secret key K
+in Section 5.8 of {{RFC9001}}. However, for aliased versions, the secret key K
 uses the first 16 octets of the aliased salt instead of the key provided in the
 specification.
 
@@ -797,9 +795,8 @@ packet instead of one, placing more load on servers when already under load.
 
 ## Request Forgery
 
-Section 21.4 of {{QUIC-TRANSPORT}} describes the request forgery attack, where
-a QUIC endpoint can cause its peer to deliver packets to a victim with specific
-content.
+Section 21.4 of {{RFC9000}} describes the request forgery attack, where a QUIC
+endpoint can cause its peer to deliver packets to a victim with specific content.
 
 Version aliasing allows the server to specify the contents of the version field
 and part of the token field in Initial packets sent by the client, potentially
