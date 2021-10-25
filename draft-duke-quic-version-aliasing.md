@@ -172,7 +172,7 @@ This mechanism is also relevant to mitigation of downgrade attacks (see
 {{downgrade}}).
 
 Similarly, the QUIC Protected Initial
-{{!QUIC-PI=I-D.duke-quic-protected-initial}} uses the ECH distribution mechanism
+{{?QUIC-PI=I-D.duke-quic-protected-initial}} uses the ECH distribution mechanism
 to generate secure initial keys and Retry integrity tags. While still dependent
 on a key distribution system, asymmetric encryption, and relatively large Initial
 packets, it offers similar protection properties to Version Aliasing while still
