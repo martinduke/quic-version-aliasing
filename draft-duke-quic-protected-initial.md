@@ -323,6 +323,9 @@ hash for key computation, as the server has no access to this message. However,
 the client hello is an input to the Integrity tag in the public_key_failed
 transport parameter, which will be in the transcript.
 
+If any part of the client hello changes (e.g the SNI or ALPN), it MUST NOT
+include a resumption ticket or send 0RTT packets.
+
 ## The Fallback Packet {#fallback-packet}
 
 The Fallback packet uses the 0x1 packet type code, which it shares with 0-RTT.
