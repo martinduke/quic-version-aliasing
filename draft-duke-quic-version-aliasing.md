@@ -15,7 +15,7 @@ author:
   -
     ins: M. Duke
     name: Martin Duke
-    org: F5 Networks, Inc.
+    org: Google
     email: martin.h.duke@gmail.com
 
 normative:
@@ -79,12 +79,11 @@ A "standard version" is a QUIC version that would be advertised in a QUIC
 version negotiation and conforms to a specification. Any aliased version
 corresponds to a standard version in all its formats and behaviors, except for
 the version number field in long headers. To be compatible with version aliasing,
-the first client packet in a standard version MUST encode the packet type and
-token as if it were a QUIC version 1 initial packet. That is:
+there MUST be no more than four long header packet types, and the first client
+packet in a standard version MUST encode the token as if it were a QUIC version
+1 initial packet. That is:
 
 * The most significant bit MUST be 1.
-
-* The third and fourth most significant bits MUST be zero.
 
 * The first field after the Source Connection ID MUST be a variable-length
 integer including the length of a token.
@@ -104,20 +103,22 @@ entirely to the specification of the standard version.
 
 When they instantiate a connection, servers select an alternate 32-bit version
 number, and optionally an initial token extension, for the next connection at
-random and securely derive a salt and Packet Length Offset from those values
-using a repeatable process. They communicate this using a transport parameter
-extension including the version, initial token extension, salt, Packet Length
-Offset, and an expiration time for that value.
+random and securely derive a salt, packet Length Offset, and long header packet
+type codepoints from those values using a repeatable process. They communicate
+this using a transport parameter extension including the version, initial token
+extension, salt, Packet Length Offset, packet type codepoints, and an expiration
+time for that value.
 
 If a client next connects to that server within the indicated expiration time,
 it MAY use the provided version number and encrypt its Initial Packets using a
-key derived from the provided salt. It adds the Packet Length Offset to the
-true packet length when encoding it in the long header. If the server provided
-an Initial Token Extension, the client puts it in the Initial Packet token
-field. If there is another token the client wishes to include, it appends the
-Initial Token Extension to that token. The server can reconstruct the salt and
-Packet Length Offset from the requested version and token, and proceed with the
-connection normally.
+key derived from the provided salt. It uses the provided Initial packet
+codepoint. It adds the Packet Length Offset to the true packet length when
+encoding it in the long header. If the server provided an Initial Token
+Extension, the client puts it in the Initial Packet token field. If there is
+another token the client wishes to include, it appends the Initial Token
+Extension to that token. The server can reconstruct the salt and Packet Length
+Offset from the requested version and token, and proceed with the connection
+normally.
 
 The Packet Length Offset provides a low-cost way for the server to verify it can
 derive a valid salt from the inputs without trial decryption. This has important
@@ -128,6 +129,13 @@ doing so randomly and storing the mapping, or using a cryptographic process to
 transform the aliased version number and token extension into the salt. The two
 options provide a simple tradeoff between computational complexity and storage
 requirements.
+
+Long header packets are composed identically to their standard version, except
+that they use the provided packet type codepoint, version number, and packet
+length offset. Initial packets additionally use any provided token extension and
+are encrypted as described below.
+
+Short header packets are unchanged when using this extension.
 
 ## Relationship to ECH and QUIC Protected Initials
 
@@ -260,6 +268,26 @@ incoming version number and ITE. It MUST NOT use client controlled information
 other than the version number and ITE; for example, the client's IP address and
 port.
 
+## Packet Type Generation
+
+The server generates the packet type codepoint for each of the four long header
+packet types (Initial, 0RTT, Handshake, and Retry). Each of these codepoints is
+two bits.
+
+Future versions of QUIC with 4 or fewer long header packet types can specify a
+mapping of these fields to their types.
+
+Note that the server needs to derive the type codepoints solely from the version
+number. It cannot extract the token, and the token extension, until the packet
+is identified as an Initial packet.
+
+A straightforward implementation might take arbitrary bits from a hash of the
+version number. The first two bits it reads are the codepoint for Initial
+packets. The next pair of bits that is not a duplicate of the first is the
+codepoint for 0RTT packets. The next pair that does not duplicate the first two
+is the codepoint for Handshake packets, and the remaining codepoint is the
+Retry packet.
+
 ## Expiration Time
 
 Servers should select an expiration time in seconds, measured from the instant
@@ -300,7 +328,7 @@ below.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         Expiration (i)                        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                Initial Token Extension (variable)             |
+|INI|0RT|HAN|RET|      Initial Token Extension (variable)       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 {: #fig-transport-parameter title="Version Alias Transport Parameter value"}
@@ -310,6 +338,10 @@ field is in seconds, and its length is encoded using the Variable Length
 Integer encoding from Section 16 of {{RFC9000}}.
 
 The Packet Length Offset is also encoded as a Variable Length Integer.
+
+INI, 0RT, HAN, and RET are the codepoints for each long header packet type. If
+any two packet types have the same codepoint, the transport parameter is
+invalid.
 
 Clients can compute the length of the Initial Token Extension by subtracting
 known and encoded field lengths from the overall transport parameter length.
@@ -368,9 +400,9 @@ behalf of the back-end server.
 # Client Behavior {#client-behavior}
 
 When a client receives the Version Alias Transport Parameter, it MAY cache the
-version number, ITE, salt, Packet Length Offset, and the expiration of these
-values. It MAY use the version number and ITE in a subsequent connection and
-compute the initial keys using the provided salt.
+version number, ITE, salt, Packet Length Offset, packet type codepoints, and the
+expiration of these values. It MAY use the version number and ITE in a
+subsequent connection and compute the initial keys using the provided salt.
 
 The Client MUST NOT use the contents of a Version Alias transport parameter if
 the handshake does not (1) later authenticate the server name or (2)
@@ -392,6 +424,8 @@ connection attempts.
 
 Clients MUST use the same standard version to format the Initial Packet as the
 standard version used in the connection that provided the aliased version.
+
+Clients MUST use the provided codepoints to encode the packet type.
 
 If the server provided an ITE, the client MUST append it to any Initial Packet
 token it is including from a Retry packet or NEW_TOKEN frame, if it is using
@@ -447,13 +481,22 @@ fields by including it in the TLS handshake transcript.
 
 # Server Actions on Aliased Version Numbers {#server-actions}
 
-When a server receives an Initial packet with an unsupported version number, it
-SHOULD send a Version Negotiation Packet if it is configured not to generate
-that version number at random.
+When a server receives a packet with an unsupported version number, it SHOULD
+send a Version Negotiation Packet if it is configured not to generate that
+version number at random.
 
-Otherwise, it extracts the ITE, if any, and either looks up the corresponding
-salt in its database or computes it using the technique originally used to
-derive the salt from the version number and ITE.
+Otherwise, when a server receives the first long header packet with an
+unsupported version number, it hashes that version number to obtain the packet
+type mapping. If the packet is Handshake or Retry, there may have been a loss of
+relevant server state; the server discards the packet and SHOULD follow the
+procedure in {{fallback}}. If 0RTT, the server MAY either buffer it in
+anticipation of a later Initial, or immediately follow the procedure in
+{{fallback}}. If buffering, and an Initial packet never arrives, the server
+SHOULD follow the procedure in {{fallback}} when discarding any 0RTT packets.
+
+For an Initial packet, it extracts the ITE, if any, and either looks up the
+corresponding salt in its database or computes it using the technique originally
+used to derive the salt from the version number and ITE.
 
 The server similarly obtains the Packet Length Offset and subtracts it from the
 provided Length field, modulo 2^62. If the resulting value is larger than the
@@ -848,6 +891,10 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
+
+## since draft-duke-quic-version-aliasing-07
+
+* Greased packet types
 
 ## since draft-duke-quic-version-aliasing-05
 
