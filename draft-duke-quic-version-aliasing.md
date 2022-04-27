@@ -106,8 +106,8 @@ number, and optionally an initial token extension, for the next connection at
 random and securely derive a salt, packet Length Offset, and long header packet
 type codepoints from those values using a repeatable process. They communicate
 this using a transport parameter extension including the version, initial token
-extension, salt, Packet Length Offset, packet type codepoints, and an expiration
-time for that value.
+extension, Initial salt, Packet Length Offset, packet type codepoints, and an
+expiration time for that value.
 
 If a client next connects to that server within the indicated expiration time,
 it MAY use the provided version number and encrypt its Initial Packets using a
