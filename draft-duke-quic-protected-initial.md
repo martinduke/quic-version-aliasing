@@ -605,6 +605,10 @@ Specification: This document
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
 
+## since draft-duke-quic-protected-initials-03
+
+* Prohibited 0-RTT after fallback
+
 ## since draft-duke-quic-protected-initials-01
 
 * Redesigned fallback again without Version Negotiation
