@@ -272,8 +272,7 @@ port.
 
 The server generates the packet type codepoint for each of the four long header
 packet types (Initial, 0RTT, Handshake, and Retry). Each of these codepoints is
-two bits. If any two packet types have the same codepoint, the transport
-parameter is invalid.
+two bits.
 
 Future versions of QUIC with 4 or fewer long header packet types can specify a
 mapping of these fields to their types.
@@ -340,7 +339,9 @@ Integer encoding from Section 16 of {{RFC9000}}.
 
 The Packet Length Offset is also encoded as a Variable Length Integer.
 
-INI, 0RT, HAN, and RET are the codepoints for each long header packet type.
+INI, 0RT, HAN, and RET are the codepoints for each long header packet type. If
+any two packet types have the same codepoint, the transport parameter is
+invalid.
 
 Clients can compute the length of the Initial Token Extension by subtracting
 known and encoded field lengths from the overall transport parameter length.
@@ -891,7 +892,7 @@ Marten Seemann was the original creator of the version aliasing approach.
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
 
-## since draft-duke-quic-version-aliasing-05
+## since draft-duke-quic-version-aliasing-07
 
 * Greased packet types
 
