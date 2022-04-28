@@ -247,8 +247,7 @@ The salt is an opaque 20-octet field. It is used to generate Initial connection
 keys using the process described in {{RFC9001}}.
 
 The Packet Length Offset is a 64-bit unsigned integer with a maximum value of
-2^62 - 1. Clients MUST ignore a transport parameter with a value that exceeds
-this limit.
+2^62 - 1.
 
 To reduce header overhead, servers MAY consistently use a Packet Length Offset
 of zero if and only if it either (1) never sends Retry packets, or (2) can
@@ -355,6 +354,9 @@ Clients MAY remember the value in this transport parameter for future
 connections. Servers MUST either store the contents of the transport parameter,
 or preserve the state to compute the full contents based on what the client
 provides.
+
+A server that receives this transport parameter MUST close the connection with
+a TRANSPORT_PARAMETER_ERROR.
 
 ## Multiple Servers for One Domain
 
@@ -478,6 +480,9 @@ length is inferred from the specified length of the parameter.
 
 The purpose of this parameter is to validate the contents of these header
 fields by including it in the TLS handshake transcript.
+
+A client that receives this transport parameter MUST close the connection with
+a TRANSPORT_PARAMETER_ERROR.
 
 # Server Actions on Aliased Version Numbers {#server-actions}
 
@@ -619,9 +624,8 @@ resend the Initial packet.
 
 If the verification succeeds, the client SHOULD attempt to connect with one of
 the listed standard versions. It SHOULD observe the privacy considerations in
-{{first-connection}}. It MUST include a version_aliaising Transport Parameter
-in the Client Hello, that enumerates the aliased version and parameters it just
-tried to connect with.
+{{first-connection}}. It MUST include a version_aliasing_fallback Transport
+Parameter in the Client Hello.
 
 Once it sends this transport parameter, the client MUST NOT attempt to connect
 with that aliased version again.
@@ -630,23 +634,63 @@ The original Client Initial is not part of the new connection. Therefore, the
 Connection IDs can change, and the original client hello is not part of the
 transcript for TLS key derivation.
 
-Note that the client never sends this transport parameter with an aliased
-version. A server that receives such a packet MUST terminate the connection with
-a TRANSPORT_PARAMETER_ERROR.
+## version_aliasing_fallback Transport Parameter
 
-## Server Response to version_aliasing Transport Parameter
+The client sends this transport parameter in a TLS Client Hello generated in
+response to a Bad Salt packet:
 
-A client version_aliasing transport parameter tells the server that the client
-received a Bad Salt packet. The server checks if could have generated that
-version aliasing transport parameter given its current configuration; i.e. if
-using the version and ITE as inputs results in the same salt and Packet Length
-Offset.
+~~~
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Aliased Version (32)                      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                                                               +
+|                            Salt (160)                         |
++                                                               +
+|                                                               |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                   Bad Salt Integrity Tag (128)                +
+|                                                               |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      Initial Token (variable)                 |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~
 
-If the salt or Packet Length Offset are invalid, the server SHOULD continue with
-the connection and SHOULD issue a new version_aliasing transport parameter.
+The Aliased Version, Salt, and Initial Token fields are taken from the
+connection attempt that triggered this fallback. The length of the
+Initial Token is inferred from the Transport Parameter's overall length.
+
+The Bad Salt Integrity Tag comes from is taken from the Bad Salt packet that
+triggered this fallback. Its purpose is to include the Bad Salt packet contents
+in the TLS handshake hash.
+
+
+## Server Response to version_aliasing_fallback Transport Parameter
+
+A client version_aliasing_fallback transport parameter tells the server that the
+client received a Bad Salt packet. The server checks if using the version and
+ITE as inputs results in the same salt.
+
+If the salt does not match, the server SHOULD continue with the connection and
+SHOULD issue a new version_aliasing transport parameter.
 
 If the salt and Packet Length Offset are valid, the server MUST terminate the
 connection with the error code INVALID_BAD_SALT.
+
+Note that the client never sends this transport parameter with an aliased
+version. A server that receives such a packet MUST terminate the connection with
+a TRANSPORT_PARAMETER_ERROR.
 
 # Considerations for Retry Packets
 
@@ -869,8 +913,9 @@ Transport Parameters Registry:
 
 | Value | Parameter Name | Specification |
 | :---: | :---: | :---: |
-| TBD | Version Aliasing | This Document |
+| TBD | version_aliasing | This Document |
 | TBD | aliasing_parameters | This Document |
+| TBD | version_aliasing_fallback | This Document |
 
 ## QUIC Transport Error Codes Registry
 
@@ -894,6 +939,7 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 ## since draft-duke-quic-version-aliasing-07
 
+* Added the Bad Salt Integrity Tag to the transport parameter
 * Greased packet types
 
 ## since draft-duke-quic-version-aliasing-05
