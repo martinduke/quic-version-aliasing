@@ -281,31 +281,26 @@ supported version in the client's version_information transport parameter (see
 {{!I-D.ietf-quic-version-negotiation}}) or be the standard version of the
 current connection.
 
-Note that if the standard version is not the same as the current connection's
-standard version, the client MUST NOT use any session tickets or NEW_TOKEN
-tokens from the current connection in the aliased version connection. The
-server MUST reject any such tokens, and therefore MUST be able to determine
-both the standard version of both the connection that provided the transport
-parameter ("originating standard version") and the connection that uses the
-aliased version ("standard version in use").
+Note that servers MUST NOT accept resumption tickets or NEW_TOKEN tokens from
+different standard versions. Therefore, the choice of standard version might
+impact the performance of the connection that uses an aliased version. The
+standard version that generated tickets and/or tokens is typically encoded in
+those tickets or tokens.
 
-There are several possible techniques for securely recovering the two standard
-versions at the server:
+There are several possible techniques for the server securely recovering the
+standard version in use for an aliased connection:
 
-* the server could store a mapping of aliased versions to the two standard
-versions;
+* the server could store a mapping of aliased versions to standard version;
 
 * the server could encrypt the standard version in use in the aliased version
-number, and the original standard version in either the aliased version number
-or the ITE (note that the ITE cannot be extracted until the standard version in
+number (note that the ITE cannot be extracted until the standard version in
 use is known);
 
-* the server only issues version_aliasing transport parameters for one
-originating standard version and only accepts one standard version in use; or
+* the server only accepts one standard version for aliased versions; or
 
-* both version numbers are included as inputs in the parameter generation
-algorithm, and the server tries all permutations of standard version and tests
-each resulting Packet Length Offset for validity.
+* the standard version is included as an input to the parameter generation
+algorithm, and the server tries all supported standard versions and tests each
+resulting Packet Length Offset for validity.
 
 ## Expiration Time
 
