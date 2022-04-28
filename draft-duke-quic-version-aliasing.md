@@ -958,6 +958,7 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 * Added the Bad Salt Integrity Tag to the transport parameter
 * Greased packet types
+* Allowed the server to specify the standard version to connect with
 
 ## since draft-duke-quic-version-aliasing-05
 
