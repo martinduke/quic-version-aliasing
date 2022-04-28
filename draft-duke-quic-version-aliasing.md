@@ -194,7 +194,7 @@ See also section 1.1 of {{QUIC-PI}} for further discussion of tradeoffs.
 
 # The Version Alias Transport Parameter
 
-## Version Number Generation
+## Aliased Version Number Generation
 
 Servers MUST use a random process to generate version numbers. This version
 number MUST NOT correspond to a QUIC version the server advertises in QUIC
@@ -220,21 +220,6 @@ different extensions will not be able to decode each other's Initial Packets.
 Servers MAY choose any length that will allow client Initial Packets to fit
 within the minimum QUIC packet size of 1200 octets. A four-octet extension is
 RECOMMENDED. The ITE MUST appear to be random to observers.
-
-If a server supports multiple standard versions, it MUST either encode the
-standard version of the current connection in the ITE or store it in a lookup
-table.
-
-If the server chooses to encode the standard version, it MUST be
-cryptographically protected.
-
-Encoded standard versions MUST be robust to false positives. That is, if decoded
-with a new key, the version encoding must return as invalid, rather than an
-incorrect value.
-
-Alternatively, servers MAY store a mapping of unexpired aliased versions and
-ITEs to standard versions. This mapping SHOULD NOT create observable patterns,
-e.g. one plaintext bit indicates if the standard version is 1 or 2.
 
 The server MUST be able to distinguish ITEs from Resumption and Retry tokens in
 incoming Initial Packets that contain an aliased version number. As the server
@@ -287,6 +272,41 @@ codepoint for 0RTT packets. The next pair that does not duplicate the first two
 is the codepoint for Handshake packets, and the remaining codepoint is the
 Retry packet.
 
+## Standard Version Number
+
+Servers also specify the Standard version that the client should use to guide
+the wire formats and behaviors of the aliased version. This version MUST meet
+the criteria to support version aliasing, and MUST either be included as a
+supported version in the client's version_information transport parameter (see
+{{!I-D.ietf-quic-version-negotiation}}) or be the standard version of the
+current connection.
+
+Note that if the standard version is not the same as the current connection's
+standard version, the client MUST NOT use any session tickets or NEW_TOKEN
+tokens from the current connection in the aliased version connection. The
+server MUST reject any such tokens, and therefore MUST be able to determine
+both the standard version of both the connection that provided the transport
+parameter ("originating standard version") and the connection that uses the
+aliased version ("standard version in use").
+
+There are several possible techniques for securely recovering the two standard
+versions at the server:
+
+* the server could store a mapping of aliased versions to the two standard
+versions;
+
+* the server could encrypt the standard version in use in the aliased version
+number, and the original standard version in either the aliased version number
+or the ITE (note that the ITE cannot be extracted until the standard version in
+use is known);
+
+* the server only issues version_aliasing transport parameters for one
+originating standard version and only accepts one standard version in use; or
+
+* both version numbers are included as inputs in the parameter generation
+algorithm, and the server tries all permutations of standard version and tests
+each resulting Packet Length Offset for validity.
+
 ## Expiration Time
 
 Servers should select an expiration time in seconds, measured from the instant
@@ -311,7 +331,9 @@ below.
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                           Version (32)                        |
+|                      Aliased Version (32)                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Standard Version (32)                     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                                                               +
@@ -350,7 +372,7 @@ parameter on every connection. Therefore, a client MAY attempt to connect with
 an unexpired aliased version, even if in its most recent connection it did not
 receive the transport parameter.
 
-Clients MAY remember the value in this transport parameter for future
+Clients MAY remember the values in this transport parameter for future
 connections. Servers MUST either store the contents of the transport parameter,
 or preserve the state to compute the full contents based on what the client
 provides.
