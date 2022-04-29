@@ -377,7 +377,7 @@ Such servers will either need a common configuration for generating parameters
 from the version number and connection ID, maintain a commmon database of
 mappings, or the connection ID itself can be used to route the Initial packet to
 the server that generated the transport parameter. See
-{{QUIC-LB=?I-D.ietf-quic-load-balancers}} for an example of the latter approach.
+{{?QUIC-LB=I-D.ietf-quic-load-balancers}} for an example of the latter approach.
 
 ### Multiple Entities With One Load Balancer
 
@@ -703,10 +703,11 @@ Aliasing transport parameter to detect the downgrade attack, and the server will
 terminate the connection if the Bad Salt packet was an attack.
 
 If the client received a Version Negotiation packet, it MUST implement a
-downgrade detection mechanism such as {{!I-D.ietf-quic-version-negotiation}} or
-abandon the connection attempt. If it subsequent detects a downgrade detection,
-or discovers that the server does not support the same mechanism, it terminates
-the connection attempt.
+downgrade detection mechanism such as
+{{!QUIC-VN=I-D.ietf-quic-version-negotiation}} or abandon the connection
+attempt. If it subsequent detects a downgrade detection, or discovers that the
+server does not support the same mechanism, it terminates the connection
+attempt.
 
 ## Initial Packet Injection
 
