@@ -234,6 +234,11 @@ Connection ID.
 A server that receives this transport parameter MUST close the connection with
 a TRANSPORT_PARAMETER_ERROR.
 
+Servers SHOULD provide a new version_aliasing transport parameter each time a
+client connects. However, issuing version numbers to a client SHOULD be rate-i
+limited to mitigate the salt polling attack{{salt-polling}} and MAY cease to
+clients that are consistently connecting with standard versions.
+
 ## Aliased Version
 
 Servers MUST use a random process to generate version numbers. This version
@@ -350,7 +355,8 @@ not enforce this restriction; the Expiration Time is purely advisory.
 
 The server generates the packet type codepoint for each of the four long header
 packet types (Initial, 0RTT, Handshake, and Retry). Each of these codepoints is
-two bits.
+two bits. All long headers from both endpoints use these codepoints instead of
+those provided in the standard version specification.
 
 A straightforward implementation might take arbitrary bits from a hash of the
 version number. The first two bits it reads are the codepoint for Initial
@@ -373,7 +379,7 @@ mappings, or the connection ID itself can be used to route the Initial packet to
 the server that generated the transport parameter. See
 {{QUIC-LB=?I-D.ietf-quic-load-balancers}} for an example of the latter approach.
 
-## Multiple Entities With One Load Balancer
+### Multiple Entities With One Load Balancer
 
 If mutually mistrustful entities share the same IP address and port, incoming
 packets are usually routed by examining the SNI at a load balancer server that
@@ -388,7 +394,7 @@ dependent syntax. See {{QUIC-LB}} for an example design.
 * Each entity has its own cryptographic context, shared with the load balancer.
 This requires the load balancer to trial decrypt each incoming Initial with
 each context. As there is no standard algorithm for encoding information in the
-Version and ITE, this involves synchronizing the method, not just the key
+Version and connection ID, this involves synchronizing the method, not just the key
 material.
 
 * Each entity reports its Version Aliasing Transport Parameters to the load
@@ -401,21 +407,16 @@ The scheme SHOULD assign all available version numbers to maximize the entropy
 of the encoding.
 
 * All entities have a common crytographic context for deriving salts and Packet
-Length Offsets from the version number and ITE. This is straightforward but also
-increases the risk that the keys will leak to an attacker which could then
-decode Initial packets from point where the packets are observable. This is
-therefore NOT RECOMMENDED.
+Length Offsets from the version number and connection ID. This isi
+straightforward but also increases the risk that the keys will leak to an
+attacker which could then decode Initial packets from point where the packets
+are observable. This is therefore NOT RECOMMENDED.
 
 Note that {{ECHO}} and {{QUIC-PI}} solve this problem elegantly by only holding
 the private key at the load balancer, which decodes the sensitive information on
 behalf of the back-end server.
 
-# Client Behavior {#client-behavior}
-
-When a client receives the Version Alias Transport Parameter, it MAY cache the
-version number, ITE, salt, Packet Length Offset, packet type codepoints, and the
-expiration of these values. It MAY use the version number and ITE in a
-subsequent connection and compute the initial keys using the provided salt.
+# Additional Client Requirements
 
 The Client MUST NOT use the contents of a Version Alias transport parameter if
 the handshake does not (1) later authenticate the server name or (2)
@@ -423,34 +424,13 @@ result in both endpoints computing the same 1-RTT keys. See {{impersonation}}.
 The authenticated server name MAY be a "public name" distributed as described in
 {{ECHO}} rather than the true target domain.
 
-Clients MUST NOT advertise aliased versions in the Version Negotiation Transport
-Parameter unless they support a standard version with the same number. Including
-that number signals support for the standard version, not the aliased version.
+Clients MUST advertise aliased versions in the chosen version field of the
+version_information Transport Parameter (see {{QUIC-VN}}).
 
-Clients SHOULD NOT attempt to use the provided version number and salt after
-the provided Expiration time has elapsed.
-
-Clients MAY decline to use the provided version number or salt in more than one
-connection. It SHOULD do so if its IP address has changed between two connection
-attempts. Using a consistent version number can link the client across
-connection attempts.
-
-Clients MUST use the provided codepoints to encode the packet type.
-
-If the server provided an ITE, the client MUST append it to any Initial Packet
-token it is including from a Retry packet or NEW_TOKEN frame, if it is using
-the associated aliased version. If there is no such token, it simply includes
-the ITE as the entire token.
-
-When using an aliased version, the client MUST include a aliasing_parameters
-transport parameter in its Client Hello.
-
-The QUIC Token Length field MUST include the length of both any Retry or
-NEW_TOKEN token and the ITE.
-
-The Length fields of all Initial, Handshake, and 0-RTT packets in the
-connection are set to the value described in {{RFC9000}} plus the provided Packet
-Length Offset, modulo 2^62.
+Clients SHOULD NOT use the provided version number and connection ID in more
+than one connection. Using the same connection ID in two connections could
+confuse the server demultiplexer. If the client IP has changed, reuse of these
+parameters can link the client across connection attempts.
 
 If a client receives an aliased version number that matches a standard version
 that the client supports, it SHOULD assume the server does not support the
@@ -465,92 +445,32 @@ version aliasing and attempt to connect with one of the advertised versions
 If the response to an Initial packet is a Bad Salt packet, the client follows
 the procedures in {{fallback}}.
 
-## The aliasing_parameters Transport Parameter
+# Fallback {#fallback}
 
-This transport parameter has the following format. Its provisional type is
-0x4150.
-
-~~~
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                           Version (32)                        |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                      Initial Token (variable)                 |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~
-
-The Version field matches the one in the packet header.
-
-The Initial Token field matches the Initial Token in the packet header,
-including any Retry token, NEW_TOKEN token, and Initial Token Extension. Its
-length is inferred from the specified length of the parameter.
-
-The purpose of this parameter is to validate the contents of these header
-fields by including it in the TLS handshake transcript.
-
-A client that receives this transport parameter MUST close the connection with
-a TRANSPORT_PARAMETER_ERROR.
-
-# Server Actions on Aliased Version Numbers {#server-actions}
+If the server has lost its encryption state, it may not be able to generate
+the correct salts from previously provided versions and connection IDs. The
+fallback mechanism provides a means of recovering from this state while
+protecting against injection of messages by attackers.
 
 When a server receives a packet with an unsupported version number, it SHOULD
 send a Version Negotiation Packet if it is configured not to generate that
 version number at random.
 
-Otherwise, when a server receives the first long header packet with an
-unsupported version number, it hashes that version number to obtain the packet
-type mapping. If the packet is Handshake or Retry, there may have been a loss of
-relevant server state; the server discards the packet and SHOULD follow the
-procedure in {{fallback}}. If 0RTT, the server MAY either buffer it in
-anticipation of a later Initial, or immediately follow the procedure in
-{{fallback}}. If buffering, and an Initial packet never arrives, the server
-SHOULD follow the procedure in {{fallback}} when discarding any 0RTT packets.
+If applying the packet length offset to the packet length field results in a
+length longer than the UDP datagram that contains it, the packet was not
+generated with the proper version aliasing context.
 
-For an Initial packet, it extracts the ITE, if any, and either looks up the
-corresponding salt in its database or computes it using the technique originally
-used to derive the salt from the version number and ITE.
-
-The server similarly obtains the Packet Length Offset and subtracts it from the
-provided Length field, modulo 2^62. If the resulting value is larger than the
-entire UDP datagram, the server discards the packet and SHOULD follow the
-procedure in {{fallback}}. The server MAY apply further checks (e.g. against the
-minimum QUIC packet length) to further reduce the very small probability of a
-false positive.
-
-If the server supports multiple standard versions, it uses the standard version
-extracted by the ITE or stored in the mapping to parse the decrypted packet.
-
-In all packets with long headers, the server uses the aliased version number
-and adds the Packet Length Offset to the length field.
+The server MAY apply further checks (e.g. against the minimum QUIC packet
+length) to further reduce the very small probability of a false positive.
 
 In the extremely unlikely event that the Packet Length Offset resulted in a
-legal value but the salt is incorrect, the packet may fail authentication. The
-server should drop these packets in case this is the result of packet corruption
-along the path.
+legal value but the salt is incorrect, the packet may fail authentication.
+Servers MAY also interpret this as a loss of version aliasing state.
 
-To reduce linkability for the client, servers SHOULD provide a new Version Alias
-transport parameter, with a new version number, ITE, salt, and Packet Length
-Offset, each time a client connects. However, issuing version numbers to a
-client SHOULD be rate-limited to mitigate the salt polling attack
-{{salt-polling}} and MAY cease to clients that are consistently connecting with
-standard versions.
-
-If there is no aliasing_parameters transport parameter, or the contents do not
-match the fields in the Initial header, the server MUST terminate the
-connection with a TRANSPORT_PARAMETER_ERROR.
-
-# Fallback {#fallback}
-
-If the server has lost its encryption state, it may not be able to generate
-the correct salts from previously provided versions and ITEs. The fallback
-mechanism provides a means of recovering from this state while protecting
-against injection of messages by attackers.
-
-When the packet length computation in {{server-actions}} fails, it signals
-either that the packet has been corrupted in transit, or the client is using a
-transport parameter issued before a server failure. In either case, the server
-sends a Bad Salt packet.
+When the packet length computation on the first packet in a connection fails, it
+signals either that the packet has been corrupted in transit, or the client is
+using a transport parameter issued before a server failure. In either case, the
+server sends a Bad Salt packet.
 
 ## Bad Salt Packets
 
@@ -653,6 +573,8 @@ response to a Bad Salt packet:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                     Aliased Version (32)                      |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   CID length  |           Connection ID (variable)            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                                                               +
 |                                                               |
@@ -671,15 +593,12 @@ response to a Bad Salt packet:
 +                                                               +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                      Initial Token (variable)                 |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 
-The Aliased Version, Salt, and Initial Token fields are taken from the
-connection attempt that triggered this fallback. The length of the
-Initial Token is inferred from the Transport Parameter's overall length.
+The Aliased Version, Connection ID, and Salt fields are taken from the
+connection attempt that triggered this fallback.
 
-The Bad Salt Integrity Tag comes from is taken from the Bad Salt packet that
+The Bad Salt Integrity Tag is taken from the Bad Salt packet that
 triggered this fallback. Its purpose is to include the Bad Salt packet contents
 in the TLS handshake hash.
 
@@ -688,7 +607,7 @@ in the TLS handshake hash.
 
 A client version_aliasing_fallback transport parameter tells the server that the
 client received a Bad Salt packet. The server checks if using the version and
-ITE as inputs results in the same salt.
+connection ID as inputs results in the same salt.
 
 If the salt does not match, the server SHOULD continue with the connection and
 SHOULD issue a new version_aliasing transport parameter.
@@ -826,21 +745,21 @@ possibility exceedingly unlikely.
 
 ## Increased Linkability
 
-As each version number and ITE is unique to each client, if a client uses one
-twice, those two connections are extremely likely to be from the same host. If
-the client has changed IP address, this is a significant increase in linkability
-relative to QUIC with a standard version numbers.
+As each version number and connection ID is unique to each client, if a client
+uses one twice, those two connections are extremely likely to be from the samei
+host. If the client has changed IP address, this is a significant increase in
+linkability relative to QUIC with a standard version numbers.
 
 ## Salt Polling {#salt-polling}
 
 Observers that wish to decode Initial Packets might open a large number of
 connections to the server in an effort to obtain part of the mapping of version
-numbers and ITEs to salts for a server. While storage-intensive, this attack
-could increase the probability that at least some version-aliased connections
-are observable. There are three mitigations servers can execute against this
-attack:
+numbers and connection IDs to salts for a server. While storage-intensive, this
+attack could increase the probability that at least some version-aliased
+connections are observable. There are three mitigations servers can execute
+against this attack:
 
-* use a longer ITE to increase the entropy of the salt,
+* use a longer connection ID to increase the entropy of the salt,
 * rate-limit transport parameters sent to a particular client, and/or
 * set a low expiration time to reduce the lifetime of the attacker's database.
 
@@ -853,15 +772,9 @@ from using this mechanism.
 
 ## Server Fingerprinting
 
-The server chooses its own ITE length, and the length of this ITE is likely to
-be discoverable to an observer. Therefore, the destination server of a client
-Initial packet might be decipherable with an ITE length along with other
-observables. A four-octet ITE is RECOMMENDED. Deviations from this value should
-be carefully considered in light of this property.
-
-Servers with acute needs for higher or lower entropy than provided by a four-
-octet ITE are RECOMMENDED to converge on common lengths to reduce the
-uniqueness of their signatures.
+The server chooses its own connection ID length. Therefore, the destination
+server of a version-aliased packet might become clear based on the chosen
+length.
 
 ## Increased Processing of Garbage UDP Packets
 
@@ -922,7 +835,6 @@ Transport Parameters Registry:
 | Value | Parameter Name | Specification |
 | :---: | :---: | :---: |
 | TBD | version_aliasing | This Document |
-| TBD | aliasing_parameters | This Document |
 | TBD | version_aliasing_fallback | This Document |
 
 ## QUIC Transport Error Codes Registry
@@ -944,6 +856,10 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
+
+## since draft-duke-quic-version-aliasing-08
+
+* Replaced Initial Token Extension with Server connection ID
 
 ## since draft-duke-quic-version-aliasing-07
 
