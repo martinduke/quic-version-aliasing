@@ -441,9 +441,6 @@ connection. It SHOULD do so if its IP address has changed between two connection
 attempts. Using a consistent version number can link the client across
 connection attempts.
 
-Clients MUST use the same standard version to format the Initial Packet as the
-standard version used in the connection that provided the aliased version.
-
 Clients MUST use the provided codepoints to encode the packet type.
 
 If the server provided an ITE, the client MUST append it to any Initial Packet
