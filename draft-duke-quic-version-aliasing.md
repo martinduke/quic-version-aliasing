@@ -208,8 +208,8 @@ the following format.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 {: #fig-transport-parameter title="version_aliasing Transport Parameter value"}
-i
-The meaning and generation of these fields are described below.
+
+These fields are described in the sections below.
 
 The Packet Length Offset and Expiration Time fields are encoded using the
 Variable Length Integer encoding from Section 16 of {{RFC9000}}. Expiration
@@ -235,24 +235,27 @@ A server that receives this transport parameter MUST close the connection with
 a TRANSPORT_PARAMETER_ERROR.
 
 Servers SHOULD provide a new version_aliasing transport parameter each time a
-client connects. However, issuing version numbers to a client SHOULD be rate-i
+client connects. However, issuing version numbers to a client SHOULD be rate-
 limited to mitigate the salt polling attack{{salt-polling}} and MAY cease to
 clients that are consistently connecting with standard versions.
 
 ## Aliased Version
 
-Servers MUST use a random process to generate version numbers. This version
-number MUST NOT correspond to a QUIC version the server advertises in QUIC
-Version Negotiation packets or transport parameters. Servers SHOULD also
-exclude version numbers used in known specifications or experiments to avoid
-confusion at clients, whether or not they have plans to support those
-specifications.
+The version MUST appear to be random, although there are certain values that
+will not be sent. Specifically, it MUST NOT correspond to a QUIC version the
+server advertises in QUIC Version Negotiation packets or transport parameters.
+Servers SHOULD also exclude version numbers used in known specifications or
+experiments to avoid confusion at clients, whether or not they have plans to
+support those specifications.
 
 Servers MAY use version numbers reserved for grease in Section 15.1 of
-{{RFC9000}}, even though they might be advertised in Version Negotiation Packets.
+{{RFC9000}}, even though they might be advertised in Version Negotiationi
+Packets. Some clients may use these version numbers to probe for Version
+Negotiation capability, which would likely result in a fallback procedure (see
+{{fallback}}) instead of a Version Negotiation packet.
 
 Servers MUST NOT use client-controlled information (e.g. the client IP address)
-in the random process, see {{salt-polling}}.
+as in input to generate the version number, see {{salt-polling}}.
 
 Servers MUST NOT advertise these versions in QUIC Version Negotiation packets.
 
@@ -266,10 +269,10 @@ supported version in the client's version_information transport parameter (see
 current connection.
 
 Note that servers MUST NOT accept resumption tickets or NEW_TOKEN tokens from
-different standard versions. Therefore, the choice of standard version might
-impact the performance of the connection that uses an aliased version. The
-standard version that generated tickets and/or tokens is typically encoded in
-those tickets or tokens.
+a certain standard version in a connection using a different standard version.
+Therefore, the choice of standard version might impact the performance of the
+connection that uses an aliased version. The standard version that generated
+tickets and/or tokens is typically encoded in those tickets or tokens.
 
 There are several possible techniques for the server securely recovering the
 standard version in use for an aliased connection:
@@ -287,12 +290,13 @@ resulting Packet Length Offset for validity.
 
 ## Server Connection ID
 
-Servers SHOULD generate an Connection ID to provide additional entropy in salt
+Servers SHOULD generate a Connection ID to provide additional entropy in salt
 generation. Two clients that receive the same version number but different
 connection IDs will not be able to decode each other's Initial Packets.
 
-The connection ID MUST appear to be random to observers, but iit might encode
-information to route the packet in the server infrastructure.
+The connection ID MUST appear to be random to observers, but it might encode
+information to route the packet in the server infrastructure, or standard
+version information.
 
 The connection ID MUST NOT be between 1 and 7 bytes long. A zero-length
 connection ID signals that the destination connection ID will not be an input
@@ -309,20 +313,21 @@ version and connection ID to salt, or generate the salt using a cryptographic
 method that uses the version number, connection ID, and server state that is
 persistent across connections. It MUST NOT use client controlled information
 other than the version number and connection ID; for example, the client's IP
-address and port.i
+address and port.
 
 ## Packet Length Offset
 
-The Packet Length Offset is a 64-bit unsigned integer with a maximum value of
-2^62 - 1. All long headers have a packet length field; this value is added to
-all packet lengths, modulo 2^62, to form the value sent on the wire in all long
-headers, sent from either endpoint.
+The Packet Length Offset is a 62-bit unsigned integer. All long headers have a
+packet length field; this value is added to all packet lengths, modulo 2^62, to
+form the value sent on the wire in all long headers, sent from either endpoint.
 
 Aside from greasing the packet length field, this parameter provides a low-cost
 means for the server to determine if the client and server share a valid version
 aliasing context. For example, if the server loses state after sending a
-version_aliasing transport parameter, the derived packet length offset isi
-extremely unlikely to be consistent with the size of the UDP datagram.
+version_aliasing transport parameter, the derived packet length offset is
+extremely unlikely to be consistent with the size of the UDP datagram. Due to
+possible packet concatenation, a packet is clearly not decryptable if the packet
+length is larger than the size of the UDP datagram payload.
 
 To reduce header overhead, servers MAY consistently use a Packet Length Offset
 of zero if and only if it either (1) never sends Retry packets, or (2) can
@@ -330,6 +335,13 @@ guarantee, through the use of persistent storage or other means, that it will
 never lose the cryptographic state required to generate the salt before the
 promised expiration time. {{retry-injection}} describes the implications if it
 uses zero without meeting these conditions.
+
+Similarly, the server MAY use a smaller Packet Length Offset size
+(e.g., 30 bits) to reduce the size of the packet length offset in long headers.
+A smaller packet length field increases the chance that the packet length will
+accidentally be valid, requiring trial decryption. As the maximum UDP datagram
+size is 2^16 bytes, a 62-bit packet length offset means that, at worst, only 1
+in every 2^46 packets will be a false positive.
 
 ## Expiration Time
 
@@ -369,7 +381,7 @@ Retry packet.
 
 ### Multiple Servers for One Domain
 
-If multiple servers serve the same entity behind a load balancer, hey MUST NOT
+If multiple servers serve the same entity behind a load balancer, they MUST NOT
 generate version numbers that any of them would advertise in a Version
 Negotiation Packet or Transport Parameter.
 
@@ -377,15 +389,16 @@ Such servers will either need a common configuration for generating parameters
 from the version number and connection ID, maintain a commmon database of
 mappings, or the connection ID itself can be used to route the Initial packet to
 the server that generated the transport parameter. See
-{{?QUIC-LB=I-D.ietf-quic-load-balancers}} for an example of the latter approach.
+{{?QUIC-LB=I-D.ietf-quic-load-balancers}} for an example of the last approach.
 
 ### Multiple Entities With One Load Balancer
 
 If mutually mistrustful entities share the same IP address and port, incoming
-packets are usually routed by examining the SNI at a load balancer server that
-routes the traffic. This use case makes concealing the contents of the Client
-Initial especially attractive, as the IP address reveals less information. There
-are several solutions to solve this problem.
+packets are usually routed by examining the SNI at a load balancer that routes
+the traffic. This use case makes concealing the contents of the client Initial
+especially attractive, as the IP address reveals less information, but there is
+no obvious means for the load balancer to inspect a version aliased packet.
+There are several solutions to solve this problem.
 
 * The RECOMMENDED solution is to use routable connection IDs, so that the load
 balancer can correctly direct the packet without any knowledge of its version-
@@ -394,8 +407,8 @@ dependent syntax. See {{QUIC-LB}} for an example design.
 * Each entity has its own cryptographic context, shared with the load balancer.
 This requires the load balancer to trial decrypt each incoming Initial with
 each context. As there is no standard algorithm for encoding information in the
-Version and connection ID, this involves synchronizing the method, not just the key
-material.
+version and connection ID, this involves synchronizing the method, not just the
+key material.
 
 * Each entity reports its Version Aliasing Transport Parameters to the load
 balancer out-of-band.
@@ -409,7 +422,7 @@ of the encoding.
 * All entities have a common crytographic context for deriving salts and Packet
 Length Offsets from the version number and connection ID. This isi
 straightforward but also increases the risk that the keys will leak to an
-attacker which could then decode Initial packets from point where the packets
+attacker which could then decode Initial packets from a point where the packets
 are observable. This is therefore NOT RECOMMENDED.
 
 Note that {{ECHO}} and {{QUIC-PI}} solve this problem elegantly by only holding
@@ -464,13 +477,14 @@ The server MAY apply further checks (e.g. against the minimum QUIC packet
 length) to further reduce the very small probability of a false positive.
 
 In the extremely unlikely event that the Packet Length Offset resulted in a
-legal value but the salt is incorrect, the packet may fail authentication.
+legal value but the salt is incorrect, the packet will fail authentication.
 Servers MAY also interpret this as a loss of version aliasing state.
 
 When the packet length computation on the first packet in a connection fails, it
 signals either that the packet has been corrupted in transit, or the client is
 using a transport parameter issued before a server failure. In either case, the
-server sends a Bad Salt packet.
+server sends a Bad Salt packet. The server ignores failures in subsequent
+packets for that connection.
 
 ## Bad Salt Packets
 
@@ -615,9 +629,9 @@ SHOULD issue a new version_aliasing transport parameter.
 If the salt and Packet Length Offset are valid, the server MUST terminate the
 connection with the error code INVALID_BAD_SALT.
 
-Note that the client never sends this transport parameter with an aliased
-version. A server that receives such a packet MUST terminate the connection with
-a TRANSPORT_PARAMETER_ERROR.
+Note that the client never sends this transport parameter in a connection that
+uses an aliased version. A server that receives such a packet MUST terminate the
+connection with a TRANSPORT_PARAMETER_ERROR.
 
 # Considerations for Retry Packets
 
@@ -654,9 +668,9 @@ there are new attacks against this mechanism.
 
 ## Endpoint Impersonation {#impersonation}
 
-An on-path attacker might respond to an Initial Packet with a standard version
-with a Version Aliasing Transport Parameter that then caused the client to
-reveal sensitive information in a subsequent Initial.
+An on-path attacker might respond to a standard version Initial packet with a
+Version Aliasing Transport Parameter that then caused the client to reveal
+sensitive information in a subsequent Initial.
 
 As described in {{client-behavior}}, clients cannot use the contents of a
 Version Aliasing transport parameter until they have authenticated the source
@@ -705,7 +719,7 @@ terminate the connection if the Bad Salt packet was an attack.
 If the client received a Version Negotiation packet, it MUST implement a
 downgrade detection mechanism such as
 {{!QUIC-VN=I-D.ietf-quic-version-negotiation}} or abandon the connection
-attempt. If it subsequent detects a downgrade detection, or discovers that the
+attempt. If it subsequently detects a downgrade detection, or discovers that the
 server does not support the same mechanism, it terminates the connection
 attempt.
 
@@ -747,7 +761,7 @@ possibility exceedingly unlikely.
 ## Increased Linkability
 
 As each version number and connection ID is unique to each client, if a client
-uses one twice, those two connections are extremely likely to be from the samei
+uses one twice, those two connections are extremely likely to be from the same
 host. If the client has changed IP address, this is a significant increase in
 linkability relative to QUIC with a standard version numbers.
 
