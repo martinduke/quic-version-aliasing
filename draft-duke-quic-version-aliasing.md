@@ -144,13 +144,6 @@ in the same datagram; and
 
 * relies on computationally cheap symmetric encryption.
 
-If ECH is operating in "Split Mode", where a client-facing server is using the
-SNI information to route to a backend server, the client-facing server MUST
-have the cryptographic context relevant to version aliasing at the backend
-server to successfully extract the SNI for routing purposes. Furthermore, either
-all backend servers must share this context, or the client-facing server must
-trial decrypt the incoming packet with all possible derived salts.
-
 Note that in the event of the server losing state, the two approaches have a
 similar fallback: ECH uses information in the outer Client Hello, and Version
 Aliasing requires a connection using a standard version. In either case,
