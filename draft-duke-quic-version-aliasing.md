@@ -265,8 +265,8 @@ Servers also identify the Standard version that the client uses to specify
 the wire formats and behaviors of the aliased version. This version MUST meet
 the criteria to support version aliasing, and MUST either be included as a
 supported version in the client's version_information transport parameter (see
-{{!I-D.ietf-quic-version-negotiation}}) or be the standard version of the
-current connection.
+{{!QUIC-VN=I-D.ietf-quic-version-negotiation}}) or be the standard version of
+the current connection.
 
 Note that servers MUST NOT accept resumption tickets or NEW_TOKEN tokens from
 a certain standard version in a connection using a different standard version.
@@ -717,8 +717,7 @@ Aliasing transport parameter to detect the downgrade attack, and the server will
 terminate the connection if the Bad Salt packet was an attack.
 
 If the client received a Version Negotiation packet, it MUST implement a
-downgrade detection mechanism such as
-{{!QUIC-VN=I-D.ietf-quic-version-negotiation}} or abandon the connection
+downgrade detection mechanism such as {{QUIC-VN}} or abandon the connection
 attempt. If it subsequently detects a downgrade detection, or discovers that the
 server does not support the same mechanism, it terminates the connection
 attempt.
