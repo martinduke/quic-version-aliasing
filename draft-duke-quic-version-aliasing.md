@@ -416,7 +416,7 @@ Note that {{ECHO}} and {{QUIC-PI}} solve this problem elegantly by only holding
 the private key at the load balancer, which decodes the sensitive information on
 behalf of the back-end server.
 
-# Additional Client Requirements
+# Additional Client Requirements {#client-behavior}
 
 The Client MUST NOT use the contents of a Version Alias transport parameter if
 the handshake does not (1) later authenticate the server name or (2)
