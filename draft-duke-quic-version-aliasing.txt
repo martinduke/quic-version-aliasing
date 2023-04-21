@@ -4,8 +4,8 @@
 
 QUIC                                                             M. Duke
 Internet-Draft                                                    Google
-Intended status: Experimental                                27 May 2022
-Expires: 28 November 2022
+Intended status: Experimental                              21 April 2023
+Expires: 23 October 2023
 
 
                          QUIC Version Aliasing
@@ -50,11 +50,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 November 2022.
+   This Internet-Draft will expire on 23 October 2023.
 
 Copyright Notice
 
-   Copyright (c) 2022 IETF Trust and the persons identified as the
+   Copyright (c) 2023 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -113,14 +113,15 @@ Table of Contents
      9.2.  Informative References
    Appendix A.  Acknowledgments
    Appendix B.  Change Log
-     B.1.  since draft-duke-quic-version-aliasing-08
-     B.2.  since draft-duke-quic-version-aliasing-07
-     B.3.  since draft-duke-quic-version-aliasing-05
-     B.4.  since draft-duke-quic-version-aliasing-04
-     B.5.  since draft-duke-quic-version-aliasing-03
-     B.6.  since draft-duke-quic-version-aliasing-02
-     B.7.  since draft-duke-quic-version-aliasing-01
-     B.8.  since draft-duke-quic-version-aliasing-00
+     B.1.  since draft-duke-quic-version-aliasing-09
+     B.2.  since draft-duke-quic-version-aliasing-08
+     B.3.  since draft-duke-quic-version-aliasing-07
+     B.4.  since draft-duke-quic-version-aliasing-05
+     B.5.  since draft-duke-quic-version-aliasing-04
+     B.6.  since draft-duke-quic-version-aliasing-03
+     B.7.  since draft-duke-quic-version-aliasing-02
+     B.8.  since draft-duke-quic-version-aliasing-01
+     B.9.  since draft-duke-quic-version-aliasing-00
    Author's Address
 
 1.  Introduction
@@ -271,9 +272,20 @@ Table of Contents
 
 3.  The version_aliasing Transport Parameter
 
-   To enable version aliasing, servers deliver a version_aliasing
-   transport parameter in any QUIC connection that supports transport
-   parameters.  It has the following format.
+   This feature is governed by the version_aliasing transport parameter,
+   which has two versions.  The client version is of zero length and
+   indicates a willingness to accept the server version of the
+   parameter.  Clients MAY send this, and servers MAY restrict sending
+   of their version_aliasing parameter to clients that request it.
+   However, servers can send this parameter to all clients if resources
+   allow.
+
+   If they support version aliasing, servers SHOULD respond to a client
+   version_aliasing transport parameter of greater than zero length with
+   a TRANSPORT_PARAMETER_ERROR if resources allow.
+
+   The server version MAY be sent in any QUIC connection that supports
+   transport parameters.  It has the following format.
 
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -323,8 +335,9 @@ Table of Contents
    parameter, or preserve the state to compute the full contents based
    on the Aliased Version and Connection ID.
 
-   A server that receives this transport parameter MUST close the
-   connection with a TRANSPORT_PARAMETER_ERROR.
+   A client that receives this transport parameter not conforming to
+   this format MUST close the connection with a
+   TRANSPORT_PARAMETER_ERROR.
 
    Servers SHOULD provide a new version_aliasing transport parameter
    each time a client connects.  However, issuing version numbers to a
@@ -1022,9 +1035,9 @@ Table of Contents
 
    [QUIC-VN]  Schinazi, D. and E. Rescorla, "Compatible Version
               Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-07, 5 April 2022,
+              draft-ietf-quic-version-negotiation-14, 19 December 2022,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-07>.
+              version-negotiation-14>.
 
    [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
               Multiplexed and Secure Transport", RFC 9000,
@@ -1039,21 +1052,21 @@ Table of Contents
 
    [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
               Encrypted Client Hello", Work in Progress, Internet-Draft,
-              draft-ietf-tls-esni-14, 13 February 2022,
+              draft-ietf-tls-esni-16, 6 April 2023,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              esni-14>.
+              esni-16>.
 
    [I-D.draft-ietf-quic-v2]
               Duke, M., "QUIC Version 2", Work in Progress, Internet-
-              Draft, draft-ietf-quic-v2-03, 12 May 2022,
+              Draft, draft-ietf-quic-v2-10, 15 December 2022,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              v2-03>.
+              v2-10>.
 
    [QUIC-LB]  Duke, M., Banks, N., and C. Huitema, "QUIC-LB: Generating
               Routable QUIC Connection IDs", Work in Progress, Internet-
-              Draft, draft-ietf-quic-load-balancers-13, 28 March 2022,
+              Draft, draft-ietf-quic-load-balancers-16, 21 April 2023,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              load-balancers-13>.
+              load-balancers-16>.
 
    [QUIC-PI]  Duke, M. and D. Schinazi, "Protected QUIC Initial
               Packets", Work in Progress, Internet-Draft, draft-duke-
@@ -1080,11 +1093,15 @@ Appendix B.  Change Log
       *RFC Editor's Note:* Please remove this section prior to
       publication of a final version of this document.
 
-B.1.  since draft-duke-quic-version-aliasing-08
+B.1.  since draft-duke-quic-version-aliasing-09
+
+   *  Allowed client to send zero-length TP as a hint
+
+B.2.  since draft-duke-quic-version-aliasing-08
 
    *  Replaced Initial Token Extension with Server connection ID
 
-B.2.  since draft-duke-quic-version-aliasing-07
+B.3.  since draft-duke-quic-version-aliasing-07
 
    *  Added the Bad Salt Integrity Tag to the transport parameter
 
@@ -1092,7 +1109,7 @@ B.2.  since draft-duke-quic-version-aliasing-07
 
    *  Allowed the server to specify the standard version to connect with
 
-B.3.  since draft-duke-quic-version-aliasing-05
+B.4.  since draft-duke-quic-version-aliasing-05
 
    *  Revised security considerations
 
@@ -1100,29 +1117,29 @@ B.3.  since draft-duke-quic-version-aliasing-05
 
    *  Removed VN from the fallback mechanism
 
-B.4.  since draft-duke-quic-version-aliasing-04
+B.5.  since draft-duke-quic-version-aliasing-04
 
    *  Relationship with Encrypted Client Hello (ECH) and QUIC Protected
       Initials
 
    *  Corrected statement about version negotiation
 
-B.5.  since draft-duke-quic-version-aliasing-03
+B.6.  since draft-duke-quic-version-aliasing-03
 
    *  Discussed request forgery attacks
 
-B.6.  since draft-duke-quic-version-aliasing-02
+B.7.  since draft-duke-quic-version-aliasing-02
 
    *  Specified 0RTT status of the transport parameter
 
-B.7.  since draft-duke-quic-version-aliasing-01
+B.8.  since draft-duke-quic-version-aliasing-01
 
    *  Fixed all references to "seed" where I meant "salt."
 
    *  Added the Packet Length Offset, which eliminates Retry Injection
       Attacks
 
-B.8.  since draft-duke-quic-version-aliasing-00
+B.9.  since draft-duke-quic-version-aliasing-00
 
    *  Added "Initial Token Extensions" to increase salt entropy and make
       salt polling attacks impractical.

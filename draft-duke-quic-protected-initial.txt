@@ -5,7 +5,7 @@
 quic                                                             M. Duke
 Internet-Draft                                               D. Schinazi
 Intended status: Standards Track                              Google LLC
-Expires: 28 November 2022                                    27 May 2022
+Expires: 23 October 2023                                   21 April 2023
 
 
                      Protected QUIC Initial Packets
@@ -46,11 +46,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 November 2022.
+   This Internet-Draft will expire on 23 October 2023.
 
 Copyright Notice
 
-   Copyright (c) 2022 IETF Trust and the persons identified as the
+   Copyright (c) 2023 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -719,11 +719,11 @@ nonce = 0x461599d35d632bf2239825bb
 
    [ECHO]     Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
               Encrypted Client Hello", Work in Progress, Internet-Draft,
-              draft-ietf-tls-esni-14, 13 February 2022,
+              draft-ietf-tls-esni-16, 6 April 2023,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              esni-14>.
+              esni-16>.
 
-   [HPKE]     Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
+   [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. A. Wood,
               "Hybrid Public Key Encryption", Work in Progress,
               Internet-Draft, draft-irtf-cfrg-hpke-12, 2 September 2021,
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
@@ -732,9 +732,9 @@ nonce = 0x461599d35d632bf2239825bb
    [I-D.ietf-quic-version-negotiation]
               Schinazi, D. and E. Rescorla, "Compatible Version
               Negotiation for QUIC", Work in Progress, Internet-Draft,
-              draft-ietf-quic-version-negotiation-07, 5 April 2022,
+              draft-ietf-quic-version-negotiation-14, 19 December 2022,
               <https://datatracker.ietf.org/doc/html/draft-ietf-quic-
-              version-negotiation-07>.
+              version-negotiation-14>.
 
    [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
               Multiplexed and Secure Transport", RFC 9000,
@@ -768,9 +768,9 @@ nonce = 0x461599d35d632bf2239825bb
 
    [VERSION-ALIASING]
               Duke, M., "QUIC Version Aliasing", Work in Progress,
-              Internet-Draft, draft-duke-quic-version-aliasing-08, 28
-              April 2022, <https://datatracker.ietf.org/doc/html/draft-
-              duke-quic-version-aliasing-08>.
+              Internet-Draft, draft-duke-quic-version-aliasing-09, 6
+              November 2022, <https://datatracker.ietf.org/doc/html/
+              draft-duke-quic-version-aliasing-09>.
 
 Appendix A.  Change Log
 
