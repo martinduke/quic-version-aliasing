@@ -1538,8 +1538,8 @@ receive the transport parameter.<a href="#section-3-9" class="pilcrow">¶</a></p
 Servers MUST either store the contents of the transport parameter, or preserve
 the state to compute the full contents based on the Aliased Version and
 Connection ID.<a href="#section-3-10" class="pilcrow">¶</a></p>
-<p id="section-3-11">A server that receives this transport parameter MUST close the connection with
-a TRANSPORT_PARAMETER_ERROR.<a href="#section-3-11" class="pilcrow">¶</a></p>
+<p id="section-3-11">A client that receives this transport parameter not conforming to this format
+MUST close the connection with a TRANSPORT_PARAMETER_ERROR.<a href="#section-3-11" class="pilcrow">¶</a></p>
 <p id="section-3-12">Servers SHOULD provide a new version_aliasing transport parameter each time a
 client connects. However, issuing version numbers to a client SHOULD be rate-
 limited to mitigate the salt polling attack<a href="#salt-polling" class="auto internal xref">Section 7.7</a> and MAY cease to
