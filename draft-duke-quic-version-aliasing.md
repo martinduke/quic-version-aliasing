@@ -827,6 +827,25 @@ Version aliasing allows the server to specify the contents of the version field
 and part of the token field in Initial packets sent by the client, potentially
 increasing the potency of this attack.
 
+## Forward Secrecy
+
+The version aliasing salt, as part of the transport parameter, is carried in a
+server Handshake packet. As the keys that protect Handshake packets are not
+forward-secure, a compromise of the server's private key would also compromise
+any version aliasing salts distributed with Handshake keys derived from that
+private key would also be compromised.
+
+Furthermore, if the server derives it salts from the incoming Connection ID and
+version via a cryptographic method rather than a lookup table, compromise of
+that method and the key in use allows attackers to compute the salts (and
+Initial Keys) of packets using aliased versions.
+
+Note that, if the provided server connection ID causes subsequent connection
+attempts to route to the same server, then each server instance behind a load
+balancer can have a unique key for deriving salts from version and connection
+ID, rather than sharing one among the entire server pool. This substantially
+reduces the effect of compromise of this key.
+
 # IANA Considerations
 
 ## QUIC Version Registry
