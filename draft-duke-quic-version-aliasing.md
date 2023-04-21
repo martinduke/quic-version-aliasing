@@ -171,9 +171,19 @@ See also section 1.1 of {{QUIC-PI}} for further discussion of tradeoffs.
 
 # The version_aliasing Transport Parameter
 
-To enable version aliasing, servers deliver a version_aliasing transport
-parameter in any QUIC connection that supports transport parameters. It has
-the following format.
+This feature is governed by the version_aliasing transport parameter, which has
+two versions. The client version is of zero length and indicates a willingness
+to accept the server version of the parameter. Clients MAY send this, and
+servers MAY restrict sending of their version_aliasing parameter to clients that
+request it. However, servers can send this parameter to all clients if resources
+allow.
+
+If they support version aliasing, servers SHOULD respond to a client
+version_aliasing transport parameter of greater than zero length with a
+TRANSPORT_PARAMETER_ERROR if resources allow.
+
+The server version MAY be sent in any QUIC connection that supports transport
+parameters. It has the following format.
 
 ~~~
  0                   1                   2                   3
@@ -224,8 +234,8 @@ Servers MUST either store the contents of the transport parameter, or preserve
 the state to compute the full contents based on the Aliased Version and
 Connection ID.
 
-A server that receives this transport parameter MUST close the connection with
-a TRANSPORT_PARAMETER_ERROR.
+A client that receives this transport parameter not conforming to this format
+MUST close the connection with a TRANSPORT_PARAMETER_ERROR.
 
 Servers SHOULD provide a new version_aliasing transport parameter each time a
 client connects. However, issuing version numbers to a client SHOULD be rate-
@@ -863,6 +873,10 @@ Marten Seemann was the original creator of the version aliasing approach.
 
 > **RFC Editor's Note:** Please remove this section prior to
 > publication of a final version of this document.
+
+## since draft-duke-quic-version-aliasing-09
+
+* Allowed client to send zero-length TP as a hint
 
 ## since draft-duke-quic-version-aliasing-08
 
