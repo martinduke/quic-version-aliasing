@@ -17,25 +17,23 @@ should prevent middlebox ossification around the current set of published
 version numbers and the contents of QUIC Initial packets, as well as improving
 the protocol's privacy properties. 
     " name="description">
-<meta content="xml2rfc 3.15.2" name="generator">
+<meta content="xml2rfc 3.17.1" name="generator">
 <meta content="draft-duke-quic-version-aliasing-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.15.2
-    Python 3.10.5
+  xml2rfc 3.17.1
+    Python 3.10.11
     appdirs 1.4.4
     ConfigArgParse 1.5.3
     google-i18n-address 2.5.2
-    html5lib 1.1
     intervaltree 3.1.0
     Jinja2 3.1.2
-    lxml 4.9.1
-    MarkupSafe 2.1.1
+    lxml 4.9.2
     pycountry 22.3.5
     PyYAML 6.0
-    requests 2.27.1
-    setuptools 59.4.0
+    requests 2.28.1
+    setuptools 65.6.0
     six 1.16.0
-    wcwidth 0.2.5
+    wcwidth 0.2.6
 -->
 <link href="draft-duke-quic-version-aliasing.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -366,7 +364,7 @@ ul.empty li, .ulEmpty li {
   margin-top: 0.5em;
 }
 :is(ul, ol).compact, .ulCompact, .olCompact {
-  line-height: 100%;
+  line-height: 1;
   margin: 0 0 0 2em;
 }
 
@@ -376,10 +374,13 @@ dl {
   --indent: 3ch;
   /* --indent: attr(indent ch); not supported in any browser, but we can dream */
 }
+dl.olPercent {
+  --indent: 5ch;
+}
 dl > dt {
   float: left;
-  margin-right: 1em;
-  min-width: 12ch;
+  margin-right: 2ch;
+  min-width: 8ch;
 }
 dl.dlNewline > dt {
   float: none;
@@ -388,6 +389,9 @@ dl > dd {
   margin-bottom: .8em;
   margin-left: var(--indent) !important; /* stupid element overrides */
   min-height: 2ex;
+}
+dl.olPercent > dt {
+  min-width: calc(var(--indent) - 2ch);
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -402,7 +406,7 @@ dl > dd > dl {
   margin-top: 0.5em;
   margin-bottom: 0;
 }
-dl .break {
+:is(dd, span).break {
   display: none;
 }
 
@@ -410,11 +414,11 @@ dl .break {
 a, a[href].selfRef:hover {
   text-decoration: none;
 }
-a[href].selfRef {
-  color: var(--text-color);
-}
 a[href] {
   color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
 }
 a[href]:hover {
   text-decoration: underline;
@@ -422,7 +426,7 @@ a[href]:hover {
 a[href].selfRef:hover {
   background-color: var(--highlight-color);
 }
-a.xref {
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
 }
 
@@ -434,7 +438,9 @@ tt, code, pre {
 tt, code {
   /* changing the font for inline elements leads to different ascender
      and descender heights; as we want to retain baseline alignment,
-     remove leading to avoid altering the final height of lines */
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
   line-height: 0;
 }
 :is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
@@ -586,10 +592,14 @@ hr {
 .bcp14 {
   font-variant: small-caps;
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: var(--small-font-size);
 }
 .role {
   font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
 }
 
 /* info block */
@@ -1031,7 +1041,7 @@ svg :is([stroke="white"], [stroke^="#fff"]) {
 svg :is([fill="black"], [fill^="#000"], :not([fill])) {
   fill: var(--text-color);
 }
-svg :is([stroke="fill"], [fill^="#fff"]) {
+svg :is([fill="white"], [fill^="#fff"]) {
   fill: var(--background-color);
 }
 </style>
@@ -1042,11 +1052,11 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">QUIC Version Aliasing</td>
-<td class="right">November 2022</td>
+<td class="right">April 2023</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Duke</td>
-<td class="center">Expires 10 May 2023</td>
+<td class="center">Expires 23 October 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1059,12 +1069,12 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-duke-quic-version-aliasing-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-11-06" class="published">6 November 2022</time>
+<time datetime="2023-04-21" class="published">21 April 2023</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2023-05-10">10 May 2023</time></dd>
+<dd class="expires"><time datetime="2023-10-23">23 October 2023</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1117,7 +1127,7 @@ the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 May 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 23 October 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1126,7 +1136,7 @@ the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2022 IETF Trust and the persons identified as the
+            Copyright (c) 2023 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1292,28 +1302,31 @@ the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">
             <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-change-log" class="internal xref">Change Log</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
-                <p id="section-toc.1-1.11.2.1.1"><a href="#appendix-B.1" class="auto internal xref">B.1</a>.  <a href="#name-since-draft-duke-quic-versi" class="internal xref">since draft-duke-quic-version-aliasing-08</a></p>
+                <p id="section-toc.1-1.11.2.1.1"><a href="#appendix-B.1" class="auto internal xref">B.1</a>.  <a href="#name-since-draft-duke-quic-versi" class="internal xref">since draft-duke-quic-version-aliasing-09</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
-                <p id="section-toc.1-1.11.2.2.1"><a href="#appendix-B.2" class="auto internal xref">B.2</a>.  <a href="#name-since-draft-duke-quic-versio" class="internal xref">since draft-duke-quic-version-aliasing-07</a></p>
+                <p id="section-toc.1-1.11.2.2.1"><a href="#appendix-B.2" class="auto internal xref">B.2</a>.  <a href="#name-since-draft-duke-quic-versio" class="internal xref">since draft-duke-quic-version-aliasing-08</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.3">
-                <p id="section-toc.1-1.11.2.3.1"><a href="#appendix-B.3" class="auto internal xref">B.3</a>.  <a href="#name-since-draft-duke-quic-version" class="internal xref">since draft-duke-quic-version-aliasing-05</a></p>
+                <p id="section-toc.1-1.11.2.3.1"><a href="#appendix-B.3" class="auto internal xref">B.3</a>.  <a href="#name-since-draft-duke-quic-version" class="internal xref">since draft-duke-quic-version-aliasing-07</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.4">
-                <p id="section-toc.1-1.11.2.4.1"><a href="#appendix-B.4" class="auto internal xref">B.4</a>.  <a href="#name-since-draft-duke-quic-version-" class="internal xref">since draft-duke-quic-version-aliasing-04</a></p>
+                <p id="section-toc.1-1.11.2.4.1"><a href="#appendix-B.4" class="auto internal xref">B.4</a>.  <a href="#name-since-draft-duke-quic-version-" class="internal xref">since draft-duke-quic-version-aliasing-05</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.5">
-                <p id="section-toc.1-1.11.2.5.1"><a href="#appendix-B.5" class="auto internal xref">B.5</a>.  <a href="#name-since-draft-duke-quic-version-a" class="internal xref">since draft-duke-quic-version-aliasing-03</a></p>
+                <p id="section-toc.1-1.11.2.5.1"><a href="#appendix-B.5" class="auto internal xref">B.5</a>.  <a href="#name-since-draft-duke-quic-version-a" class="internal xref">since draft-duke-quic-version-aliasing-04</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.6">
-                <p id="section-toc.1-1.11.2.6.1"><a href="#appendix-B.6" class="auto internal xref">B.6</a>.  <a href="#name-since-draft-duke-quic-version-al" class="internal xref">since draft-duke-quic-version-aliasing-02</a></p>
+                <p id="section-toc.1-1.11.2.6.1"><a href="#appendix-B.6" class="auto internal xref">B.6</a>.  <a href="#name-since-draft-duke-quic-version-al" class="internal xref">since draft-duke-quic-version-aliasing-03</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.7">
-                <p id="section-toc.1-1.11.2.7.1"><a href="#appendix-B.7" class="auto internal xref">B.7</a>.  <a href="#name-since-draft-duke-quic-version-ali" class="internal xref">since draft-duke-quic-version-aliasing-01</a></p>
+                <p id="section-toc.1-1.11.2.7.1"><a href="#appendix-B.7" class="auto internal xref">B.7</a>.  <a href="#name-since-draft-duke-quic-version-ali" class="internal xref">since draft-duke-quic-version-aliasing-02</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.8">
-                <p id="section-toc.1-1.11.2.8.1"><a href="#appendix-B.8" class="auto internal xref">B.8</a>.  <a href="#name-since-draft-duke-quic-version-alia" class="internal xref">since draft-duke-quic-version-aliasing-00</a></p>
+                <p id="section-toc.1-1.11.2.8.1"><a href="#appendix-B.8" class="auto internal xref">B.8</a>.  <a href="#name-since-draft-duke-quic-version-alia" class="internal xref">since draft-duke-quic-version-aliasing-01</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.9">
+                <p id="section-toc.1-1.11.2.9.1"><a href="#appendix-B.9" class="auto internal xref">B.9</a>.  <a href="#name-since-draft-duke-quic-version-alias" class="internal xref">since draft-duke-quic-version-aliasing-00</a></p>
 </li>
             </ul>
 </li>
@@ -1465,12 +1478,20 @@ QUIC version aliasing otherwise.<a href="#section-2.1-6" class="pilcrow">¶</a><
       <h2 id="name-the-version_aliasing-transp">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-the-version_aliasing-transp" class="section-name selfRef">The version_aliasing Transport Parameter</a>
       </h2>
-<p id="section-3-1">To enable version aliasing, servers deliver a version_aliasing transport
-parameter in any QUIC connection that supports transport parameters. It has
-the following format.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-1">This feature is governed by the version_aliasing transport parameter, which has
+two versions. The client version is of zero length and indicates a willingness
+to accept the server version of the parameter. Clients MAY send this, and
+servers MAY restrict sending of their version_aliasing parameter to clients that
+request it. However, servers can send this parameter to all clients if resources
+allow.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">If they support version aliasing, servers SHOULD respond to a client
+version_aliasing transport parameter of greater than zero length with a
+TRANSPORT_PARAMETER_ERROR if resources allow.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">The server version MAY be sent in any QUIC connection that supports transport
+parameters. It has the following format.<a href="#section-3-3" class="pilcrow">¶</a></p>
 <span id="name-version_aliasing-transport-"></span><div id="fig-transport-parameter">
 <figure id="figure-1">
-        <div class="alignLeft art-text artwork" id="section-3-2.1">
+        <div class="alignLeft art-text artwork" id="section-3-4.1">
 <pre>
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -1501,28 +1522,28 @@ the following format.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <a href="#name-version_aliasing-transport-" class="selfRef">version_aliasing Transport Parameter value</a>
         </figcaption></figure>
 </div>
-<p id="section-3-3">These fields are described in the sections below.<a href="#section-3-3" class="pilcrow">¶</a></p>
-<p id="section-3-4">The Packet Length Offset and Expiration Time fields are encoded using the
+<p id="section-3-5">These fields are described in the sections below.<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-6">The Packet Length Offset and Expiration Time fields are encoded using the
 Variable Length Integer encoding from Section 16 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>. Expiration
-Time is measured in seconds.<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5">INI, 0RT, HAN, and RET are the codepoints for each long header packet type. If
+Time is measured in seconds.<a href="#section-3-6" class="pilcrow">¶</a></p>
+<p id="section-3-7">INI, 0RT, HAN, and RET are the codepoints for each long header packet type. If
 any two packet types have the same codepoint, the transport parameter is
-invalid.<a href="#section-3-5" class="pilcrow">¶</a></p>
-<p id="section-3-6">The Connection ID Length (CID Length) is in bytes.<a href="#section-3-6" class="pilcrow">¶</a></p>
-<p id="section-3-7">Note that servers that support version aliasing need not send the transport
+invalid.<a href="#section-3-7" class="pilcrow">¶</a></p>
+<p id="section-3-8">The Connection ID Length (CID Length) is in bytes.<a href="#section-3-8" class="pilcrow">¶</a></p>
+<p id="section-3-9">Note that servers that support version aliasing need not send the transport
 parameter on every connection. Therefore, a client MAY attempt to connect with
 an unexpired aliased version, even if in its most recent connection it did not
-receive the transport parameter.<a href="#section-3-7" class="pilcrow">¶</a></p>
-<p id="section-3-8">Clients remember the values in this transport parameter for a future connection.
+receive the transport parameter.<a href="#section-3-9" class="pilcrow">¶</a></p>
+<p id="section-3-10">Clients remember the values in this transport parameter for a future connection.
 Servers MUST either store the contents of the transport parameter, or preserve
 the state to compute the full contents based on the Aliased Version and
-Connection ID.<a href="#section-3-8" class="pilcrow">¶</a></p>
-<p id="section-3-9">A server that receives this transport parameter MUST close the connection with
-a TRANSPORT_PARAMETER_ERROR.<a href="#section-3-9" class="pilcrow">¶</a></p>
-<p id="section-3-10">Servers SHOULD provide a new version_aliasing transport parameter each time a
+Connection ID.<a href="#section-3-10" class="pilcrow">¶</a></p>
+<p id="section-3-11">A server that receives this transport parameter MUST close the connection with
+a TRANSPORT_PARAMETER_ERROR.<a href="#section-3-11" class="pilcrow">¶</a></p>
+<p id="section-3-12">Servers SHOULD provide a new version_aliasing transport parameter each time a
 client connects. However, issuing version numbers to a client SHOULD be rate-
 limited to mitigate the salt polling attack<a href="#salt-polling" class="auto internal xref">Section 7.7</a> and MAY cease to
-clients that are consistently connecting with standard versions.<a href="#section-3-10" class="pilcrow">¶</a></p>
+clients that are consistently connecting with standard versions.<a href="#section-3-12" class="pilcrow">¶</a></p>
 <div id="aliased-version">
 <section id="section-3.1">
         <h3 id="name-aliased-version">
@@ -2252,7 +2273,7 @@ Error Codes registry:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
 <dl class="references">
 <dt id="QUIC-VN">[QUIC-VN]</dt>
         <dd>
-<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-13</span>, <time datetime="2022-11-06" class="refDate">6 November 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-13">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-13</a>&gt;</span>. </dd>
+<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-14</span>, <time datetime="2022-12-19" class="refDate">19 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-14">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-14</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9000">[RFC9000]</dt>
         <dd>
@@ -2271,15 +2292,15 @@ Error Codes registry:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
 <dl class="references">
 <dt id="ECHO">[ECHO]</dt>
         <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-15</span>, <time datetime="2022-10-03" class="refDate">3 October 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-15">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-15</a>&gt;</span>. </dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-16</span>, <time datetime="2023-04-06" class="refDate">6 April 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-16">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-16</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="I-D.draft-ietf-quic-v2">[I-D.draft-ietf-quic-v2]</dt>
         <dd>
-<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version 2"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-v2-07</span>, <time datetime="2022-11-06" class="refDate">6 November 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-v2-07">https://datatracker.ietf.org/doc/html/draft-ietf-quic-v2-07</a>&gt;</span>. </dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version 2"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-v2-10</span>, <time datetime="2022-12-15" class="refDate">15 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-v2-10">https://datatracker.ietf.org/doc/html/draft-ietf-quic-v2-10</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="QUIC-LB">[QUIC-LB]</dt>
         <dd>
-<span class="refAuthor">Duke, M.</span>, <span class="refAuthor">Banks, N.</span>, and <span class="refAuthor">C. Huitema</span>, <span class="refTitle">"QUIC-LB: Generating Routable QUIC Connection IDs"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-load-balancers-15</span>, <time datetime="2022-10-24" class="refDate">24 October 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-load-balancers-15">https://datatracker.ietf.org/doc/html/draft-ietf-quic-load-balancers-15</a>&gt;</span>. </dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refAuthor">Banks, N.</span>, and <span class="refAuthor">C. Huitema</span>, <span class="refTitle">"QUIC-LB: Generating Routable QUIC Connection IDs"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-load-balancers-16</span>, <time datetime="2023-04-21" class="refDate">21 April 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-load-balancers-16">https://datatracker.ietf.org/doc/html/draft-ietf-quic-load-balancers-16</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="QUIC-PI">[QUIC-PI]</dt>
         <dd>
@@ -2315,112 +2336,123 @@ Error Codes registry:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
 publication of a final version of this document.<a href="#appendix-B-1.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<div id="since-draft-duke-quic-version-aliasing-08">
+<div id="since-draft-duke-quic-version-aliasing-09">
 <section id="appendix-B.1">
         <h3 id="name-since-draft-duke-quic-versi">
-<a href="#appendix-B.1" class="section-number selfRef">B.1. </a><a href="#name-since-draft-duke-quic-versi" class="section-name selfRef">since draft-duke-quic-version-aliasing-08</a>
+<a href="#appendix-B.1" class="section-number selfRef">B.1. </a><a href="#name-since-draft-duke-quic-versi" class="section-name selfRef">since draft-duke-quic-version-aliasing-09</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.1-1.1">Replaced Initial Token Extension with Server connection ID<a href="#appendix-B.1-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.1-1.1">Allowed client to send zero-length TP as a hint<a href="#appendix-B.1-1.1" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-08">
+<section id="appendix-B.2">
+        <h3 id="name-since-draft-duke-quic-versio">
+<a href="#appendix-B.2" class="section-number selfRef">B.2. </a><a href="#name-since-draft-duke-quic-versio" class="section-name selfRef">since draft-duke-quic-version-aliasing-08</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.2-1.1">Replaced Initial Token Extension with Server connection ID<a href="#appendix-B.2-1.1" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-07">
-<section id="appendix-B.2">
-        <h3 id="name-since-draft-duke-quic-versio">
-<a href="#appendix-B.2" class="section-number selfRef">B.2. </a><a href="#name-since-draft-duke-quic-versio" class="section-name selfRef">since draft-duke-quic-version-aliasing-07</a>
+<section id="appendix-B.3">
+        <h3 id="name-since-draft-duke-quic-version">
+<a href="#appendix-B.3" class="section-number selfRef">B.3. </a><a href="#name-since-draft-duke-quic-version" class="section-name selfRef">since draft-duke-quic-version-aliasing-07</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.2-1.1">Added the Bad Salt Integrity Tag to the transport parameter<a href="#appendix-B.2-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.3-1.1">Added the Bad Salt Integrity Tag to the transport parameter<a href="#appendix-B.3-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.2-1.2">Greased packet types<a href="#appendix-B.2-1.2" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.3-1.2">Greased packet types<a href="#appendix-B.3-1.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.2-1.3">Allowed the server to specify the standard version to connect with<a href="#appendix-B.2-1.3" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.3-1.3">Allowed the server to specify the standard version to connect with<a href="#appendix-B.3-1.3" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-05">
-<section id="appendix-B.3">
-        <h3 id="name-since-draft-duke-quic-version">
-<a href="#appendix-B.3" class="section-number selfRef">B.3. </a><a href="#name-since-draft-duke-quic-version" class="section-name selfRef">since draft-duke-quic-version-aliasing-05</a>
+<section id="appendix-B.4">
+        <h3 id="name-since-draft-duke-quic-version-">
+<a href="#appendix-B.4" class="section-number selfRef">B.4. </a><a href="#name-since-draft-duke-quic-version-" class="section-name selfRef">since draft-duke-quic-version-aliasing-05</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.3-1.1">Revised security considerations<a href="#appendix-B.3-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.4-1.1">Revised security considerations<a href="#appendix-B.4-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.3-1.2">Discussed multiple SNIs behind one load balancer<a href="#appendix-B.3-1.2" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.4-1.2">Discussed multiple SNIs behind one load balancer<a href="#appendix-B.4-1.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.3-1.3">Removed VN from the fallback mechanism<a href="#appendix-B.3-1.3" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.4-1.3">Removed VN from the fallback mechanism<a href="#appendix-B.4-1.3" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-04">
-<section id="appendix-B.4">
-        <h3 id="name-since-draft-duke-quic-version-">
-<a href="#appendix-B.4" class="section-number selfRef">B.4. </a><a href="#name-since-draft-duke-quic-version-" class="section-name selfRef">since draft-duke-quic-version-aliasing-04</a>
+<section id="appendix-B.5">
+        <h3 id="name-since-draft-duke-quic-version-a">
+<a href="#appendix-B.5" class="section-number selfRef">B.5. </a><a href="#name-since-draft-duke-quic-version-a" class="section-name selfRef">since draft-duke-quic-version-aliasing-04</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.4-1.1">Relationship with Encrypted Client Hello (ECH) and QUIC Protected Initials<a href="#appendix-B.4-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.5-1.1">Relationship with Encrypted Client Hello (ECH) and QUIC Protected Initials<a href="#appendix-B.5-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.4-1.2">Corrected statement about version negotiation<a href="#appendix-B.4-1.2" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.5-1.2">Corrected statement about version negotiation<a href="#appendix-B.5-1.2" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-03">
-<section id="appendix-B.5">
-        <h3 id="name-since-draft-duke-quic-version-a">
-<a href="#appendix-B.5" class="section-number selfRef">B.5. </a><a href="#name-since-draft-duke-quic-version-a" class="section-name selfRef">since draft-duke-quic-version-aliasing-03</a>
+<section id="appendix-B.6">
+        <h3 id="name-since-draft-duke-quic-version-al">
+<a href="#appendix-B.6" class="section-number selfRef">B.6. </a><a href="#name-since-draft-duke-quic-version-al" class="section-name selfRef">since draft-duke-quic-version-aliasing-03</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.5-1.1">Discussed request forgery attacks<a href="#appendix-B.5-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.6-1.1">Discussed request forgery attacks<a href="#appendix-B.6-1.1" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-02">
-<section id="appendix-B.6">
-        <h3 id="name-since-draft-duke-quic-version-al">
-<a href="#appendix-B.6" class="section-number selfRef">B.6. </a><a href="#name-since-draft-duke-quic-version-al" class="section-name selfRef">since draft-duke-quic-version-aliasing-02</a>
+<section id="appendix-B.7">
+        <h3 id="name-since-draft-duke-quic-version-ali">
+<a href="#appendix-B.7" class="section-number selfRef">B.7. </a><a href="#name-since-draft-duke-quic-version-ali" class="section-name selfRef">since draft-duke-quic-version-aliasing-02</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.6-1.1">Specified 0RTT status of the transport parameter<a href="#appendix-B.6-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.7-1.1">Specified 0RTT status of the transport parameter<a href="#appendix-B.7-1.1" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-01">
-<section id="appendix-B.7">
-        <h3 id="name-since-draft-duke-quic-version-ali">
-<a href="#appendix-B.7" class="section-number selfRef">B.7. </a><a href="#name-since-draft-duke-quic-version-ali" class="section-name selfRef">since draft-duke-quic-version-aliasing-01</a>
+<section id="appendix-B.8">
+        <h3 id="name-since-draft-duke-quic-version-alia">
+<a href="#appendix-B.8" class="section-number selfRef">B.8. </a><a href="#name-since-draft-duke-quic-version-alia" class="section-name selfRef">since draft-duke-quic-version-aliasing-01</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.7-1.1">Fixed all references to "seed" where I meant "salt."<a href="#appendix-B.7-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.8-1.1">Fixed all references to "seed" where I meant "salt."<a href="#appendix-B.8-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.7-1.2">Added the Packet Length Offset, which eliminates Retry Injection Attacks<a href="#appendix-B.7-1.2" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.8-1.2">Added the Packet Length Offset, which eliminates Retry Injection Attacks<a href="#appendix-B.8-1.2" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-duke-quic-version-aliasing-00">
-<section id="appendix-B.8">
-        <h3 id="name-since-draft-duke-quic-version-alia">
-<a href="#appendix-B.8" class="section-number selfRef">B.8. </a><a href="#name-since-draft-duke-quic-version-alia" class="section-name selfRef">since draft-duke-quic-version-aliasing-00</a>
+<section id="appendix-B.9">
+        <h3 id="name-since-draft-duke-quic-version-alias">
+<a href="#appendix-B.9" class="section-number selfRef">B.9. </a><a href="#name-since-draft-duke-quic-version-alias" class="section-name selfRef">since draft-duke-quic-version-aliasing-00</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-B.8-1.1">Added "Initial Token Extensions" to increase salt entropy and make salt
-polling attacks impractical.<a href="#appendix-B.8-1.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-B.9-1.1">Added "Initial Token Extensions" to increase salt entropy and make salt
+polling attacks impractical.<a href="#appendix-B.9-1.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.8-1.2">Allowed servers to store a mapping of version number and ITE to salt instead.<a href="#appendix-B.8-1.2" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.9-1.2">Allowed servers to store a mapping of version number and ITE to salt instead.<a href="#appendix-B.9-1.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.8-1.3">Made standard version encoding mandatory. This dramatically simplifies the new
-Retry logic and changes the security model.<a href="#appendix-B.8-1.3" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.9-1.3">Made standard version encoding mandatory. This dramatically simplifies the new
+Retry logic and changes the security model.<a href="#appendix-B.9-1.3" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.8-1.4">Added references to Version Negotiation Transport Parameters.<a href="#appendix-B.8-1.4" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.9-1.4">Added references to Version Negotiation Transport Parameters.<a href="#appendix-B.9-1.4" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="appendix-B.8-1.5">Extensive readability edit.<a href="#appendix-B.8-1.5" class="pilcrow">¶</a>
+          <li class="normal" id="appendix-B.9-1.5">Extensive readability edit.<a href="#appendix-B.9-1.5" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>

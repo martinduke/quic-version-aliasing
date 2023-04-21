@@ -14,25 +14,23 @@ successfully spoof them. This document proposes a new version of QUIC that
 encrypts Initial Packets more securely by leveraging a Public Key distributed
 via the Domain Name System (DNS) or other out-of-band system. 
     " name="description">
-<meta content="xml2rfc 3.15.2" name="generator">
+<meta content="xml2rfc 3.17.1" name="generator">
 <meta content="draft-duke-quic-protected-initial-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.15.2
-    Python 3.10.5
+  xml2rfc 3.17.1
+    Python 3.10.11
     appdirs 1.4.4
     ConfigArgParse 1.5.3
     google-i18n-address 2.5.2
-    html5lib 1.1
     intervaltree 3.1.0
     Jinja2 3.1.2
-    lxml 4.9.1
-    MarkupSafe 2.1.1
+    lxml 4.9.2
     pycountry 22.3.5
     PyYAML 6.0
-    requests 2.27.1
-    setuptools 59.4.0
+    requests 2.28.1
+    setuptools 65.6.0
     six 1.16.0
-    wcwidth 0.2.5
+    wcwidth 0.2.6
 -->
 <link href="draft-duke-quic-protected-initial.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -363,7 +361,7 @@ ul.empty li, .ulEmpty li {
   margin-top: 0.5em;
 }
 :is(ul, ol).compact, .ulCompact, .olCompact {
-  line-height: 100%;
+  line-height: 1;
   margin: 0 0 0 2em;
 }
 
@@ -373,10 +371,13 @@ dl {
   --indent: 3ch;
   /* --indent: attr(indent ch); not supported in any browser, but we can dream */
 }
+dl.olPercent {
+  --indent: 5ch;
+}
 dl > dt {
   float: left;
-  margin-right: 1em;
-  min-width: 12ch;
+  margin-right: 2ch;
+  min-width: 8ch;
 }
 dl.dlNewline > dt {
   float: none;
@@ -385,6 +386,9 @@ dl > dd {
   margin-bottom: .8em;
   margin-left: var(--indent) !important; /* stupid element overrides */
   min-height: 2ex;
+}
+dl.olPercent > dt {
+  min-width: calc(var(--indent) - 2ch);
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -399,7 +403,7 @@ dl > dd > dl {
   margin-top: 0.5em;
   margin-bottom: 0;
 }
-dl .break {
+:is(dd, span).break {
   display: none;
 }
 
@@ -407,11 +411,11 @@ dl .break {
 a, a[href].selfRef:hover {
   text-decoration: none;
 }
-a[href].selfRef {
-  color: var(--text-color);
-}
 a[href] {
   color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
 }
 a[href]:hover {
   text-decoration: underline;
@@ -419,7 +423,7 @@ a[href]:hover {
 a[href].selfRef:hover {
   background-color: var(--highlight-color);
 }
-a.xref {
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
 }
 
@@ -431,7 +435,9 @@ tt, code, pre {
 tt, code {
   /* changing the font for inline elements leads to different ascender
      and descender heights; as we want to retain baseline alignment,
-     remove leading to avoid altering the final height of lines */
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
   line-height: 0;
 }
 :is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
@@ -583,10 +589,14 @@ hr {
 .bcp14 {
   font-variant: small-caps;
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: var(--small-font-size);
 }
 .role {
   font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
 }
 
 /* info block */
@@ -1028,7 +1038,7 @@ svg :is([stroke="white"], [stroke^="#fff"]) {
 svg :is([fill="black"], [fill^="#000"], :not([fill])) {
   fill: var(--text-color);
 }
-svg :is([stroke="fill"], [fill^="#fff"]) {
+svg :is([fill="white"], [fill^="#fff"]) {
   fill: var(--background-color);
 }
 </style>
@@ -1039,11 +1049,11 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">protected-initial</td>
-<td class="right">November 2022</td>
+<td class="right">April 2023</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Duke &amp; Schinazi</td>
-<td class="center">Expires 10 May 2023</td>
+<td class="center">Expires 23 October 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1056,12 +1066,12 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-duke-quic-protected-initial-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-11-06" class="published">6 November 2022</time>
+<time datetime="2023-04-21" class="published">21 April 2023</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2023-05-10">10 May 2023</time></dd>
+<dd class="expires"><time datetime="2023-10-23">23 October 2023</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1114,7 +1124,7 @@ via the Domain Name System (DNS) or other out-of-band system.<a href="#section-a
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 May 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 23 October 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1123,7 +1133,7 @@ via the Domain Name System (DNS) or other out-of-band system.<a href="#section-a
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2022 IETF Trust and the persons identified as the
+            Copyright (c) 2023 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1981,7 +1991,7 @@ Error Codes registry:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
 <dl class="references">
 <dt id="ECHO">[ECHO]</dt>
         <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-15</span>, <time datetime="2022-10-03" class="refDate">3 October 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-15">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-15</a>&gt;</span>. </dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-16</span>, <time datetime="2023-04-06" class="refDate">6 April 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-16">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-16</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="HPKE">[HPKE]</dt>
         <dd>
@@ -1989,7 +1999,7 @@ Error Codes registry:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
 <dd class="break"></dd>
 <dt id="I-D.ietf-quic-version-negotiation">[I-D.ietf-quic-version-negotiation]</dt>
         <dd>
-<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-13</span>, <time datetime="2022-11-06" class="refDate">6 November 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-13">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-13</a>&gt;</span>. </dd>
+<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-14</span>, <time datetime="2022-12-19" class="refDate">19 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-14">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-14</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9000">[RFC9000]</dt>
         <dd>
@@ -2024,7 +2034,7 @@ Error Codes registry:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
 <dd class="break"></dd>
 <dt id="VERSION-ALIASING">[VERSION-ALIASING]</dt>
       <dd>
-<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version Aliasing"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-version-aliasing-08</span>, <time datetime="2022-04-28" class="refDate">28 April 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-version-aliasing-08">https://datatracker.ietf.org/doc/html/draft-duke-quic-version-aliasing-08</a>&gt;</span>. </dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version Aliasing"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-version-aliasing-09</span>, <time datetime="2022-11-06" class="refDate">6 November 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-version-aliasing-09">https://datatracker.ietf.org/doc/html/draft-duke-quic-version-aliasing-09</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
