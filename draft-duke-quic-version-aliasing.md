@@ -234,8 +234,8 @@ Servers MUST either store the contents of the transport parameter, or preserve
 the state to compute the full contents based on the Aliased Version and
 Connection ID.
 
-A server that receives this transport parameter MUST close the connection with
-a TRANSPORT_PARAMETER_ERROR.
+A client that receives this transport parameter not conforming to this format
+MUST close the connection with a TRANSPORT_PARAMETER_ERROR.
 
 Servers SHOULD provide a new version_aliasing transport parameter each time a
 client connects. However, issuing version numbers to a client SHOULD be rate-
