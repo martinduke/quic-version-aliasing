@@ -104,6 +104,7 @@ Table of Contents
      7.9.  Increased Processing of Garbage UDP Packets
      7.10. Increased Retry Overhead
      7.11. Request Forgery
+     7.12. Forward Secrecy
    8.  IANA Considerations
      8.1.  QUIC Version Registry
      8.2.  QUIC Transport Parameter Registry
@@ -987,6 +988,32 @@ Table of Contents
    Version aliasing allows the server to specify the contents of the
    version field and part of the token field in Initial packets sent by
    the client, potentially increasing the potency of this attack.
+
+7.12.  Forward Secrecy
+
+   There are two relevant keys to the forward secrecy of Initial packets
+   that use version aliasing.  First, the Handshake key of the first
+   connection, that protects the transport parameter that delivers the
+   salt.  Second, if the server uses a cryptographic process instead of
+   a lookup table to derive the salt from the incoming Connection ID and
+   version, the key associated with that process.
+
+   As the keys that protect Handshake packets are not forward-secure, a
+   compromise of the server's private key would also compromise any
+   version aliasing salts distributed with Handshake keys derived from
+   that private key.
+
+   Furthermore, if the server derives it salts from the incoming
+   Connection ID and version via a cryptographic method, compromise of
+   that method and the key in use allows attackers to compute the salts
+   (and Initial Keys) of packets using aliased versions.
+
+   Note that, if the provided server connection ID causes subsequent
+   connection attempts to route to the same server, then each server
+   instance behind a load balancer can have a unique key for deriving
+   salts from version and connection ID, rather than sharing one among
+   the entire server pool.  This substantially reduces the effect of
+   compromise of this key.
 
 8.  IANA Considerations
 
