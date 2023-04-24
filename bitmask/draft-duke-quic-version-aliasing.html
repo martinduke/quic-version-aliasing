@@ -1589,7 +1589,7 @@ number and/or connection ID;<a href="#section-3.2-4.2" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-3.2-4.4">the standard version is included as an input to the parameter generation
 algorithm, and the server tries all supported standard versions and tests each
-resulting Packet Length Offset for validity.<a href="#section-3.2-4.4" class="pilcrow">¶</a>
+resulting bitmask for validity.<a href="#section-3.2-4.4" class="pilcrow">¶</a>
 </li>
         </ul>
 </section>
@@ -1787,11 +1787,11 @@ as this would allow observers to obtain the target server based on the version.
 The scheme SHOULD assign all available version numbers to maximize the entropy
 of the encoding.<a href="#section-3.7.2-2.4" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-3.7.2-2.5">All entities have a common crytographic context for deriving salts and Packet
-Length Offsets from the version number and connection ID. This isi
-straightforward but also increases the risk that the keys will leak to an
-attacker which could then decode Initial packets from a point where the packets
-are observable. This is therefore NOT RECOMMENDED.<a href="#section-3.7.2-2.5" class="pilcrow">¶</a>
+            <li class="normal" id="section-3.7.2-2.5">All entities have a common crytographic context for deriving salts and
+bitmasks from the version number and connection ID. This is straightforward but
+also increases the risk that the keys will leak to an attacker which could then
+decode Initial packets from a point where the packets are observable. This is
+therefore NOT RECOMMENDED.<a href="#section-3.7.2-2.5" class="pilcrow">¶</a>
 </li>
           </ul>
 <p id="section-3.7.2-3">Note that <span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> and <span>[<a href="#QUIC-PI" class="cite xref">QUIC-PI</a>]</span> solve this problem elegantly by only holding
