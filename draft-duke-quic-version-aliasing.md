@@ -284,7 +284,7 @@ number and/or connection ID;
 
 * the standard version is included as an input to the parameter generation
 algorithm, and the server tries all supported standard versions and tests each
-resulting Packet Length Offset for validity.
+resulting bitmask for validity.
 
 ## Salt
 
@@ -464,11 +464,11 @@ as this would allow observers to obtain the target server based on the version.
 The scheme SHOULD assign all available version numbers to maximize the entropy
 of the encoding.
 
-* All entities have a common crytographic context for deriving salts and Packet
-Length Offsets from the version number and connection ID. This isi
-straightforward but also increases the risk that the keys will leak to an
-attacker which could then decode Initial packets from a point where the packets
-are observable. This is therefore NOT RECOMMENDED.
+* All entities have a common crytographic context for deriving salts and
+bitmasks from the version number and connection ID. This is straightforward but
+also increases the risk that the keys will leak to an attacker which could then
+decode Initial packets from a point where the packets are observable. This is
+therefore NOT RECOMMENDED.
 
 Note that {{ECHO}} and {{QUIC-PI}} solve this problem elegantly by only holding
 the private key at the load balancer, which decodes the sensitive information on
