@@ -450,10 +450,11 @@ balancer can correctly direct the packet without any knowledge of its version-
 dependent syntax. See {{QUIC-LB}} for an example design.
 
 * Each entity has its own cryptographic context, shared with the load balancer.
-This requires the load balancer to trial decrypt each incoming Initial with
-each context. As there is no standard algorithm for encoding information in the
-version and connection ID, this involves synchronizing the method, not just the
-key material.
+This requires the load balancer to compute a bitmask for each context, and
+choose the one with a valid result. If multiple contexts are possible, it will
+require trial decryption. As there is no standard algorithm for deriving
+parameters from the version and connection ID, this involves synchronizing the
+method, not just the key material.
 
 * Each entity reports its Version Aliasing Transport Parameters to the load
 balancer out-of-band.
