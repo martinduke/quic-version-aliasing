@@ -286,6 +286,32 @@ number and/or connection ID;
 algorithm, and the server tries all supported standard versions and tests each
 resulting bitmask for validity.
 
+### Criteria to Support Version Aliasing
+
+Version aliasing is designed to work with QUICv1 and QUICv2 as standard
+versions, but does not preclude other standard versions. Note that the
+"standard version" is the version which provides the wire format and behavior
+for the aliased connection. A different connection exchanges the mandatory-to-
+implement transport parameters for version aliasing, and need not be of the
+same version.
+
+Any QUIC version that uses transport parameters with similar security
+guarantees, or provides an equivalent mechanism, can exchange the relevant
+information. An alternate mechanism will likely require specification of the
+equivalent messages.
+
+New QUIC versions could also serve as standard versions. However, version
+aliasing leverages several assumptions. New versions that deviate from these
+assumptions will have to specify how version aliasing can utilize the version.
+
+* Version Aliasing assumes that connections begin with a Long Header packet
+encrypted with a key derived from a salt.
+
+* The rules for which header fields are subject to the bitmask are written to
+be clear for QUICv1 and v2. New version-specific header fields might be
+ambiguous relative to these criteria, or be a special case (as the fixed bit is
+for v1 and v2).
+
 ## Salt
 
 The salt is an opaque 20-octet field. It is used to generate Initial connection
