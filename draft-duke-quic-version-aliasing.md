@@ -971,6 +971,7 @@ Marten Seemann was the original creator of the version aliasing approach.
 * Allowed client to send zero-length TP as a hint
 * Discuss forward secrecy of version aliasing
 * Replace "packet length offset" with a generic bitmask
+* Added what it takes to be a standard version
 
 ## since draft-duke-quic-version-aliasing-08
 
