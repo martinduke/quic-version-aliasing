@@ -92,16 +92,16 @@ specification of the standard version.
 
 When they instantiate a connection, servers select an alternate 32-bit version
 number, and optionally a server connection ID, for the next connection at
-random and securely derive several parameters from those values using a
-repeatable process. Among those is a "salt" that can be used to encrypt Initial
-packets instead of the well-known salt provided in the specification. Other
-parameters serve to "grease" parts of the QUIC public header that are currently
+random and securely derive parameters from those values using a repeatable
+process. Among those is a "salt" that can be used to encrypt Initial packets
+instead of the well-known salt provided in the specification. A bitmask
+parameter serves to "grease" parts of the QUIC public header that are currently
 unencrypted. Servers communicate these parameters using a transport parameter.
 
 If a client next connects to that server within the indicated expiration time,
-it uses the provided version number and connection ID, and encrypt its Initial
-Packets using a key derived from the provided salt. It uses the other parameters
-to grease certain public header fields. In all other respects, the packet is
+it uses the provided version number and connection ID, and encrypts its Initial
+Packets using a key derived from the provided salt. It uses the bitmask to
+grease certain public header fields. In all other respects, the packet is
 identical to an Initial packet from a standard version indicated in the
 transport parameter.
 
@@ -178,9 +178,9 @@ servers MAY restrict sending of their version_aliasing parameter to clients that
 request it. However, servers can send this parameter to all clients if resources
 allow.
 
-If they support version aliasing, servers SHOULD respond to a client
-version_aliasing transport parameter of greater than zero length with a
-TRANSPORT_PARAMETER_ERROR if resources allow.
+If they support version aliasing and resources allow, servers SHOULD respond to
+a client version_aliasing transport parameter of greater than zero length with a
+TRANSPORT_PARAMETER_ERROR.
 
 The server version MAY be sent in any QUIC connection that supports transport
 parameters. It has the following format.
@@ -203,24 +203,19 @@ parameters. It has the following format.
 +                                                               +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                     Packet Length Offset (i)                  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                       Expiration Time (i)                     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|INI|0RT|HAN|RET|  CID length  |   Connection ID (variable)     |
+|  CID length  |           Connection ID (variable)             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      Bitmask (variable)                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 {: #fig-transport-parameter title="version_aliasing Transport Parameter value"}
 
 These fields are described in the sections below.
 
-The Packet Length Offset and Expiration Time fields are encoded using the
-Variable Length Integer encoding from Section 16 of {{RFC9000}}. Expiration
-Time is measured in seconds.
-
-INI, 0RT, HAN, and RET are the codepoints for each long header packet type. If
-any two packet types have the same codepoint, the transport parameter is
-invalid.
+The Expiration Time field is encoded using the Variable Length Integer encoding
+from Section 16 of {{RFC9000}}. Expiration Time is measured in seconds.
 
 The Connection ID Length (CID Length) is in bytes.
 
@@ -239,7 +234,7 @@ MUST close the connection with a TRANSPORT_PARAMETER_ERROR.
 
 Servers SHOULD provide a new version_aliasing transport parameter each time a
 client connects. However, issuing version numbers to a client SHOULD be rate-
-limited to mitigate the salt polling attack{{salt-polling}} and MAY cease to
+limited to mitigate the salt polling attack ({{salt-polling}}) and MAY cease to
 clients that are consistently connecting with standard versions.
 
 ## Aliased Version
@@ -252,7 +247,7 @@ experiments to avoid confusion at clients, whether or not they have plans to
 support those specifications.
 
 Servers MAY use version numbers reserved for grease in Section 15.1 of
-{{RFC9000}}, even though they might be advertised in Version Negotiationi
+{{RFC9000}}, even though they might be advertised in Version Negotiation
 Packets. Some clients may use these version numbers to probe for Version
 Negotiation capability, which would likely result in a fallback procedure (see
 {{fallback}}) instead of a Version Negotiation packet.
@@ -289,7 +284,39 @@ number and/or connection ID;
 
 * the standard version is included as an input to the parameter generation
 algorithm, and the server tries all supported standard versions and tests each
-resulting Packet Length Offset for validity.
+resulting bitmask for validity.
+
+## Salt
+
+The salt is an opaque 20-octet field. It is used to generate Initial connection
+keys using the process described in {{RFC9001}}.
+
+Servers MUST either generate a random salt and store a mapping of aliased
+version and connection ID to salt, or generate the salt using a cryptographic
+method that uses the version number, connection ID, and server state that is
+persistent across connections. It MUST NOT use client controlled information
+other than the version number and connection ID; for example, the client's IP
+address and port.
+
+## Expiration Time
+
+Servers should select an expiration time in seconds, measured from the instant
+the transport parameter is first sent. This time SHOULD be less than the time
+until the server expects to support new QUIC versions, rotate the keys used
+to encode information in the version number, or rotate the keys used in salt
+generation. The expiration need not be derivable from the aliased version and
+connection ID; it is a matter of policy.
+
+Furthermore, the expiration time SHOULD be short enough to frustrate a salt
+polling attack ({{salt-polling}}).
+
+Conversely, an extremely short expiration time will often force the client to
+use standard QUIC version numbers and salts.
+
+The client SHOULD NOT use an aliased version if the time since the receipt of
+the transport parameter exceeds the Expiration Time. Attempting to do so is
+likely to result in a fallback procedure (see {{fallback}}). The server need
+not enforce this restriction; the Expiration Time is purely advisory.
 
 ## Server Connection ID
 
@@ -306,79 +333,94 @@ connection ID signals that the destination connection ID will not be an input
 to the server's process, so the client may choose any destination connection ID
 compliant with the standard version.
 
-## Salt
+## Bitmask
 
-The salt is an opaque 20-octet field. It is used to generate Initial connection
-keys using the process described in {{RFC9001}}.
+The length of the bitmask field is inferred from the remaining length of the
+transport parameter.
 
-Servers MUST either generate a random salt and store a mapping of aliased
-version and connection ID to salt, or generate the salt using a cryptographic
-method that uses the version number, connection ID, and server state that is
-persistent across connections. It MUST NOT use client controlled information
-other than the version number and connection ID; for example, the client's IP
-address and port.
+For all initial packets, the bitmask is applied to all parts of the packet
+header that do not meet any of the following criteria:
 
-## Packet Length Offset
+* They are encrypted via header encryption (in QUIC version 1, the packet
+number, packet number length, and reserved bits in the first byte).
 
-The Packet Length Offset is a 62-bit unsigned integer. All long headers have a
-packet length field; this value is added to all packet lengths, modulo 2^62, to
-form the value sent on the wire in all long headers, sent from either endpoint.
+* They are part of the {{!RFC8999}} invariants in the long header (i.e., the
+long header bit, version, connection IDs, and connection ID lengths).
 
-Aside from greasing the packet length field, this parameter provides a low-cost
-means for the server to determine if the client and server share a valid version
-aliasing context. For example, if the server loses state after sending a
-version_aliasing transport parameter, the derived packet length offset is
-extremely unlikely to be consistent with the size of the UDP datagram. Due to
-possible packet concatenation, a packet is clearly not decryptable if the packet
-length is larger than the size of the UDP datagram payload.
+* They are encrypted using a server-specific scheme (such as the Initial token).
 
-To reduce header overhead, servers MAY consistently use a Packet Length Offset
-of zero if and only if it either (1) never sends Retry packets, or (2) can
-guarantee, through the use of persistent storage or other means, that it will
-never lose the cryptographic state required to generate the salt before the
-promised expiration time. {{retry-injection}} describes the implications if it
-uses zero without meeting these conditions.
+Therefore, in QUIC version 1 or 2 {{!I-D.draft-ietf-quic-v2}}, the bitmask is
+applied to the packet type, fixed bit, initial token length, and length fields.
+Senders apply the bitmask after header protection. Receivers apply it before
+removing header protection.
 
-Similarly, the server MAY use a smaller Packet Length Offset size
-(e.g., 30 bits) to reduce the size of the packet length offset in long headers.
-A smaller packet length field increases the chance that the packet length will
-accidentally be valid, requiring trial decryption. As the maximum UDP datagram
-size is 2^16 bytes, a 62-bit packet length offset means that, at worst, only 1
-in every 2^46 packets will be a false positive.
+Each octet of the bitmask is XORed with an octet of the header than contains
+bits that are masked. Bits of those octets that are not masked MUST be zero in
+the bitmask. If the standard version is QUICv1 or v2, therefore, the first,
+fifth, sixth, seventh, and eighth bits must all be zero.
 
-## Expiration Time
+For example, an outgoint aliased Initial header, with a Standard Version of
+QUICv1, might have these values prior to applying the bitmask:
 
-Servers should select an expiration time in seconds, measured from the instant
-the transport parameter is first sent. This time SHOULD be less than the time
-until the server expects to support new QUIC versions, rotate the keys used
-to encode information in the version number, or rotate the keys used in salt
-generation. The expiration need not be derivable from the aliased version and
-connection ID; it is a matter of policy.
+~~~
+First Byte: 0xcd (Long Header, Fixed Bit, Initial Packet, encrypted bits)
+Aliased version: 0x4d8723a1
+Destination Connection ID Length: 0x08
+Destination Connection ID: 0xf4ad00431f2901ff
+Source Connection ID Length: 0x00
+Token Length: 0x10
+Token: 0x467daa15 270a6718 7cd84310 b62c119b
+Length: 0x44b0 (1200 B)
+Packet Number: 0x349ae204 (encrypted)
+~~~
 
-Furthermore, the expiration time SHOULD be short enough to frustrate a salt
-polling attack ({{salt-polling}})
+There are a total of four octets that require masking: the first type, token
+length, and length field. The provided bitmask field is
 
-Conversely, an extremely short expiration time will often force the client to
-use standard QUIC version numbers and salts.
+~~~
+0x2051efa4
+~~~
 
-The client SHOULD NOT use an aliased version if the time since the receipt of
-the transport parameter exceeds the Expiration Time. Attempting to do so is
-likely to result in a fallback procedure (see {{fallback}}). The server need
-not enforce this restriction; the Expiration Time is purely advisory.
+Therefore, the final form of the packet header on egress is
 
-## Packet Type Codepoints
+~~~
+First Byte: 0xed (0b11001101 ^ 0x0010000)
+Aliased version: 0x4d8723a1 (no change)
+Destination Connection ID Length: 0x08 (no change)
+Destination Connection ID: 0xf4ad00431f2901ff (no change)
+Source Connection ID Length: 0x00 (no change)
+Token Length: 0x41 (0x10 ^ 0x51)
+Token: 0x467daa15 270a6718 7cd84310 b62c119b (no change)
+Length: 0xab14 (0x44b0 ^ 0xefa4))
+Packet Number: 0x349ae204 (no change)
+~~~
 
-The server generates the packet type codepoint for each of the four long header
-packet types (Initial, 0RTT, Handshake, and Retry). Each of these codepoints is
-two bits. All long headers from both endpoints use these codepoints instead of
-those provided in the standard version specification.
+The "Fixed bit" (second-most-significant bit of the first octet) is sometimes
+used to differentiate QUIC packets from other UDP traffic at the server. The
+server MAY choose to always set this bit to zero in the bitmask to maintain this
+property. For packets sent from server to client, this bit in the bitmask MUST
+always be treated as zero. Clients and servers interested in greasing the fixed
+bit in the server-to-client direction can use {{?RFC9297}} to do so.
 
-A straightforward implementation might take arbitrary bits from a hash of the
-version number. The first two bits it reads are the codepoint for Initial
-packets. The next pair of bits that is not a duplicate of the first is the
-codepoint for 0RTT packets. The next pair that does not duplicate the first two
-is the codepoint for Handshake packets, and the remaining codepoint is the
-Retry packet.
+Aside from greasing the remaining non-invariant header fields , this parameter
+provides a low-cost means for the server to determine if the client and server
+share a valid version aliasing context. For example, if the server loses state
+after sending a version_aliasing transport parameter, the bitmask will not
+match. This will cause the token length and packet length fields to be
+essentially random. If the token length does not match tokens generated by the
+server, or the packet length field implies a packet larger than the UDP
+datagram, the packet was not masked with the correct version aliasing context,
+and the server initiates the procedure in {{fallback}}.
+
+In the typical case where the token length field is one octet and the packet
+length field is two octets, about 127/128 of incoming packets with an invalid
+version aliasing context can be identified as such based on the token length
+(i.e. it is neither zero nor the correct token length). Of those that are not
+identified, approximately 50% will resolve to a plausible packet length (equal
+to or smaller than the size of the datagram). Thus, approximately 1 out of
+every 256 packets with an incorrect version aliasing context will require trial
+decryption at the server to detect the problem. If a server has multiple token
+lengths, the odds of requiring trial decryption increase.
 
 ## Operational Considerations for Multiple-Server Architectures
 
@@ -422,11 +464,11 @@ as this would allow observers to obtain the target server based on the version.
 The scheme SHOULD assign all available version numbers to maximize the entropy
 of the encoding.
 
-* All entities have a common crytographic context for deriving salts and Packet
-Length Offsets from the version number and connection ID. This isi
-straightforward but also increases the risk that the keys will leak to an
-attacker which could then decode Initial packets from a point where the packets
-are observable. This is therefore NOT RECOMMENDED.
+* All entities have a common crytographic context for deriving salts and
+bitmasks from the version number and connection ID. This is straightforward but
+also increases the risk that the keys will leak to an attacker which could then
+decode Initial packets from a point where the packets are observable. This is
+therefore NOT RECOMMENDED.
 
 Note that {{ECHO}} and {{QUIC-PI}} solve this problem elegantly by only holding
 the private key at the load balancer, which decodes the sensitive information on
@@ -472,20 +514,18 @@ When a server receives a packet with an unsupported version number, it SHOULD
 send a Version Negotiation Packet if it is configured not to generate that
 version number at random.
 
-If applying the packet length offset to the packet length field results in a
-length longer than the UDP datagram that contains it, the packet was not
-generated with the proper version aliasing context.
+If the unmasked Token Length or packet length fields are inconsistent with
+possible server-generated token lengths or the size of the UDP datagram, the
+packet was not generated with the proper version aliasing context.
 
 The server MAY apply further checks (e.g. against the minimum QUIC packet
-length) to further reduce the very small probability of a false positive.
+length) to further reduce the small probability of a false positive.
 
-In the extremely unlikely event that the Packet Length Offset resulted in a
-legal value but the salt is incorrect, the packet will fail authentication.
-Servers MAY also interpret this as a loss of version aliasing state.
+In the unlikely event that the length fields produce a plausible result but the
+salt is incorrect, the packet will fail authentication. Servers MAY also
+interpret this as a loss of version aliasing state.
 
-When the packet length computation on the first packet in a connection fails, it
-signals either that the packet has been corrupted in transit, or the client is
-using a transport parameter issued before a server failure. In either case, the
+When any of these indicators suggest an invalid version aliasing context, the
 server sends a Bad Salt packet. The server ignores failures in subsequent
 packets for that connection.
 
@@ -660,8 +700,9 @@ specification.
 Clients MUST ignore Retry packets that contain a QUIC version other than the
 version it used in its Initial Packet.
 
-Servers MUST NOT reply to a packet with an incorrect Length field in its long
-header with a Retry packet; it SHOULD reply with Bad Salt as described above.
+Servers MUST NOT reply to a packet with incorrect token lengt or packet length
+fields in its long header with a Retry packet; it SHOULD reply with Bad Salt as
+described above.
 
 # Security and Privacy Considerations
 
@@ -805,10 +846,10 @@ is a low-cost response that triggers very early in packet processing.
 However, a server that provides version aliasing is prepared to accept almost
 any version number. As a result, many more sufficiently sized UDP payloads with
 the first bit set to '1' are potential QUIC Initial Packets that require
-computation of a salt and Packet Length Offset.
+computation of a salt and bitmask.
 
-Note that a nonzero Packet Length Offset will allow the server to drop all but
-approximately 1 in every 2^49 packets, so trial decryption is unnecessary.
+Note that the bitmask will allow the server to drop all but approximately 1 in
+every 256 packets, so trial decryption is unnecessary.
 
 While not a more potent attack then simply sending valid Initial Packets,
 servers may have to provision additional resources to address this possibility.
@@ -830,10 +871,11 @@ increasing the potency of this attack.
 ## Forward Secrecy
 
 There are two relevant keys to the forward secrecy of Initial packets that use
-version aliasing. First, the Handshake key of the first connection, that
-protects the transport parameter that delivers the salt. Second, if the server
-uses a cryptographic process instead of a lookup table to derive the salt from
-the incoming Connection ID and version, the key associated with that process.
+version aliasing. First, the Handshake key of the first connection protects the
+transport parameter that delivers the salt. Second, if the server uses a
+cryptographic process instead of a lookup table to derive the salt from the
+incoming Connection ID and version, the key associated with that process
+prevents observers from determining the salt.
 
 As the keys that protect Handshake packets are not forward-secure, a compromise
 of the server's private key would also compromise any version aliasing salts
@@ -900,6 +942,8 @@ Marten Seemann was the original creator of the version aliasing approach.
 ## since draft-duke-quic-version-aliasing-09
 
 * Allowed client to send zero-length TP as a hint
+* Discuss forward secrecy of version aliasing
+* Replace "packet length offset" with a generic bitmask
 
 ## since draft-duke-quic-version-aliasing-08
 
