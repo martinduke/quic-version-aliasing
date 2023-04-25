@@ -1773,10 +1773,11 @@ balancer can correctly direct the packet without any knowledge of its version-
 dependent syntax. See <span>[<a href="#QUIC-LB" class="cite xref">QUIC-LB</a>]</span> for an example design.<a href="#section-3.7.2-2.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-3.7.2-2.2">Each entity has its own cryptographic context, shared with the load balancer.
-This requires the load balancer to trial decrypt each incoming Initial with
-each context. As there is no standard algorithm for encoding information in the
-version and connection ID, this involves synchronizing the method, not just the
-key material.<a href="#section-3.7.2-2.2" class="pilcrow">¶</a>
+This requires the load balancer to compute a bitmask for each context, and
+choose the one with a valid result. If multiple contexts are possible, it will
+require trial decryption. As there is no standard algorithm for deriving
+parameters from the version and connection ID, this involves synchronizing the
+method, not just the key material.<a href="#section-3.7.2-2.2" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-3.7.2-2.3">Each entity reports its Version Aliasing Transport Parameters to the load
 balancer out-of-band.<a href="#section-3.7.2-2.3" class="pilcrow">¶</a>
