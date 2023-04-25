@@ -384,7 +384,7 @@ length, and length field. The provided bitmask field is
 Therefore, the final form of the packet header on egress is
 
 ~~~
-First Byte: 0xed (0b11001101 ^ 0x0010000)
+First Byte: 0xed (0b11001101 ^ 0b0010000)
 Aliased version: 0x4d8723a1 (no change)
 Destination Connection ID Length: 0x08 (no change)
 Destination Connection ID: 0xf4ad00431f2901ff (no change)
@@ -400,7 +400,7 @@ used to differentiate QUIC packets from other UDP traffic at the server. The
 server MAY choose to always set this bit to zero in the bitmask to maintain this
 property. For packets sent from server to client, this bit in the bitmask MUST
 always be treated as zero. Clients and servers interested in greasing the fixed
-bit in the server-to-client direction can use {{?RFC9297}} to do so.
+bit in the server-to-client direction can use {{?RFC9287}} to do so.
 
 Aside from greasing the remaining non-invariant header fields , this parameter
 provides a low-cost means for the server to determine if the client and server
