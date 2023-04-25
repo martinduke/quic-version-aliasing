@@ -1180,6 +1180,11 @@ the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
                 <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-standard-version" class="internal xref">Standard Version</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2.2.1">
+                    <p id="section-toc.1-1.3.2.2.2.1.1"><a href="#section-3.2.1" class="auto internal xref">3.2.1</a>.  <a href="#name-criteria-to-support-version" class="internal xref">Criteria to Support Version Aliasing</a></p>
+</li>
+                </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
                 <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-salt" class="internal xref">Salt</a></p>
@@ -1592,6 +1597,36 @@ algorithm, and the server tries all supported standard versions and tests each
 resulting bitmask for validity.<a href="#section-3.2-4.4" class="pilcrow">¶</a>
 </li>
         </ul>
+<div id="criteria-to-support-version-aliasing">
+<section id="section-3.2.1">
+          <h4 id="name-criteria-to-support-version">
+<a href="#section-3.2.1" class="section-number selfRef">3.2.1. </a><a href="#name-criteria-to-support-version" class="section-name selfRef">Criteria to Support Version Aliasing</a>
+          </h4>
+<p id="section-3.2.1-1">Version aliasing is designed to work with QUICv1 and QUICv2 as standard
+versions, but does not preclude other standard versions. Note that the
+"standard version" is the version which provides the wire format and behavior
+for the aliased connection. A different connection exchanges the mandatory-to-
+implement transport parameters for version aliasing, and need not be of the
+same version.<a href="#section-3.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.2.1-2">Any QUIC version that uses transport parameters with similar security
+guarantees, or provides an equivalent mechanism, can exchange the relevant
+information. An alternate mechanism will likely require specification of the
+equivalent messages.<a href="#section-3.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.2.1-3">New QUIC versions could also serve as standard versions. However, version
+aliasing leverages several assumptions. New versions that deviate from these
+assumptions will have to specify how version aliasing can utilize the version.<a href="#section-3.2.1-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2.1-4.1">Version Aliasing assumes that connections begin with a Long Header packet
+encrypted with a key derived from a salt.<a href="#section-3.2.1-4.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.2.1-4.2">The rules for which header fields are subject to the bitmask are written to
+be clear for QUICv1 and v2. New version-specific header fields might be
+ambiguous relative to these criteria, or be a special case (as the fixed bit is
+for v1 and v2).<a href="#section-3.2.1-4.2" class="pilcrow">¶</a>
+</li>
+          </ul>
+</section>
+</div>
 </section>
 </div>
 <div id="salt">
