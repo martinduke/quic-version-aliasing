@@ -5,7 +5,7 @@
 quic                                                             M. Duke
 Internet-Draft                                               D. Schinazi
 Intended status: Standards Track                              Google LLC
-Expires: 26 October 2023                                   24 April 2023
+Expires: 27 October 2023                                   25 April 2023
 
 
                      Protected QUIC Initial Packets
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 October 2023.
+   This Internet-Draft will expire on 27 October 2023.
 
 Copyright Notice
 

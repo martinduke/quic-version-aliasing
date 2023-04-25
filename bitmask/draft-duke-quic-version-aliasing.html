@@ -1056,7 +1056,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Duke</td>
-<td class="center">Expires 26 October 2023</td>
+<td class="center">Expires 27 October 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1069,12 +1069,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-duke-quic-version-aliasing-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2023-04-24" class="published">24 April 2023</time>
+<time datetime="2023-04-25" class="published">25 April 2023</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2023-10-26">26 October 2023</time></dd>
+<dd class="expires"><time datetime="2023-10-27">27 October 2023</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1127,7 +1127,7 @@ the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 26 October 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 27 October 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1398,13 +1398,13 @@ specification of the standard version.<a href="#section-1.1-4" class="pilcrow">�
       </h2>
 <p id="section-2-1">When they instantiate a connection, servers select an alternate 32-bit version
 number, and optionally a server connection ID, for the next connection at
-random and securely derive a several parameters from those values using a
-repeatable process. Among those is a "salt" that can be used to encrypt Initial
-packets instead of the well-known salt provided in the specification. A bitmask
+random and securely derive parameters from those values using a repeatable
+process. Among those is a "salt" that can be used to encrypt Initial packets
+instead of the well-known salt provided in the specification. A bitmask
 parameter serves to "grease" parts of the QUIC public header that are currently
 unencrypted. Servers communicate these parameters using a transport parameter.<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-2-2">If a client next connects to that server within the indicated expiration time,
-it uses the provided version number and connection ID, and encrypt its Initial
+it uses the provided version number and connection ID, and encrypts its Initial
 Packets using a key derived from the provided salt. It uses the bitmask to
 grease certain public header fields. In all other respects, the packet is
 identical to an Initial packet from a standard version indicated in the
@@ -1523,8 +1523,8 @@ parameters. It has the following format.<a href="#section-3-3" class="pilcrow">�
         </figcaption></figure>
 </div>
 <p id="section-3-5">These fields are described in the sections below.<a href="#section-3-5" class="pilcrow">¶</a></p>
-<p id="section-3-6">The Expiration Time field are is encoded using the Variable Length Integer
-encoding from Section 16 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>. Expiration Time is measured in seconds.<a href="#section-3-6" class="pilcrow">¶</a></p>
+<p id="section-3-6">The Expiration Time field is encoded using the Variable Length Integer encoding
+from Section 16 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>. Expiration Time is measured in seconds.<a href="#section-3-6" class="pilcrow">¶</a></p>
 <p id="section-3-7">The Connection ID Length (CID Length) is in bytes.<a href="#section-3-7" class="pilcrow">¶</a></p>
 <p id="section-3-8">Note that servers that support version aliasing need not send the transport
 parameter on every connection. Therefore, a client MAY attempt to connect with
@@ -1714,7 +1714,7 @@ Packet Number: 0x349ae204 (no change)
 used to differentiate QUIC packets from other UDP traffic at the server. The
 server MAY choose to always set this bit to zero in the bitmask to maintain this
 property. For packets sent from server to client, this bit in the bitmask MUST
-always be treated as zero. Client and servers interested in greasing the fixed
+always be treated as zero. Clients and servers interested in greasing the fixed
 bit in the server-to-client direction can use <span>[<a href="#RFC9297" class="cite xref">RFC9297</a>]</span> to do so.<a href="#section-3.6-12" class="pilcrow">¶</a></p>
 <p id="section-3.6-13">Aside from greasing the remaining non-invariant header fields , this parameter
 provides a low-cost means for the server to determine if the client and server
@@ -1724,7 +1724,7 @@ match. This will cause the token length and packet length fields to be
 essentially random. If the token length does not match tokens generated by the
 server, or the packet length field implies a packet larger than the UDP
 datagram, the packet was not masked with the correct version aliasing context,
-and the server initiates the procedure in<a href="#fallback" class="auto internal xref">Section 5</a>.<a href="#section-3.6-13" class="pilcrow">¶</a></p>
+and the server initiates the procedure in <a href="#fallback" class="auto internal xref">Section 5</a>.<a href="#section-3.6-13" class="pilcrow">¶</a></p>
 <p id="section-3.6-14">In the typical case where the token length field is one octet and the packet
 length field is two octets, about 127/128 of incoming packets with an invalid
 version aliasing context can be identified as such based on the token length
