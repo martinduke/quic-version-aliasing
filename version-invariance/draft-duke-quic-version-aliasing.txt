@@ -1201,6 +1201,8 @@ B.1.  since draft-duke-quic-version-aliasing-09
 
    *  Replace "packet length offset" with a generic bitmask
 
+   *  Added what it takes to be a standard version
+
 B.2.  since draft-duke-quic-version-aliasing-08
 
    *  Replaced Initial Token Extension with Server connection ID
