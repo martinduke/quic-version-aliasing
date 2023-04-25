@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>martinduke/quic-version-aliasing draft-duke-quic-version-aliasing-10 preview</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <style type="text/css">/*<![CDATA[*/
+      body { font-family: "Helvetica Neue","Open Sans", Helvetica, Calibri,sans-serif; }
+      h1, h2, td { font-family: "Helvetica Neue", "Roboto Condensed", "Open Sans", Helvetica, Calibri, sans-serif; }
+      h1 { font-size: 20px; } h2 { font-size: 16px; }
+      table { margin: 5px 10px; border-collapse: collapse; }
+      th, td { font-weight: normal; text-align: left; padding: 2px 5px; }
+      a:link { color: #000; } a:visited { color: #00a; }
+    /*]]>*/</style>
+  </head>
+  <body>
+    <h1>Editor's drafts for draft-duke-quic-version-aliasing-10 branch of <a href="https://github.com/martinduke/quic-version-aliasing/tree/draft-duke-quic-version-aliasing-10">martinduke/quic-version-aliasing</a></h1>
+    <p>View <a href="issues.html">saved issues</a>, or the latest GitHub <a href="https://github.com/martinduke/quic-version-aliasing/issues">issues</a> and <a href="https://github.com/martinduke/quic-version-aliasing/pulls">pull requests</a> in the <a href="https://github.com/martinduke/quic-version-aliasing">repo</a>.</p>
+    <table id="branch-draft-duke-quic-version-aliasing-10">
+      <tr>
+        <td><a href="./draft-duke-quic-version-aliasing.html" class="html draft-duke-quic-version-aliasing" title="QUIC Version Aliasing (HTML)">QUIC Version Aliasing</a></td>
+        <td><a href="./draft-duke-quic-version-aliasing.txt" class="txt draft-duke-quic-version-aliasing" title="QUIC Version Aliasing (Text)">plain text</a></td>
+        <td>same as main</td>
+      </tr>
+      <tr>
+        <td><a href="./draft-duke-quic-protected-initial.html" class="html draft-duke-quic-protected-initial" title="Protected QUIC Initial Packets (HTML)">protected-initial</a></td>
+        <td><a href="./draft-duke-quic-protected-initial.txt" class="txt draft-duke-quic-protected-initial" title="Protected QUIC Initial Packets (Text)">plain text</a></td>
+        <td>same as main</td>
+      </tr>
+    </table>
+    <script>
+window.onload = function() {
+  var referrer_branch = 'main';
+  // e.g., "https://github.com/user/repo/tree/main"
+  var chunks = document.referrer.split("/");
+  if (chunks[2] === 'github.com' && chunks[5] === 'tree') {
+    referrer_branch = chunks[6];
+  }
+  let branch = document.querySelector('#branch-' + referrer_branch);
+  let h = document.location.hash.substring(1);
+  if (h === 'show') {
+    document.location.hash = '#' + branch.id;
+  } else if (branch && h.startsWith('go')) {
+    let e = branch.querySelector(h.substring(2));
+    if (e && e.href) {
+      document.location = e.href;
+    }
+  }
+};
+    </script>
+  </body>
+</html>

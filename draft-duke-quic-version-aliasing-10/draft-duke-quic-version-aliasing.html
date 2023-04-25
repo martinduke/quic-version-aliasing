@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>QUIC Version Aliasing</title>
+<meta content="Martin Duke" name="author">
+<meta content="
+       The QUIC transport protocol preserves its future extensibility partly by
+specifying its version number. There will be a relatively small number of
+published version numbers for the foreseeable future. This document provides a
+method for clients and servers to negotiate the use of other version numbers in
+subsequent connections and encrypts Initial Packets using secret keys instead of
+standard ones. If a sizeable subset of QUIC connections use this mechanism, this
+should prevent middlebox ossification around the current set of published
+version numbers and the contents of QUIC Initial packets, as well as improving
+the protocol's privacy properties. 
+    " name="description">
+<meta content="xml2rfc 3.17.1" name="generator">
+<meta content="draft-duke-quic-version-aliasing-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.17.1
+    Python 3.10.11
+    appdirs 1.4.4
+    ConfigArgParse 1.5.3
+    google-i18n-address 2.5.2
+    intervaltree 3.1.0
+    Jinja2 3.1.2
+    lxml 4.9.2
+    pycountry 22.3.5
+    PyYAML 6.0
+    requests 2.28.1
+    setuptools 65.6.0
+    six 1.16.0
+    wcwidth 0.2.6
+-->
+<link href="draft-duke-quic-version-aliasing.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cabin Condensed", sans-serif;
+  font-weight: 600;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1#title {
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1#title, h1#rfcnum {
+  margin: 1.5em 0 0.2em;
+}
+h1#rfcnum + h1#title {
+  margin: 0.2em 0;
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+}
+#abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 16px;
+  line-height: 0;
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+/* font-family isn't space-separated, but =~ will have to do */
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+}
+:is(ol, ul) :is(ol, ul) {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  line-height: 1;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+}
+dl.olPercent {
+  --indent: 5ch;
+}
+dl > dt {
+  float: left;
+  margin-right: 2ch;
+  min-width: 8ch;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+dl > dd {
+  margin-bottom: .8em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
+}
+dl.olPercent > dt {
+  min-width: calc(var(--indent) - 2ch);
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
+  pre, svg {
+    display: inline-block;
+    overflow-x: auto;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+}
+table.right {
+  margin-left: auto;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.left {
+  margin-right: auto;
+}
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+table caption {
+  margin: 0;
+  padding: 3px 0 3px 1em;
+}
+table p {
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+}
+a.pilcrow[href] { color: var(--pilcrow-weak); }
+a.pilcrow[href]:hover { text-decoration: none; }
+@media not print {
+  :hover > a.pilcrow {
+    opacity: 1;
+  }
+  a.pilcrow[href]:hover {
+    color: var(--pilcrow-strong);
+    background-color: transparent;
+  }
+}
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+}
+#identifiers dt {
+  width: var(--identifier-width);
+  min-width: var(--identifier-width);
+  clear: left;
+  float: left;
+  text-align: right;
+}
+#identifiers dd {
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
+  min-width: 5em;
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+#toc nav ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+#toc nav li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+#toc a.xref {
+  white-space: normal;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dt:target::before {
+  content: "⇒";
+  width: 15px;
+  margin: 0 10px 0 -25px;
+}
+.references dd {
+  margin-left: 8em !important;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses > section {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #authors-addresses > section > h2 {
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+.rfcEditorRemove p:first-of-type {
+  font-style: italic;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc.active {
+      opacity: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 8px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active nav {
+    display: block;
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin-top: 2px;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #toc nav > ul  {
+    margin-bottom: 2em;
+  }
+  #toc ul {
+    margin: 0 0 0 4px;
+    font-size: var(--small-font-size);
+  }
+  #toc ul :is(p, li) {
+    margin: 2px 0;
+    line-height: 22px;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Changes introduced to fix issues found during implementation */
+
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin: 8px 0.5em 0;
+}
+
+/* Provide styling for table cell text alignment */
+table .text-left {
+  text-align: left;
+}
+table .text-center {
+  text-align: center;
+}
+table .text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact information look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 20em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  dd {
+    page-break-before: avoid;
+  }
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text-color);
+}
+svg :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--background-color);
+}
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text-color);
+}
+svg :is([fill="white"], [fill^="#fff"]) {
+  fill: var(--background-color);
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">QUIC Version Aliasing</td>
+<td class="right">April 2023</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Duke</td>
+<td class="center">Expires 27 October 2023</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">QUIC</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-duke-quic-version-aliasing-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2023-04-25" class="published">25 April 2023</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Experimental</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2023-10-27">27 October 2023</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">M. Duke</div>
+<div class="org">Google</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">QUIC Version Aliasing</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">The QUIC transport protocol preserves its future extensibility partly by
+specifying its version number. There will be a relatively small number of
+published version numbers for the foreseeable future. This document provides a
+method for clients and servers to negotiate the use of other version numbers in
+subsequent connections and encrypts Initial Packets using secret keys instead of
+standard ones. If a sizeable subset of QUIC connections use this mechanism, this
+should prevent middlebox ossification around the current set of published
+version numbers and the contents of QUIC Initial packets, as well as improving
+the protocol's privacy properties.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-discussion-venues">
+<a href="#name-discussion-venues" class="section-name selfRef">Discussion Venues</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">Discussion of this document takes place on the
+    mailing list (quic@ietf.org),
+  which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/quic/">https://mailarchive.ietf.org/arch/browse/quic/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">Source for this draft and an issue tracker can be found at
+  <span><a href="https://github.com/martinduke/quic-version-aliasing">https://github.com/martinduke/quic-version-aliasing</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 27 October 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2023 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-terminology" class="internal xref">Terminology</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-protocol-overview" class="internal xref">Protocol Overview</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-relationship-to-ech-and-qui" class="internal xref">Relationship to ECH and QUIC Protected Initials</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-the-version_aliasing-transp" class="internal xref">The version_aliasing Transport Parameter</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-aliased-version" class="internal xref">Aliased Version</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-standard-version" class="internal xref">Standard Version</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2.2.1">
+                    <p id="section-toc.1-1.3.2.2.2.1.1"><a href="#section-3.2.1" class="auto internal xref">3.2.1</a>.  <a href="#name-criteria-to-support-version" class="internal xref">Criteria to Support Version Aliasing</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-salt" class="internal xref">Salt</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4">
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-expiration-time" class="internal xref">Expiration Time</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.5">
+                <p id="section-toc.1-1.3.2.5.1"><a href="#section-3.5" class="auto internal xref">3.5</a>.  <a href="#name-server-connection-id" class="internal xref">Server Connection ID</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.6">
+                <p id="section-toc.1-1.3.2.6.1"><a href="#section-3.6" class="auto internal xref">3.6</a>.  <a href="#name-bitmask" class="internal xref">Bitmask</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.7">
+                <p id="section-toc.1-1.3.2.7.1"><a href="#section-3.7" class="auto internal xref">3.7</a>.  <a href="#name-operational-considerations-" class="internal xref">Operational Considerations for Multiple-Server Architectures</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.7.2.1">
+                    <p id="section-toc.1-1.3.2.7.2.1.1"><a href="#section-3.7.1" class="auto internal xref">3.7.1</a>.  <a href="#name-multiple-servers-for-one-do" class="internal xref">Multiple Servers for One Domain</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.7.2.2">
+                    <p id="section-toc.1-1.3.2.7.2.2.1"><a href="#section-3.7.2" class="auto internal xref">3.7.2</a>.  <a href="#name-multiple-entities-with-one-" class="internal xref">Multiple Entities With One Load Balancer</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-additional-client-requireme" class="internal xref">Additional Client Requirements</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-fallback" class="internal xref">Fallback</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-bad-salt-packets" class="internal xref">Bad Salt Packets</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-client-response-to-bad-salt" class="internal xref">Client Response to Bad Salt</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-version_aliasing_fallback-t" class="internal xref">version_aliasing_fallback Transport Parameter</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4">
+                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="auto internal xref">5.4</a>.  <a href="#name-server-response-to-version_" class="internal xref">Server Response to version_aliasing_fallback Transport Parameter</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-considerations-for-retry-pa" class="internal xref">Considerations for Retry Packets</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-and-privacy-consid" class="internal xref">Security and Privacy Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-endpoint-impersonation" class="internal xref">Endpoint Impersonation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-first-connection-privacy" class="internal xref">First-Connection Privacy</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-forcing-downgrade" class="internal xref">Forcing Downgrade</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-initial-packet-injection" class="internal xref">Initial Packet Injection</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.5">
+                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-retry-injection" class="internal xref">Retry Injection</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6">
+                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-increased-linkability" class="internal xref">Increased Linkability</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.7">
+                <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="auto internal xref">7.7</a>.  <a href="#name-salt-polling" class="internal xref">Salt Polling</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.8">
+                <p id="section-toc.1-1.7.2.8.1"><a href="#section-7.8" class="auto internal xref">7.8</a>.  <a href="#name-server-fingerprinting" class="internal xref">Server Fingerprinting</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.9">
+                <p id="section-toc.1-1.7.2.9.1"><a href="#section-7.9" class="auto internal xref">7.9</a>.  <a href="#name-increased-processing-of-gar" class="internal xref">Increased Processing of Garbage UDP Packets</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.10">
+                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-increased-retry-overhead" class="internal xref">Increased Retry Overhead</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.11">
+                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-request-forgery" class="internal xref">Request Forgery</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.12">
+                <p id="section-toc.1-1.7.2.12.1"><a href="#section-7.12" class="auto internal xref">7.12</a>. <a href="#name-forward-secrecy" class="internal xref">Forward Secrecy</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-quic-version-registry" class="internal xref">QUIC Version Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-quic-transport-parameter-re" class="internal xref">QUIC Transport Parameter Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.3">
+                <p id="section-toc.1-1.8.2.3.1"><a href="#section-8.3" class="auto internal xref">8.3</a>.  <a href="#name-quic-transport-error-codes-" class="internal xref">QUIC Transport Error Codes Registry</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-change-log" class="internal xref">Change Log</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
+                <p id="section-toc.1-1.11.2.1.1"><a href="#appendix-B.1" class="auto internal xref">B.1</a>.  <a href="#name-since-draft-duke-quic-versi" class="internal xref">since draft-duke-quic-version-aliasing-09</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
+                <p id="section-toc.1-1.11.2.2.1"><a href="#appendix-B.2" class="auto internal xref">B.2</a>.  <a href="#name-since-draft-duke-quic-versio" class="internal xref">since draft-duke-quic-version-aliasing-08</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.3">
+                <p id="section-toc.1-1.11.2.3.1"><a href="#appendix-B.3" class="auto internal xref">B.3</a>.  <a href="#name-since-draft-duke-quic-version" class="internal xref">since draft-duke-quic-version-aliasing-07</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.4">
+                <p id="section-toc.1-1.11.2.4.1"><a href="#appendix-B.4" class="auto internal xref">B.4</a>.  <a href="#name-since-draft-duke-quic-version-" class="internal xref">since draft-duke-quic-version-aliasing-05</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.5">
+                <p id="section-toc.1-1.11.2.5.1"><a href="#appendix-B.5" class="auto internal xref">B.5</a>.  <a href="#name-since-draft-duke-quic-version-a" class="internal xref">since draft-duke-quic-version-aliasing-04</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.6">
+                <p id="section-toc.1-1.11.2.6.1"><a href="#appendix-B.6" class="auto internal xref">B.6</a>.  <a href="#name-since-draft-duke-quic-version-al" class="internal xref">since draft-duke-quic-version-aliasing-03</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.7">
+                <p id="section-toc.1-1.11.2.7.1"><a href="#appendix-B.7" class="auto internal xref">B.7</a>.  <a href="#name-since-draft-duke-quic-version-ali" class="internal xref">since draft-duke-quic-version-aliasing-02</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.8">
+                <p id="section-toc.1-1.11.2.8.1"><a href="#appendix-B.8" class="auto internal xref">B.8</a>.  <a href="#name-since-draft-duke-quic-version-alia" class="internal xref">since draft-duke-quic-version-aliasing-01</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.9">
+                <p id="section-toc.1-1.11.2.9.1"><a href="#appendix-B.9" class="auto internal xref">B.9</a>.  <a href="#name-since-draft-duke-quic-version-alias" class="internal xref">since draft-duke-quic-version-aliasing-00</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">The QUIC version number is critical to future extensibility of the protocol
+(<span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>). Past experience with other protocols, such as TLS1.3
+<span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, shows that middleboxes might attempt to enforce that QUIC packets
+use versions known at the time the middlebox was implemented. This deters
+deployment of experimental and standard versions on the internet.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">Each version of QUIC has a "salt" <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span> that is used to derive the keys
+used to encrypt Initial packets. As each salt is published in a standards
+document, any observer can decrypt these packets and inspect the contents,
+including a TLS Client Hello. A subsidiary mechanism like Encrypted Client Hello
+<span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> might protect some of the TLS fields inside a TLS
+Client Hello.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document proposes "QUIC Version Aliasing," a standard way for servers to
+advertise the availability of other versions inside the cryptographic
+protection of a QUIC handshake. These versions are syntactically identical to
+the QUIC version in which the communication takes place, but use a different
+salt. In subsequent communications, the client uses the new version number and
+encrypts its Initial packets with a key derived from the provided salt. These
+version numbers and salts are unique to the client.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">If a large subset of QUIC traffic adopts his technique, middleboxes will be
+unable to enforce particular version numbers or policy based on Client Hello
+contents without incurring unacceptable penalties on users. This would
+simultaneously protect the protocol against ossification and improve its privacy
+properties.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<div id="terminology">
+<section id="section-1.1">
+        <h3 id="name-terminology">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
+        </h3>
+<p id="section-1.1-1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
+interpreted as described in RFC 2119 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span>.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">In this document, these words will appear with that interpretation only when in
+ALL CAPS.  Lower case uses of these words are not to be interpreted as carrying
+significance described in RFC 2119.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-3">A "standard version" is a QUIC version that would be advertised in a QUIC
+version negotiation and conforms to a specification. Any aliased version
+corresponds to a standard version in all its formats and behaviors, except for
+the version number field in long headers. QUIC versions require certain
+properties to support use as a standard version. QUIC version 1 (<span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>)
+and version 2 (<span>[<a href="#I-D.draft-ietf-quic-v2" class="cite xref">I-D.draft-ietf-quic-v2</a>]</span>) both have the necessary properties.
+Future QUIC version specifications can specify their suitability for this
+purpose.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
+<p id="section-1.1-4">An "aliased version" is a version with a number generated in accordance with
+this document. Except when specified below, it conforms entirely to the
+specification of the standard version.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="protocol-overview">
+<section id="section-2">
+      <h2 id="name-protocol-overview">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-protocol-overview" class="section-name selfRef">Protocol Overview</a>
+      </h2>
+<p id="section-2-1">When they instantiate a connection, servers select an alternate 32-bit version
+number, and optionally a server connection ID, for the next connection at
+random and securely derive parameters from those values using a repeatable
+process. Among those is a "salt" that can be used to encrypt Initial packets
+instead of the well-known salt provided in the specification. A bitmask
+parameter serves to "grease" parts of the QUIC public header that are currently
+unencrypted. Servers communicate these parameters using a transport parameter.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">If a client next connects to that server within the indicated expiration time,
+it uses the provided version number and connection ID, and encrypts its Initial
+Packets using a key derived from the provided salt. It uses the bitmask to
+grease certain public header fields. In all other respects, the packet is
+identical to an Initial packet from a standard version indicated in the
+transport parameter.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">When a server receives a long header packet with an aliased version, it uses the
+version number and destination connection ID to recover the parameters, which
+allows it to extract the header values and decrypt the packet.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-4">When generating parameters, servers can choose between doing so randomly and
+storing the mapping, or using a cryptographic process to transform the aliased
+version number and token extension into the salt. The two options provide a
+simple tradeoff between computational complexity and storage requirements.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<p id="section-2-5">All long header packets use the aliased version and apply the greasing
+parameters. Short header packets are in every respect unchanged from the
+standard version.<a href="#section-2-5" class="pilcrow">¶</a></p>
+<div id="relationship-to-ech-and-quic-protected-initials">
+<section id="section-2.1">
+        <h3 id="name-relationship-to-ech-and-qui">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-relationship-to-ech-and-qui" class="section-name selfRef">Relationship to ECH and QUIC Protected Initials</a>
+        </h3>
+<p id="section-2.1-1">The TLS Encrypted Client Hello <span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> shares some goals with
+this document. It encodes an "inner" encrypted Client Hello in a TLS extension
+in an "outer" Client Hello. The encryption uses asymmetric keys with the
+server's public key distributed via an out-of-band mechanism like DNS. The
+inner Client Hello contains any privacy-sensitive information and is only
+readable with the server's private key.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<p id="section-2.1-2">Significantly, unlike QUIC Version Aliasing, ECH can operate on the first
+connection between a client and server. However, from the second connection
+QUIC version aliasing provides additional benefits. It:<a href="#section-2.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2.1-3.1">greases QUIC header fields and packet formats;<a href="#section-2.1-3.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-2.1-3.2">protects all of the TLS Client Hello and Server Hello;<a href="#section-2.1-3.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-2.1-3.3">mitigates Retry injection attacks;<a href="#section-2.1-3.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-2.1-3.4">does not require a mechanism to distribute the public key;<a href="#section-2.1-3.4" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-2.1-3.5">uses smaller Client Hello messages, which might allow a larger 0RTT packet
+in the same datagram; and<a href="#section-2.1-3.5" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-2.1-3.6">relies on computationally cheap symmetric encryption.<a href="#section-2.1-3.6" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-2.1-4">Note that in the event of the server losing state, the two approaches have a
+similar fallback: ECH uses information in the outer Client Hello, and Version
+Aliasing requires a connection using a standard version. In either case,
+maintaining privacy requires the outer or standard version Client Hello to
+exclude privacy-sensitive information. However, ECH will allow confidential
+transmission of data in 1 RTT, while Version Aliasing requires 2 RTTs to resume.
+This mechanism is also relevant to mitigation of downgrade attacks (see
+<a href="#downgrade" class="auto internal xref">Section 7.3</a>).<a href="#section-2.1-4" class="pilcrow">¶</a></p>
+<p id="section-2.1-5">Similarly, the QUIC Protected Initial
+<span>[<a href="#QUIC-PI" class="cite xref">QUIC-PI</a>]</span> uses the ECH distribution mechanism
+to generate secure initial keys and Retry integrity tags. While still dependent
+on a key distribution system, asymmetric encryption, and relatively large Initial
+packets, it offers similar protection properties to Version Aliasing while still
+not greasing the version field. Note that since QUIC Protected Initials have
+their own scheme for protecting Initial packets, that version is not suitable
+for use as a standard version. However, these connections can be used to deliver
+the version_aliasing transport parameter.<a href="#section-2.1-5" class="pilcrow">¶</a></p>
+<p id="section-2.1-6">A maximally privacy-protecting client might use Protected Initials for any
+connection attempts for which it does not have an unexpired aliased version, and
+QUIC version aliasing otherwise.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
+<p id="section-2.1-7">See also section 1.1 of <span>[<a href="#QUIC-PI" class="cite xref">QUIC-PI</a>]</span> for further discussion of tradeoffs.<a href="#section-2.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="the-versionaliasing-transport-parameter">
+<section id="section-3">
+      <h2 id="name-the-version_aliasing-transp">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-the-version_aliasing-transp" class="section-name selfRef">The version_aliasing Transport Parameter</a>
+      </h2>
+<p id="section-3-1">This feature is governed by the version_aliasing transport parameter, which has
+two versions. The client version is of zero length and indicates a willingness
+to accept the server version of the parameter. Clients MAY send this, and
+servers MAY restrict sending of their version_aliasing parameter to clients that
+request it. However, servers can send this parameter to all clients if resources
+allow.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">If they support version aliasing and resources allow, servers SHOULD respond to
+a client version_aliasing transport parameter of greater than zero length with a
+TRANSPORT_PARAMETER_ERROR.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">The server version MAY be sent in any QUIC connection that supports transport
+parameters. It has the following format.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<span id="name-version_aliasing-transport-"></span><div id="fig-transport-parameter">
+<figure id="figure-1">
+        <div class="alignLeft art-text artwork" id="section-3-4.1">
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      Aliased Version (32)                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Standard Version (32)                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                                                               +
+|                            Salt (160)                         |
++                                                               +
+|                                                               |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Expiration Time (i)                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|  CID length  |           Connection ID (variable)             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      Bitmask (variable)                       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-version_aliasing-transport-" class="selfRef">version_aliasing Transport Parameter value</a>
+        </figcaption></figure>
+</div>
+<p id="section-3-5">These fields are described in the sections below.<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-6">The Expiration Time field is encoded using the Variable Length Integer encoding
+from Section 16 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>. Expiration Time is measured in seconds.<a href="#section-3-6" class="pilcrow">¶</a></p>
+<p id="section-3-7">The Connection ID Length (CID Length) is in bytes.<a href="#section-3-7" class="pilcrow">¶</a></p>
+<p id="section-3-8">Note that servers that support version aliasing need not send the transport
+parameter on every connection. Therefore, a client MAY attempt to connect with
+an unexpired aliased version, even if in its most recent connection it did not
+receive the transport parameter.<a href="#section-3-8" class="pilcrow">¶</a></p>
+<p id="section-3-9">Clients remember the values in this transport parameter for a future connection.
+Servers MUST either store the contents of the transport parameter, or preserve
+the state to compute the full contents based on the Aliased Version and
+Connection ID.<a href="#section-3-9" class="pilcrow">¶</a></p>
+<p id="section-3-10">A client that receives this transport parameter not conforming to this format
+MUST close the connection with a TRANSPORT_PARAMETER_ERROR.<a href="#section-3-10" class="pilcrow">¶</a></p>
+<p id="section-3-11">Servers SHOULD provide a new version_aliasing transport parameter each time a
+client connects. However, issuing version numbers to a client SHOULD be rate-
+limited to mitigate the salt polling attack (<a href="#salt-polling" class="auto internal xref">Section 7.7</a>) and MAY cease to
+clients that are consistently connecting with standard versions.<a href="#section-3-11" class="pilcrow">¶</a></p>
+<div id="aliased-version">
+<section id="section-3.1">
+        <h3 id="name-aliased-version">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-aliased-version" class="section-name selfRef">Aliased Version</a>
+        </h3>
+<p id="section-3.1-1">The version MUST appear to be random, although there are certain values that
+will not be sent. Specifically, it MUST NOT correspond to a QUIC version the
+server advertises in QUIC Version Negotiation packets or transport parameters.
+Servers SHOULD also exclude version numbers used in known specifications or
+experiments to avoid confusion at clients, whether or not they have plans to
+support those specifications.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">Servers MAY use version numbers reserved for grease in Section 15.1 of
+<span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>, even though they might be advertised in Version Negotiation
+Packets. Some clients may use these version numbers to probe for Version
+Negotiation capability, which would likely result in a fallback procedure (see
+<a href="#fallback" class="auto internal xref">Section 5</a>) instead of a Version Negotiation packet.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">Servers MUST NOT use client-controlled information (e.g. the client IP address)
+as in input to generate the version number, see <a href="#salt-polling" class="auto internal xref">Section 7.7</a>.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">Servers MUST NOT advertise these versions in QUIC Version Negotiation packets.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="standard-version">
+<section id="section-3.2">
+        <h3 id="name-standard-version">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-standard-version" class="section-name selfRef">Standard Version</a>
+        </h3>
+<p id="section-3.2-1">Servers also identify the Standard version that the client uses to specify
+the wire formats and behaviors of the aliased version. This version MUST meet
+the criteria to support version aliasing, and MUST either be included as a
+supported version in the client's version_information transport parameter (see
+<span>[<a href="#QUIC-VN" class="cite xref">QUIC-VN</a>]</span>) or be the standard version of
+the current connection.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">Note that servers MUST NOT accept resumption tickets or NEW_TOKEN tokens from
+a certain standard version in a connection using a different standard version.
+Therefore, the choice of standard version might impact the performance of the
+connection that uses an aliased version. The standard version that generated
+tickets and/or tokens is typically encoded in those tickets or tokens.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">There are several possible techniques for the server securely recovering the
+standard version in use for an aliased connection:<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2-4.1">the server could store a mapping of aliased versions to standard version;<a href="#section-3.2-4.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-4.2">the server could encrypt the standard version in use in the aliased version
+number and/or connection ID;<a href="#section-3.2-4.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-4.3">the server only accepts one standard version for aliased versions; or<a href="#section-3.2-4.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-4.4">the standard version is included as an input to the parameter generation
+algorithm, and the server tries all supported standard versions and tests each
+resulting bitmask for validity.<a href="#section-3.2-4.4" class="pilcrow">¶</a>
+</li>
+        </ul>
+<div id="criteria-to-support-version-aliasing">
+<section id="section-3.2.1">
+          <h4 id="name-criteria-to-support-version">
+<a href="#section-3.2.1" class="section-number selfRef">3.2.1. </a><a href="#name-criteria-to-support-version" class="section-name selfRef">Criteria to Support Version Aliasing</a>
+          </h4>
+<p id="section-3.2.1-1">Version aliasing is designed to work with QUICv1 and QUICv2 as standard
+versions, but does not preclude other standard versions. Note that the
+"standard version" is the version which provides the wire format and behavior
+for the aliased connection. A different connection exchanges the mandatory-to-
+implement transport parameters for version aliasing, and need not be of the
+same version.<a href="#section-3.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.2.1-2">Any QUIC version that uses transport parameters with similar security
+guarantees, or provides an equivalent mechanism, can exchange the relevant
+information. An alternate mechanism will likely require specification of the
+equivalent messages.<a href="#section-3.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.2.1-3">New QUIC versions could also serve as standard versions. However, version
+aliasing leverages several assumptions. New versions that deviate from these
+assumptions will have to specify how version aliasing can utilize the version.<a href="#section-3.2.1-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2.1-4.1">Version Aliasing assumes that connections begin with a Long Header packet
+encrypted with a key derived from a salt.<a href="#section-3.2.1-4.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.2.1-4.2">The rules for which header fields are subject to the bitmask are written to
+be clear for QUICv1 and v2. New version-specific header fields might be
+ambiguous relative to these criteria, or be a special case (as the fixed bit is
+for v1 and v2).<a href="#section-3.2.1-4.2" class="pilcrow">¶</a>
+</li>
+          </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="salt">
+<section id="section-3.3">
+        <h3 id="name-salt">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-salt" class="section-name selfRef">Salt</a>
+        </h3>
+<p id="section-3.3-1">The salt is an opaque 20-octet field. It is used to generate Initial connection
+keys using the process described in <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span>.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">Servers MUST either generate a random salt and store a mapping of aliased
+version and connection ID to salt, or generate the salt using a cryptographic
+method that uses the version number, connection ID, and server state that is
+persistent across connections. It MUST NOT use client controlled information
+other than the version number and connection ID; for example, the client's IP
+address and port.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="expiration-time">
+<section id="section-3.4">
+        <h3 id="name-expiration-time">
+<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-expiration-time" class="section-name selfRef">Expiration Time</a>
+        </h3>
+<p id="section-3.4-1">Servers should select an expiration time in seconds, measured from the instant
+the transport parameter is first sent. This time SHOULD be less than the time
+until the server expects to support new QUIC versions, rotate the keys used
+to encode information in the version number, or rotate the keys used in salt
+generation. The expiration need not be derivable from the aliased version and
+connection ID; it is a matter of policy.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+<p id="section-3.4-2">Furthermore, the expiration time SHOULD be short enough to frustrate a salt
+polling attack (<a href="#salt-polling" class="auto internal xref">Section 7.7</a>).<a href="#section-3.4-2" class="pilcrow">¶</a></p>
+<p id="section-3.4-3">Conversely, an extremely short expiration time will often force the client to
+use standard QUIC version numbers and salts.<a href="#section-3.4-3" class="pilcrow">¶</a></p>
+<p id="section-3.4-4">The client SHOULD NOT use an aliased version if the time since the receipt of
+the transport parameter exceeds the Expiration Time. Attempting to do so is
+likely to result in a fallback procedure (see <a href="#fallback" class="auto internal xref">Section 5</a>). The server need
+not enforce this restriction; the Expiration Time is purely advisory.<a href="#section-3.4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="server-connection-id">
+<section id="section-3.5">
+        <h3 id="name-server-connection-id">
+<a href="#section-3.5" class="section-number selfRef">3.5. </a><a href="#name-server-connection-id" class="section-name selfRef">Server Connection ID</a>
+        </h3>
+<p id="section-3.5-1">Servers SHOULD generate a Connection ID to provide additional entropy in salt
+generation. Two clients that receive the same version number but different
+connection IDs will not be able to decode each other's Initial Packets.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
+<p id="section-3.5-2">The connection ID MUST appear to be random to observers, but it might encode
+information to route the packet in the server infrastructure, or standard
+version information.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
+<p id="section-3.5-3">The connection ID MUST NOT be between 1 and 7 bytes long. A zero-length
+connection ID signals that the destination connection ID will not be an input
+to the server's process, so the client may choose any destination connection ID
+compliant with the standard version.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="bitmask">
+<section id="section-3.6">
+        <h3 id="name-bitmask">
+<a href="#section-3.6" class="section-number selfRef">3.6. </a><a href="#name-bitmask" class="section-name selfRef">Bitmask</a>
+        </h3>
+<p id="section-3.6-1">The length of the bitmask field is inferred from the remaining length of the
+transport parameter.<a href="#section-3.6-1" class="pilcrow">¶</a></p>
+<p id="section-3.6-2">For all initial packets, the bitmask is applied to all parts of the packet
+header that do not meet any of the following criteria:<a href="#section-3.6-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.6-3.1">They are encrypted via header encryption (in QUIC version 1, the packet
+number, packet number length, and reserved bits in the first byte).<a href="#section-3.6-3.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.6-3.2">They are part of the <span>[<a href="#RFC8999" class="cite xref">RFC8999</a>]</span> invariants in the long header (i.e., the
+long header bit, version, connection IDs, and connection ID lengths).<a href="#section-3.6-3.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.6-3.3">They are encrypted using a server-specific scheme (such as the Initial token).<a href="#section-3.6-3.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.6-4">Therefore, in QUIC version 1 or 2 <span>[<a href="#I-D.draft-ietf-quic-v2" class="cite xref">I-D.draft-ietf-quic-v2</a>]</span>, the bitmask is
+applied to the packet type, fixed bit, initial token length, and length fields.
+Senders apply the bitmask after header protection. Receivers apply it before
+removing header protection.<a href="#section-3.6-4" class="pilcrow">¶</a></p>
+<p id="section-3.6-5">Each octet of the bitmask is XORed with an octet of the header than contains
+bits that are masked. Bits of those octets that are not masked MUST be zero in
+the bitmask. If the standard version is QUICv1 or v2, therefore, the first,
+fifth, sixth, seventh, and eighth bits must all be zero.<a href="#section-3.6-5" class="pilcrow">¶</a></p>
+<p id="section-3.6-6">For example, an outgoint aliased Initial header, with a Standard Version of
+QUICv1, might have these values prior to applying the bitmask:<a href="#section-3.6-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.6-7">
+<pre>
+First Byte: 0xcd (Long Header, Fixed Bit, Initial Packet, encrypted bits)
+Aliased version: 0x4d8723a1
+Destination Connection ID Length: 0x08
+Destination Connection ID: 0xf4ad00431f2901ff
+Source Connection ID Length: 0x00
+Token Length: 0x10
+Token: 0x467daa15 270a6718 7cd84310 b62c119b
+Length: 0x44b0 (1200 B)
+Packet Number: 0x349ae204 (encrypted)
+</pre><a href="#section-3.6-7" class="pilcrow">¶</a>
+</div>
+<p id="section-3.6-8">There are a total of four octets that require masking: the first type, token
+length, and length field. The provided bitmask field is<a href="#section-3.6-8" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.6-9">
+<pre>
+0x2051efa4
+</pre><a href="#section-3.6-9" class="pilcrow">¶</a>
+</div>
+<p id="section-3.6-10">Therefore, the final form of the packet header on egress is<a href="#section-3.6-10" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.6-11">
+<pre>
+First Byte: 0xed (0b11001101 ^ 0b0010000)
+Aliased version: 0x4d8723a1 (no change)
+Destination Connection ID Length: 0x08 (no change)
+Destination Connection ID: 0xf4ad00431f2901ff (no change)
+Source Connection ID Length: 0x00 (no change)
+Token Length: 0x41 (0x10 ^ 0x51)
+Token: 0x467daa15 270a6718 7cd84310 b62c119b (no change)
+Length: 0xab14 (0x44b0 ^ 0xefa4))
+Packet Number: 0x349ae204 (no change)
+</pre><a href="#section-3.6-11" class="pilcrow">¶</a>
+</div>
+<p id="section-3.6-12">The "Fixed bit" (second-most-significant bit of the first octet) is sometimes
+used to differentiate QUIC packets from other UDP traffic at the server. The
+server MAY choose to always set this bit to zero in the bitmask to maintain this
+property. For packets sent from server to client, this bit in the bitmask MUST
+always be treated as zero. Clients and servers interested in greasing the fixed
+bit in the server-to-client direction can use <span>[<a href="#RFC9287" class="cite xref">RFC9287</a>]</span> to do so.<a href="#section-3.6-12" class="pilcrow">¶</a></p>
+<p id="section-3.6-13">Aside from greasing the remaining non-invariant header fields , this parameter
+provides a low-cost means for the server to determine if the client and server
+share a valid version aliasing context. For example, if the server loses state
+after sending a version_aliasing transport parameter, the bitmask will not
+match. This will cause the token length and packet length fields to be
+essentially random. If the token length does not match tokens generated by the
+server, or the packet length field implies a packet larger than the UDP
+datagram, the packet was not masked with the correct version aliasing context,
+and the server initiates the procedure in <a href="#fallback" class="auto internal xref">Section 5</a>.<a href="#section-3.6-13" class="pilcrow">¶</a></p>
+<p id="section-3.6-14">In the typical case where the token length field is one octet and the packet
+length field is two octets, about 127/128 of incoming packets with an invalid
+version aliasing context can be identified as such based on the token length
+(i.e. it is neither zero nor the correct token length). Of those that are not
+identified, approximately 50% will resolve to a plausible packet length (equal
+to or smaller than the size of the datagram). Thus, approximately 1 out of
+every 256 packets with an incorrect version aliasing context will require trial
+decryption at the server to detect the problem. If a server has multiple token
+lengths, the odds of requiring trial decryption increase.<a href="#section-3.6-14" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="operational-considerations-for-multiple-server-architectures">
+<section id="section-3.7">
+        <h3 id="name-operational-considerations-">
+<a href="#section-3.7" class="section-number selfRef">3.7. </a><a href="#name-operational-considerations-" class="section-name selfRef">Operational Considerations for Multiple-Server Architectures</a>
+        </h3>
+<div id="multiple-servers-for-one-domain">
+<section id="section-3.7.1">
+          <h4 id="name-multiple-servers-for-one-do">
+<a href="#section-3.7.1" class="section-number selfRef">3.7.1. </a><a href="#name-multiple-servers-for-one-do" class="section-name selfRef">Multiple Servers for One Domain</a>
+          </h4>
+<p id="section-3.7.1-1">If multiple servers serve the same entity behind a load balancer, they MUST NOT
+generate version numbers that any of them would advertise in a Version
+Negotiation Packet or Transport Parameter.<a href="#section-3.7.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.7.1-2">Such servers will either need a common configuration for generating parameters
+from the version number and connection ID, maintain a commmon database of
+mappings, or the connection ID itself can be used to route the Initial packet to
+the server that generated the transport parameter. See
+<span>[<a href="#QUIC-LB" class="cite xref">QUIC-LB</a>]</span> for an example of the last approach.<a href="#section-3.7.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="multiple-entities-with-one-load-balancer">
+<section id="section-3.7.2">
+          <h4 id="name-multiple-entities-with-one-">
+<a href="#section-3.7.2" class="section-number selfRef">3.7.2. </a><a href="#name-multiple-entities-with-one-" class="section-name selfRef">Multiple Entities With One Load Balancer</a>
+          </h4>
+<p id="section-3.7.2-1">If mutually mistrustful entities share the same IP address and port, incoming
+packets are usually routed by examining the SNI at a load balancer that routes
+the traffic. This use case makes concealing the contents of the client Initial
+especially attractive, as the IP address reveals less information, but there is
+no obvious means for the load balancer to inspect a version aliased packet.
+There are several solutions to solve this problem.<a href="#section-3.7.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.7.2-2.1">The RECOMMENDED solution is to use routable connection IDs, so that the load
+balancer can correctly direct the packet without any knowledge of its version-
+dependent syntax. See <span>[<a href="#QUIC-LB" class="cite xref">QUIC-LB</a>]</span> for an example design.<a href="#section-3.7.2-2.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.7.2-2.2">Each entity has its own cryptographic context, shared with the load balancer.
+This requires the load balancer to compute a bitmask for each context, and
+choose the one with a valid result. If multiple contexts are possible, it will
+require trial decryption. As there is no standard algorithm for deriving
+parameters from the version and connection ID, this involves synchronizing the
+method, not just the key material.<a href="#section-3.7.2-2.2" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.7.2-2.3">Each entity reports its Version Aliasing Transport Parameters to the load
+balancer out-of-band.<a href="#section-3.7.2-2.3" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.7.2-2.4">Each entity is assigned certain version numbers for use. This assignment
+SHOULD NOT follow observable patterns (e.g., assigning ranges to each entity),
+as this would allow observers to obtain the target server based on the version.
+The scheme SHOULD assign all available version numbers to maximize the entropy
+of the encoding.<a href="#section-3.7.2-2.4" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.7.2-2.5">All entities have a common crytographic context for deriving salts and
+bitmasks from the version number and connection ID. This is straightforward but
+also increases the risk that the keys will leak to an attacker which could then
+decode Initial packets from a point where the packets are observable. This is
+therefore NOT RECOMMENDED.<a href="#section-3.7.2-2.5" class="pilcrow">¶</a>
+</li>
+          </ul>
+<p id="section-3.7.2-3">Note that <span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> and <span>[<a href="#QUIC-PI" class="cite xref">QUIC-PI</a>]</span> solve this problem elegantly by only holding
+the private key at the load balancer, which decodes the sensitive information on
+behalf of the back-end server.<a href="#section-3.7.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="client-behavior">
+<section id="section-4">
+      <h2 id="name-additional-client-requireme">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-additional-client-requireme" class="section-name selfRef">Additional Client Requirements</a>
+      </h2>
+<p id="section-4-1">The Client MUST NOT use the contents of a Version Alias transport parameter if
+the handshake does not (1) later authenticate the server name or (2)
+result in both endpoints computing the same 1-RTT keys. See <a href="#impersonation" class="auto internal xref">Section 7.1</a>.
+The authenticated server name MAY be a "public name" distributed as described in
+<span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> rather than the true target domain.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">Clients MUST advertise aliased versions in the chosen version field of the
+version_information Transport Parameter (see <span>[<a href="#QUIC-VN" class="cite xref">QUIC-VN</a>]</span>).<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">Clients SHOULD NOT use the provided version number and connection ID in more
+than one connection. Using the same connection ID in two connections could
+confuse the server demultiplexer. If the client IP has changed, reuse of these
+parameters can link the client across connection attempts.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">If a client receives an aliased version number that matches a standard version
+that the client supports, it SHOULD assume the server does not support the
+standard version and MUST use aliased version behaviors in any connection with
+the server using that version number.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-5">If the response to an Initial packet using the provided version is a Version
+Negotiation Packet, the client SHOULD assume that the server no longer supports
+version aliasing and attempt to connect with one of the advertised versions
+(while observing the considerations in <a href="#downgrade" class="auto internal xref">Section 7.3</a>).<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-6">If the response to an Initial packet is a Bad Salt packet, the client follows
+the procedures in <a href="#fallback" class="auto internal xref">Section 5</a>.<a href="#section-4-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="fallback">
+<section id="section-5">
+      <h2 id="name-fallback">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-fallback" class="section-name selfRef">Fallback</a>
+      </h2>
+<p id="section-5-1">If the server has lost its encryption state, it may not be able to generate
+the correct salts from previously provided versions and connection IDs. The
+fallback mechanism provides a means of recovering from this state while
+protecting against injection of messages by attackers.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">When a server receives a packet with an unsupported version number, it SHOULD
+send a Version Negotiation Packet if it is configured not to generate that
+version number at random.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">If the unmasked Token Length or packet length fields are inconsistent with
+possible server-generated token lengths or the size of the UDP datagram, the
+packet was not generated with the proper version aliasing context.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-4">The server MAY apply further checks (e.g. against the minimum QUIC packet
+length) to further reduce the small probability of a false positive.<a href="#section-5-4" class="pilcrow">¶</a></p>
+<p id="section-5-5">In the unlikely event that the length fields produce a plausible result but the
+salt is incorrect, the packet will fail authentication. Servers MAY also
+interpret this as a loss of version aliasing state.<a href="#section-5-5" class="pilcrow">¶</a></p>
+<p id="section-5-6">When any of these indicators suggest an invalid version aliasing context, the
+server sends a Bad Salt packet. The server ignores failures in subsequent
+packets for that connection.<a href="#section-5-6" class="pilcrow">¶</a></p>
+<div id="bad-salt-packets">
+<section id="section-5.1">
+        <h3 id="name-bad-salt-packets">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-bad-salt-packets" class="section-name selfRef">Bad Salt Packets</a>
+        </h3>
+<p id="section-5.1-1">The Bad Salt packet has a long header and a reserved version number, because it
+must not be confused with a legitimate packet in any standard version. They are
+not encrypted, not authenticated, and have the following format:<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.1-2">
+<pre>
+Bad Salt Packet {
+    Header Form (1) = 1,
+    Unused (7),
+    Version (32) = TBD (provisional value = 0x56415641),
+    Destination Connection ID Length (8),
+    Destination Connection ID (0..2040),
+    Source Connection ID Length (8),
+    Source Connection ID (0..2040),
+    Supported Version (32) ...,
+    Integrity Tag (128),
+}
+</pre><a href="#section-5.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-5.1-3">Unused: The unused field is filled randomly by the sender and ignored on
+receipt.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+<p id="section-5.1-4">Version: The version field is reserved for use by the Bad Salt packet.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.1-5">Destination and Source Connection IDs and Lengths: These fields are copied from
+the client packet, with the source fields from the client packet written into
+the destination fields of the Bad Salt, and vice versa.<a href="#section-5.1-5" class="pilcrow">¶</a></p>
+<p id="section-5.1-6">Supported Version: A list of standard QUIC version numbers which the server
+supports. The number of versions is inferred from the length of the datagram.<a href="#section-5.1-6" class="pilcrow">¶</a></p>
+<p id="section-5.1-7">Integrity Tag: To compute the integrity tag, the server creates a pseudo-packet
+by contents of the entire client Initial UDP payload, including any coalesced
+packets, with the Bad Salt packet:<a href="#section-5.1-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.1-8">
+<pre>
+Bad Salt Pseudo-Packet {
+    Client UDP Payload (9600..),
+    Header Form (1) = 1,
+    Unused (7),
+    Version (32) = TBD (provisional value = 0x56415641),
+    Destination Connection ID Length (8),
+    Destination Connection ID (0..2040),
+    Source Connection ID Length (8),
+    Source Connection ID (0..2040),
+    Supported Version (32) ...,
+}
+</pre><a href="#section-5.1-8" class="pilcrow">¶</a>
+</div>
+<p id="section-5.1-9">In a process similar to the Retry Integrity Tag, the Bad Salt Integrity Tag is
+computed as the output of AEAD_AES_128_GCM with the following inputs:<a href="#section-5.1-9" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.1-10.1">The secret key, K, is 0xbe0c690b9f66575a1d766b54e368c84e.<a href="#section-5.1-10.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-5.1-10.2">The nonce, N, is 0x461599d35d632bf2239825bb.<a href="#section-5.1-10.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-5.1-10.3">The plaintext, P, is empty.<a href="#section-5.1-10.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-5.1-10.4">The associated data, A, is the Bad Salt pseudo-packet.<a href="#section-5.1-10.4" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-5.1-11">These values are derived using HKDF-Expand-Label from the secret
+0x767fedaff519a2aad117d8fd3ce0a04178ed205ab0d43425723e436853c4b3e2 and labels
+"quicva key" and "quicva iv".<a href="#section-5.1-11" class="pilcrow">¶</a></p>
+<p id="section-5.1-12">The integrity tag serves to validate the integrity of both the Bad Salt packet
+itself and the Initial packet that triggered it.<a href="#section-5.1-12" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="client-response-to-bad-salt">
+<section id="section-5.2">
+        <h3 id="name-client-response-to-bad-salt">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-client-response-to-bad-salt" class="section-name selfRef">Client Response to Bad Salt</a>
+        </h3>
+<p id="section-5.2-1">Upon receipt of a Bad Salt packet, the client SHOULD wait for a Probe Timeout
+(PTO) to check if the Bad Salt packet was injected by an attacker, and a valid
+response arrives from the actual server.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">After waiting, the client checks the Integrity Tag using its record of the
+Initial it sent. If this fails, the client SHOULD assume packet corruption and
+resend the Initial packet.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">If the verification succeeds, the client SHOULD attempt to connect with one of
+the listed standard versions. It SHOULD observe the privacy considerations in
+<a href="#first-connection" class="auto internal xref">Section 7.2</a>. It MUST include a version_aliasing_fallback Transport
+Parameter in the Client Hello.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">Once it sends this transport parameter, the client MUST NOT attempt to connect
+with that aliased version again.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.2-5">The original Client Initial is not part of the new connection. Therefore, the
+Connection IDs can change, and the original client hello is not part of the
+transcript for TLS key derivation.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="versionaliasingfallback-transport-parameter">
+<section id="section-5.3">
+        <h3 id="name-version_aliasing_fallback-t">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-version_aliasing_fallback-t" class="section-name selfRef">version_aliasing_fallback Transport Parameter</a>
+        </h3>
+<p id="section-5.3-1">The client sends this transport parameter in a TLS Client Hello generated in
+response to a Bad Salt packet:<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.3-2">
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Aliased Version (32)                      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   CID length  |           Connection ID (variable)            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                                                               +
+|                            Salt (160)                         |
++                                                               +
+|                                                               |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                   Bad Salt Integrity Tag (128)                +
+|                                                               |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-5.3-2" class="pilcrow">¶</a>
+</div>
+<p id="section-5.3-3">The Aliased Version, Connection ID, and Salt fields are taken from the
+connection attempt that triggered this fallback.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.3-4">The Bad Salt Integrity Tag is taken from the Bad Salt packet that
+triggered this fallback. Its purpose is to include the Bad Salt packet contents
+in the TLS handshake hash.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="server-response-to-versionaliasingfallback-transport-parameter">
+<section id="section-5.4">
+        <h3 id="name-server-response-to-version_">
+<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-server-response-to-version_" class="section-name selfRef">Server Response to version_aliasing_fallback Transport Parameter</a>
+        </h3>
+<p id="section-5.4-1">A client version_aliasing_fallback transport parameter tells the server that the
+client received a Bad Salt packet. The server checks if using the version and
+connection ID as inputs results in the same salt.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.4-2">If the salt does not match, the server SHOULD continue with the connection and
+SHOULD issue a new version_aliasing transport parameter.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+<p id="section-5.4-3">If the salt and Packet Length Offset are valid, the server MUST terminate the
+connection with the error code INVALID_BAD_SALT.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
+<p id="section-5.4-4">Note that the client never sends this transport parameter in a connection that
+uses an aliased version. A server that receives such a packet MUST terminate the
+connection with a TRANSPORT_PARAMETER_ERROR.<a href="#section-5.4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="considerations-for-retry-packets">
+<section id="section-6">
+      <h2 id="name-considerations-for-retry-pa">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-considerations-for-retry-pa" class="section-name selfRef">Considerations for Retry Packets</a>
+      </h2>
+<p id="section-6-1">QUIC Retry packets reduce the load on servers during periods of stress by
+forcing the client to prove it possesses the IP address before the server
+decrypts any Initial Packets or establishes any connection state. Version
+aliasing substantially complicates the process.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">If a server has to send a Retry packet, the required format is ambiguous without
+understanding which standard version to use. If all supported standard versions
+use the same Retry format, it simply uses that format with the client-provided
+version number.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">If the supported standard versions use different Retry formats, the server
+obtains the standard version via lookup or decoding and formats a Retry
+containing the aliased version number accordingly.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">Servers generate the Retry Integrity Tag of a Retry Packet using the procedure
+in Section 5.8 of <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span>. However, for aliased versions, the secret key K
+uses the first 16 octets of the aliased salt instead of the key provided in the
+specification.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">Clients MUST ignore Retry packets that contain a QUIC version other than the
+version it used in its Initial Packet.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<p id="section-6-6">Servers MUST NOT reply to a packet with incorrect token lengt or packet length
+fields in its long header with a Retry packet; it SHOULD reply with Bad Salt as
+described above.<a href="#section-6-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-and-privacy-considerations">
+<section id="section-7">
+      <h2 id="name-security-and-privacy-consid">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-and-privacy-consid" class="section-name selfRef">Security and Privacy Considerations</a>
+      </h2>
+<p id="section-7-1">This document intends to improve the existing security and privacy properties of
+QUIC by dramatically improving the secrecy of QUIC Initial Packets. However,
+there are new attacks against this mechanism.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="impersonation">
+<section id="section-7.1">
+        <h3 id="name-endpoint-impersonation">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-endpoint-impersonation" class="section-name selfRef">Endpoint Impersonation</a>
+        </h3>
+<p id="section-7.1-1">An on-path attacker might respond to a standard version Initial packet with a
+Version Aliasing Transport Parameter that then caused the client to reveal
+sensitive information in a subsequent Initial.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">As described in <a href="#client-behavior" class="auto internal xref">Section 4</a>, clients cannot use the contents of a
+Version Aliasing transport parameter until they have authenticated the source
+as a trusted domain, and have verified that the 1RTT key derivation is
+identical at both endpoints.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="first-connection">
+<section id="section-7.2">
+        <h3 id="name-first-connection-privacy">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-first-connection-privacy" class="section-name selfRef">First-Connection Privacy</a>
+        </h3>
+<p id="section-7.2-1">As version aliasing requires one connection over a standard QUIC version to
+acquire initial state, this initial connection leaks some information about
+the true target.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.2-2">The client MAY alter its Initial Packet to sanitize sensitive information and
+obtain another aliased version before proceeding with its true request. However,
+the client Initial must lead to the authentication of a domain name the client
+trusts to provide accurate Version Aliasing information (possibly the
+public_name from an Encrypted Client Hello configuration from <span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span>). Advice
+for the Outer ClientHello in Section 10.5 of <span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> applies here.<a href="#section-7.2-2" class="pilcrow">¶</a></p>
+<p id="section-7.2-3">Endpoints are encouraged to instead use <span>[<a href="#ECHO" class="cite xref">ECHO</a>]</span> or <span>[<a href="#QUIC-PI" class="cite xref">QUIC-PI</a>]</span> to increase
+privacy on the first connection between a client and server.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="downgrade">
+<section id="section-7.3">
+        <h3 id="name-forcing-downgrade">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-forcing-downgrade" class="section-name selfRef">Forcing Downgrade</a>
+        </h3>
+<p id="section-7.3-1">An attacker can attempt to force a client to send an Initial that uses a
+standard version by injecting a Version Negotiation packet (which implies the
+server no longer supports aliasing) or a Bad Salt packet (which implies the
+server has a new cryptographic context).<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-2">The weak form of this attack observes the Initial and injects the Version
+Negotiation or Bad Salt packet, but cannot drop the Initial. To counteract this,
+a client SHOULD NOT respond to these packets until they have waited for Probe
+Timeout (PTO) for a valid server Initial to arrive.<a href="#section-7.3-2" class="pilcrow">¶</a></p>
+<p id="section-7.3-3">The strong form features an attacker that can drop Initial packets. In this
+case, the client can either abandon the connection attempt or connect with an
+standard version.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+<p id="section-7.3-4">If it connects with a standard version, it should consider the privacy advice
+in <a href="#first-connection" class="auto internal xref">Section 7.2</a>.<a href="#section-7.3-4" class="pilcrow">¶</a></p>
+<p id="section-7.3-5">Furthermore, if it received a Bad Salt packet, the client sends a Version
+Aliasing transport parameter to detect the downgrade attack, and the server will
+terminate the connection if the Bad Salt packet was an attack.<a href="#section-7.3-5" class="pilcrow">¶</a></p>
+<p id="section-7.3-6">If the client received a Version Negotiation packet, it MUST implement a
+downgrade detection mechanism such as <span>[<a href="#QUIC-VN" class="cite xref">QUIC-VN</a>]</span> or abandon the connection
+attempt. If it subsequently detects a downgrade detection, or discovers that the
+server does not support the same mechanism, it terminates the connection
+attempt.<a href="#section-7.3-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="initial-packet-injection">
+<section id="section-7.4">
+        <h3 id="name-initial-packet-injection">
+<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-initial-packet-injection" class="section-name selfRef">Initial Packet Injection</a>
+        </h3>
+<p id="section-7.4-1">QUIC version 1 handshakes are vulnerable to DoS from observers for the short
+interval that endpoints keep Initial keys (usually ~1.5 RTTS), since Initial
+Packets are not authenticated. With version aliasing, attackers do not have
+the necessary keys to launch such an attack.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="retry-injection">
+<section id="section-7.5">
+        <h3 id="name-retry-injection">
+<a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-retry-injection" class="section-name selfRef">Retry Injection</a>
+        </h3>
+<p id="section-7.5-1">QUIC Version 1 Retry packets are spoofable, as they follow a fixed format, are
+sent in plaintext, and the integrity protection uses a widely known key. As a
+result, QUIC Version 1 has verification mechanisms in subsequent packets of the
+connection to validate the origin of the Retry.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
+<p id="section-7.5-2">Version aliasing largely frustrates this attack. As the integrity check key is
+derived from the secret salt, packets from attackers will fail their integrity
+check and the client will ignore them.<a href="#section-7.5-2" class="pilcrow">¶</a></p>
+<p id="section-7.5-3">The Packet Length Offset is important in this framework. Without this
+mechanism, servers would have to perform trial decryption to verify the client
+was using the correct salt. As this does not occur before sending Retry
+Packets, servers would not detect disagreement on the salt beforehand and would
+send a Retry packet signed with a different salt than the client expects.
+Therefore, a client that received a Retry packet with an invalid integrity
+check would not be able to distinguish between the following possibilities:<a href="#section-7.5-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.5-4.1">a Retry packet corrupted in the network, which should be ignored;<a href="#section-7.5-4.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-7.5-4.2">a Retry packet generated by an attacker, which should be ignored; or<a href="#section-7.5-4.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-7.5-4.3">a Retry packet from a server that lost its cryptographic state, meaning that
+further communication with aliased versions is impossible and the client should
+revert to using a standard version.<a href="#section-7.5-4.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-7.5-5">The Packet Length Offset introduces sufficient entropy to make the third
+possibility exceedingly unlikely.<a href="#section-7.5-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="increased-linkability">
+<section id="section-7.6">
+        <h3 id="name-increased-linkability">
+<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-increased-linkability" class="section-name selfRef">Increased Linkability</a>
+        </h3>
+<p id="section-7.6-1">As each version number and connection ID is unique to each client, if a client
+uses one twice, those two connections are extremely likely to be from the same
+host. If the client has changed IP address, this is a significant increase in
+linkability relative to QUIC with a standard version numbers.<a href="#section-7.6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="salt-polling">
+<section id="section-7.7">
+        <h3 id="name-salt-polling">
+<a href="#section-7.7" class="section-number selfRef">7.7. </a><a href="#name-salt-polling" class="section-name selfRef">Salt Polling</a>
+        </h3>
+<p id="section-7.7-1">Observers that wish to decode Initial Packets might open a large number of
+connections to the server in an effort to obtain part of the mapping of version
+numbers and connection IDs to salts for a server. While storage-intensive, this
+attack could increase the probability that at least some version-aliased
+connections are observable. There are three mitigations servers can execute
+against this attack:<a href="#section-7.7-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.7-2.1">use a longer connection ID to increase the entropy of the salt,<a href="#section-7.7-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-7.7-2.2">rate-limit transport parameters sent to a particular client, and/or<a href="#section-7.7-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-7.7-2.3">set a low expiration time to reduce the lifetime of the attacker's database.<a href="#section-7.7-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-7.7-3">Segmenting the version number space based on client information, i.e. using only
+a subset of version numbers for a certain IP address range, would significantly
+amplify an attack. Observers will generally be on the path to the client and be
+able to mimic having an identical IP address. Segmentation in this way would
+dramatically reduce the search space for attackers. Thus, servers are prohibited
+from using this mechanism.<a href="#section-7.7-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="server-fingerprinting">
+<section id="section-7.8">
+        <h3 id="name-server-fingerprinting">
+<a href="#section-7.8" class="section-number selfRef">7.8. </a><a href="#name-server-fingerprinting" class="section-name selfRef">Server Fingerprinting</a>
+        </h3>
+<p id="section-7.8-1">The server chooses its own connection ID length. Therefore, the destination
+server of a version-aliased packet might become clear based on the chosen
+length.<a href="#section-7.8-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="increased-processing-of-garbage-udp-packets">
+<section id="section-7.9">
+        <h3 id="name-increased-processing-of-gar">
+<a href="#section-7.9" class="section-number selfRef">7.9. </a><a href="#name-increased-processing-of-gar" class="section-name selfRef">Increased Processing of Garbage UDP Packets</a>
+        </h3>
+<p id="section-7.9-1">As QUIC shares the UDP protocol number with other UDP applications, in some
+deployments it may be possible for traffic intended for other UDP applications
+to arrive at a QUIC server endpoint. When servers support a finite set of
+version numbers, a valid version number field is a strong indicator the packet
+is, in fact, QUIC. If the version number is invalid, a QUIC Version Negotiation
+is a low-cost response that triggers very early in packet processing.<a href="#section-7.9-1" class="pilcrow">¶</a></p>
+<p id="section-7.9-2">However, a server that provides version aliasing is prepared to accept almost
+any version number. As a result, many more sufficiently sized UDP payloads with
+the first bit set to '1' are potential QUIC Initial Packets that require
+computation of a salt and bitmask.<a href="#section-7.9-2" class="pilcrow">¶</a></p>
+<p id="section-7.9-3">Note that the bitmask will allow the server to drop all but approximately 1 in
+every 256 packets, so trial decryption is unnecessary.<a href="#section-7.9-3" class="pilcrow">¶</a></p>
+<p id="section-7.9-4">While not a more potent attack then simply sending valid Initial Packets,
+servers may have to provision additional resources to address this possibility.<a href="#section-7.9-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="increased-retry-overhead">
+<section id="section-7.10">
+        <h3 id="name-increased-retry-overhead">
+<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-increased-retry-overhead" class="section-name selfRef">Increased Retry Overhead</a>
+        </h3>
+<p id="section-7.10-1">This document requires two small cryptographic operations to build a Retry
+packet instead of one, placing more load on servers when already under load.<a href="#section-7.10-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="request-forgery">
+<section id="section-7.11">
+        <h3 id="name-request-forgery">
+<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-request-forgery" class="section-name selfRef">Request Forgery</a>
+        </h3>
+<p id="section-7.11-1">Section 21.4 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span> describes the request forgery attack, where a QUIC
+endpoint can cause its peer to deliver packets to a victim with specific content.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
+<p id="section-7.11-2">Version aliasing allows the server to specify the contents of the version field
+and part of the token field in Initial packets sent by the client, potentially
+increasing the potency of this attack.<a href="#section-7.11-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="forward-secrecy">
+<section id="section-7.12">
+        <h3 id="name-forward-secrecy">
+<a href="#section-7.12" class="section-number selfRef">7.12. </a><a href="#name-forward-secrecy" class="section-name selfRef">Forward Secrecy</a>
+        </h3>
+<p id="section-7.12-1">There are two relevant keys to the forward secrecy of Initial packets that use
+version aliasing. First, the Handshake key of the first connection protects the
+transport parameter that delivers the salt. Second, if the server uses a
+cryptographic process instead of a lookup table to derive the salt from the
+incoming Connection ID and version, the key associated with that process
+prevents observers from determining the salt.<a href="#section-7.12-1" class="pilcrow">¶</a></p>
+<p id="section-7.12-2">As the keys that protect Handshake packets are not forward-secure, a compromise
+of the server's private key would also compromise any version aliasing salts
+distributed with Handshake keys derived from that private key.<a href="#section-7.12-2" class="pilcrow">¶</a></p>
+<p id="section-7.12-3">Furthermore, if the server derives it salts from the incoming Connection ID and
+version via a cryptographic method, compromise of that method and the key in use
+allows attackers to compute the salts (and Initial Keys) of packets using
+aliased versions.<a href="#section-7.12-3" class="pilcrow">¶</a></p>
+<p id="section-7.12-4">Note that, if the provided server connection ID causes subsequent connection
+attempts to route to the same server, then each server instance behind a load
+balancer can have a unique key for deriving salts from version and connection
+ID, rather than sharing one among the entire server pool. This substantially
+reduces the effect of compromise of this key.<a href="#section-7.12-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-8">
+      <h2 id="name-iana-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<div id="quic-version-registry">
+<section id="section-8.1">
+        <h3 id="name-quic-version-registry">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-quic-version-registry" class="section-name selfRef">QUIC Version Registry</a>
+        </h3>
+<p id="section-8.1-1">This document request that IANA add the following entry to the QUIC version
+registry:<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-2">Value: TBD<a href="#section-8.1-2" class="pilcrow">¶</a></p>
+<p id="section-8.1-3">Status: permanent<a href="#section-8.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.1-4">Specification: This document<a href="#section-8.1-4" class="pilcrow">¶</a></p>
+<p id="section-8.1-5">Change Controller: IETF<a href="#section-8.1-5" class="pilcrow">¶</a></p>
+<p id="section-8.1-6">Contact: QUIC WG<a href="#section-8.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="quic-transport-parameter-registry">
+<section id="section-8.2">
+        <h3 id="name-quic-transport-parameter-re">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-quic-transport-parameter-re" class="section-name selfRef">QUIC Transport Parameter Registry</a>
+        </h3>
+<p id="section-8.2-1">This document requests that IANA add the following entries to the QUIC
+Transport Parameters Registry:<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+            <tr>
+              <th class="text-center" rowspan="1" colspan="1">Value</th>
+              <th class="text-center" rowspan="1" colspan="1">Parameter Name</th>
+              <th class="text-center" rowspan="1" colspan="1">Specification</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center" rowspan="1" colspan="1">TBD</td>
+              <td class="text-center" rowspan="1" colspan="1">version_aliasing</td>
+              <td class="text-center" rowspan="1" colspan="1">This Document</td>
+            </tr>
+            <tr>
+              <td class="text-center" rowspan="1" colspan="1">TBD</td>
+              <td class="text-center" rowspan="1" colspan="1">version_aliasing_fallback</td>
+              <td class="text-center" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="quic-transport-error-codes-registry">
+<section id="section-8.3">
+        <h3 id="name-quic-transport-error-codes-">
+<a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-quic-transport-error-codes-" class="section-name selfRef">QUIC Transport Error Codes Registry</a>
+        </h3>
+<p id="section-8.3-1">This document requests that IANA add the following entry to the QUIC Transport
+Error Codes registry:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+<p id="section-8.3-2">Value: TBD (provisional: 0x4942)<a href="#section-8.3-2" class="pilcrow">¶</a></p>
+<p id="section-8.3-3">Code: INVALID_BAD_SALT<a href="#section-8.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<section id="section-9">
+      <h2 id="name-references">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<section id="section-9.1">
+        <h3 id="name-normative-references">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="I-D.draft-ietf-quic-v2">[I-D.draft-ietf-quic-v2]</dt>
+        <dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refTitle">"QUIC Version 2"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-v2-10</span>, <time datetime="2022-12-15" class="refDate">15 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-v2-10">https://datatracker.ietf.org/doc/html/draft-ietf-quic-v2-10</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="QUIC-VN">[QUIC-VN]</dt>
+        <dd>
+<span class="refAuthor">Schinazi, D.</span> and <span class="refAuthor">E. Rescorla</span>, <span class="refTitle">"Compatible Version Negotiation for QUIC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-version-negotiation-14</span>, <time datetime="2022-12-19" class="refDate">19 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-14">https://datatracker.ietf.org/doc/html/draft-ietf-quic-version-negotiation-14</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8999">[RFC8999]</dt>
+        <dd>
+<span class="refAuthor">Thomson, M.</span>, <span class="refTitle">"Version-Independent Properties of QUIC"</span>, <span class="seriesInfo">RFC 8999</span>, <span class="seriesInfo">DOI 10.17487/RFC8999</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8999">https://www.rfc-editor.org/rfc/rfc8999</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9000">[RFC9000]</dt>
+        <dd>
+<span class="refAuthor">Iyengar, J., Ed.</span> and <span class="refAuthor">M. Thomson, Ed.</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="seriesInfo">RFC 9000</span>, <span class="seriesInfo">DOI 10.17487/RFC9000</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9000">https://www.rfc-editor.org/rfc/rfc9000</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9001">[RFC9001]</dt>
+      <dd>
+<span class="refAuthor">Thomson, M., Ed.</span> and <span class="refAuthor">S. Turner, Ed.</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="seriesInfo">RFC 9001</span>, <span class="seriesInfo">DOI 10.17487/RFC9001</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9001">https://www.rfc-editor.org/rfc/rfc9001</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+<section id="section-9.2">
+        <h3 id="name-informative-references">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="ECHO">[ECHO]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-esni-16</span>, <time datetime="2023-04-06" class="refDate">6 April 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-16">https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni-16</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="QUIC-LB">[QUIC-LB]</dt>
+        <dd>
+<span class="refAuthor">Duke, M.</span>, <span class="refAuthor">Banks, N.</span>, and <span class="refAuthor">C. Huitema</span>, <span class="refTitle">"QUIC-LB: Generating Routable QUIC Connection IDs"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-load-balancers-16</span>, <time datetime="2023-04-21" class="refDate">21 April 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-load-balancers-16">https://datatracker.ietf.org/doc/html/draft-ietf-quic-load-balancers-16</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="QUIC-PI">[QUIC-PI]</dt>
+        <dd>
+<span class="refAuthor">Duke, M.</span> and <span class="refAuthor">D. Schinazi</span>, <span class="refTitle">"Protected QUIC Initial Packets"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-duke-quic-protected-initial-04</span>, <time datetime="2022-04-27" class="refDate">27 April 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-04">https://datatracker.ietf.org/doc/html/draft-duke-quic-protected-initial-04</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8446">[RFC8446]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08" class="refDate">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8446">https://www.rfc-editor.org/rfc/rfc8446</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9287">[RFC9287]</dt>
+      <dd>
+<span class="refAuthor">Thomson, M.</span>, <span class="refTitle">"Greasing the QUIC Bit"</span>, <span class="seriesInfo">RFC 9287</span>, <span class="seriesInfo">DOI 10.17487/RFC9287</span>, <time datetime="2022-08" class="refDate">August 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9287">https://www.rfc-editor.org/rfc/rfc9287</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</section>
+<div id="acknowledgments">
+<section id="appendix-A">
+      <h2 id="name-acknowledgments">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-A-1">Marten Seemann was the original creator of the version aliasing approach.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="change-log">
+<section id="appendix-B">
+      <h2 id="name-change-log">
+<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
+      </h2>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="appendix-B-1.1">
+          <p id="appendix-B-1.1.1"><strong>RFC Editor's Note:</strong> Please remove this section prior to
+publication of a final version of this document.<a href="#appendix-B-1.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<div id="since-draft-duke-quic-version-aliasing-09">
+<section id="appendix-B.1">
+        <h3 id="name-since-draft-duke-quic-versi">
+<a href="#appendix-B.1" class="section-number selfRef">B.1. </a><a href="#name-since-draft-duke-quic-versi" class="section-name selfRef">since draft-duke-quic-version-aliasing-09</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.1-1.1">Allowed client to send zero-length TP as a hint<a href="#appendix-B.1-1.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.1-1.2">Discuss forward secrecy of version aliasing<a href="#appendix-B.1-1.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.1-1.3">Replace "packet length offset" with a generic bitmask<a href="#appendix-B.1-1.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.1-1.4">Added what it takes to be a standard version<a href="#appendix-B.1-1.4" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-08">
+<section id="appendix-B.2">
+        <h3 id="name-since-draft-duke-quic-versio">
+<a href="#appendix-B.2" class="section-number selfRef">B.2. </a><a href="#name-since-draft-duke-quic-versio" class="section-name selfRef">since draft-duke-quic-version-aliasing-08</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.2-1.1">Replaced Initial Token Extension with Server connection ID<a href="#appendix-B.2-1.1" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-07">
+<section id="appendix-B.3">
+        <h3 id="name-since-draft-duke-quic-version">
+<a href="#appendix-B.3" class="section-number selfRef">B.3. </a><a href="#name-since-draft-duke-quic-version" class="section-name selfRef">since draft-duke-quic-version-aliasing-07</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.3-1.1">Added the Bad Salt Integrity Tag to the transport parameter<a href="#appendix-B.3-1.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.3-1.2">Greased packet types<a href="#appendix-B.3-1.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.3-1.3">Allowed the server to specify the standard version to connect with<a href="#appendix-B.3-1.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-05">
+<section id="appendix-B.4">
+        <h3 id="name-since-draft-duke-quic-version-">
+<a href="#appendix-B.4" class="section-number selfRef">B.4. </a><a href="#name-since-draft-duke-quic-version-" class="section-name selfRef">since draft-duke-quic-version-aliasing-05</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.4-1.1">Revised security considerations<a href="#appendix-B.4-1.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.4-1.2">Discussed multiple SNIs behind one load balancer<a href="#appendix-B.4-1.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.4-1.3">Removed VN from the fallback mechanism<a href="#appendix-B.4-1.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-04">
+<section id="appendix-B.5">
+        <h3 id="name-since-draft-duke-quic-version-a">
+<a href="#appendix-B.5" class="section-number selfRef">B.5. </a><a href="#name-since-draft-duke-quic-version-a" class="section-name selfRef">since draft-duke-quic-version-aliasing-04</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.5-1.1">Relationship with Encrypted Client Hello (ECH) and QUIC Protected Initials<a href="#appendix-B.5-1.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.5-1.2">Corrected statement about version negotiation<a href="#appendix-B.5-1.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-03">
+<section id="appendix-B.6">
+        <h3 id="name-since-draft-duke-quic-version-al">
+<a href="#appendix-B.6" class="section-number selfRef">B.6. </a><a href="#name-since-draft-duke-quic-version-al" class="section-name selfRef">since draft-duke-quic-version-aliasing-03</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.6-1.1">Discussed request forgery attacks<a href="#appendix-B.6-1.1" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-02">
+<section id="appendix-B.7">
+        <h3 id="name-since-draft-duke-quic-version-ali">
+<a href="#appendix-B.7" class="section-number selfRef">B.7. </a><a href="#name-since-draft-duke-quic-version-ali" class="section-name selfRef">since draft-duke-quic-version-aliasing-02</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.7-1.1">Specified 0RTT status of the transport parameter<a href="#appendix-B.7-1.1" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-01">
+<section id="appendix-B.8">
+        <h3 id="name-since-draft-duke-quic-version-alia">
+<a href="#appendix-B.8" class="section-number selfRef">B.8. </a><a href="#name-since-draft-duke-quic-version-alia" class="section-name selfRef">since draft-duke-quic-version-aliasing-01</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.8-1.1">Fixed all references to "seed" where I meant "salt."<a href="#appendix-B.8-1.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.8-1.2">Added the Packet Length Offset, which eliminates Retry Injection Attacks<a href="#appendix-B.8-1.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="since-draft-duke-quic-version-aliasing-00">
+<section id="appendix-B.9">
+        <h3 id="name-since-draft-duke-quic-version-alias">
+<a href="#appendix-B.9" class="section-number selfRef">B.9. </a><a href="#name-since-draft-duke-quic-version-alias" class="section-name selfRef">since draft-duke-quic-version-aliasing-00</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-B.9-1.1">Added "Initial Token Extensions" to increase salt entropy and make salt
+polling attacks impractical.<a href="#appendix-B.9-1.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.9-1.2">Allowed servers to store a mapping of version number and ITE to salt instead.<a href="#appendix-B.9-1.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.9-1.3">Made standard version encoding mandatory. This dramatically simplifies the new
+Retry logic and changes the security model.<a href="#appendix-B.9-1.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.9-1.4">Added references to Version Negotiation Transport Parameters.<a href="#appendix-B.9-1.4" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="appendix-B.9-1.5">Extensive readability edit.<a href="#appendix-B.9-1.5" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-C">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Martin Duke</span></div>
+<div dir="auto" class="left"><span class="org">Google</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:martin.h.duke@gmail.com" class="email">martin.h.duke@gmail.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
